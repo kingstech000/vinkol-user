@@ -1,0 +1,26 @@
+flutter_launcher_icons:
+  image_path: "assets/images/logo.png" # This is your primary icon path for all platforms by default
+
+  android: true # Set to true to generate default Android icons based on image_path
+  # image_path_android: "assets/icon/icon.png" # Keep this commented unless you need a different icon specifically for Android
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  # If you want adaptive icons, uncomment these and provide separate foreground/background images:
+  # adaptive_icon_background: "#ffffff" # A color hex code or path to an image
+  # adaptive_icon_foreground: "assets/images/logo_foreground.png" # Path to your foreground image
+
+  ios: true
+  image_path_ios: "assets/images/logo.png" # Corrected typo: "imsges" to "images"
+  remove_alpha_channel_ios: true # Use this if your logo has transparency and you want to remove it for iOS
+
+  web:
+    generate: true
+    image_path: "assets/images/logo.png"
+
+  windows:
+    generate: true
+    image_path: "assets/images/logo.png"
+    icon_size: 48 # min:48, max:256, default: 48
+
+  macos:
+    generate: true
+    image_path: "assets/images/logo.png"

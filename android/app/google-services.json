@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "642058483038",
+    "project_id": "vinkol",
+    "storage_bucket": "vinkol.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:642058483038:android:f60afebafd7d58cf038bcf",
+        "android_client_info": {
+          "package_name": "app.vinkol.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHYpFFKL7cp2UQrQRdQTBRhVIDYu9pTnI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
