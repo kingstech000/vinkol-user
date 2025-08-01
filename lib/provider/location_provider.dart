@@ -6,11 +6,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:starter_codes/models/location_model.dart'; // Ensure this path is correct
 
-import 'package:geolocator/geolocator.dart'; 
+import 'package:geolocator/geolocator.dart';
+import 'package:starter_codes/provider/user_provider.dart'; 
 class LocationController {
   final String? BACKEND_URL;
   final String GOOGLE_MAP_API_KEY;
-
+final Ref ref;
   LatLng? _currentLatLng; // Private field to store the user's current location
 
   // Public getter to access the currentLatLng from outside the class
@@ -19,6 +20,7 @@ class LocationController {
   LocationController({
     required this.GOOGLE_MAP_API_KEY,
     this.BACKEND_URL,
+    required this.ref,
   }) {
     // Immediately attempt to get the user's current location when the controller is loaded
     _initializeCurrentLocation();
@@ -43,9 +45,9 @@ class LocationController {
 
     // Use the provided position or fallback to the stored currentLatLng
     final LatLng effectivePosition = position ?? _currentLatLng ?? const LatLng(6.5244, 3.3792); // Default to Lagos, Nigeria if no location is available
-
+final state = ref.watch(userProvider)!.currentState;
     final params = {
-      'input': placeName,
+      'input': "$placeName $state state Nigeria",
       'location': '${effectivePosition.latitude},${effectivePosition.longitude}',
       'radius': '500', // Radius in meters
       'key': GOOGLE_MAP_API_KEY,
@@ -201,5 +203,6 @@ final locationControllerProvider = Provider<LocationController>((ref) {
   return LocationController(
     GOOGLE_MAP_API_KEY: googleApiKey,
     BACKEND_URL: backendUrl,
+    ref:ref,
   );
 });

@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart'; // Ensure this path is correct
+import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
 
@@ -75,7 +76,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
         _pickedAddress = location?.formattedAddress ?? 'Unknown location';
       });
     } catch (e) {
-      print('Error getting address: $e');
+      debugPrint('Error getting address: $e');
       setState(() {
         _pickedAddress = 'Failed to load address';
       });
@@ -103,6 +104,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userState = ref.watch(userProvider)!.currentState;
     return Scaffold(
       body: Stack(
         children: [

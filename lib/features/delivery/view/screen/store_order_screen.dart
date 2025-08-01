@@ -101,14 +101,13 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
               ),
             ),
             SlidingSheet(
-              elevation: 8,
-              cornerRadius: 20.r,
-              snapSpec: const SnapSpec(
-                snap: true,
-                initialSnap: 0.35,
-                snappings: [0.35, 0.5, 0.8, 1.0],
-                positioning: SnapPositioning.relativeToSheetHeight,
-              ),
+                elevation: 8,
+                cornerRadius: 20.r,
+                snapSpec: const SnapSpec(
+                  snap: true,
+                  snappings: [0.5, 0.8, 1.0],
+                  positioning: SnapPositioning.relativeToSheetHeight,
+                ),
               builder: (context, state) {
                 return Container(
                   decoration: BoxDecoration(

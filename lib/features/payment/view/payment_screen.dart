@@ -9,7 +9,7 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/provider/payment_provider.dart';
 import 'package:starter_codes/core/utils/colors.dart';
-import 'package:flutter/foundation.dart';
+
 class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({super.key});
 
@@ -38,8 +38,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final currentUser = ref.read(userProvider);
 
     if (_paymentDetails == null || currentUser == null) {
-      debugPrint('[PaymentScreen] Error: Payment details or user email missing.');
-      _showSnackbar('Payment details or user information not found. Please try again.');
+      debugPrint(
+          '[PaymentScreen] Error: Payment details or user email missing.');
+      _showSnackbar(
+          'Payment details or user information not found. Please try again.');
       NavigationService.instance.goBack();
       return;
     }
@@ -58,25 +60,29 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         email: currentUser.email,
         reference: _paymentDetails!.reference,
         currency: _paymentDetails!.currency ?? 'NGN',
-        callbackUrl: 'https://your-app.com/paystack-callback', // Set your actual callback URL here
+        callbackUrl:
+            'https://your-app.com/paystack-callback', // Set your actual callback URL here
       );
 
       if (authUrl != null) {
         _paystackAuthUrl = authUrl;
-        debugPrint('[PaymentScreen] Received Paystack authorization URL: $_paystackAuthUrl');
+        debugPrint(
+            '[PaymentScreen] Received Paystack authorization URL: $_paystackAuthUrl');
         _initializeWebView(
           paystackAuthUrl: _paystackAuthUrl!,
           paymentReference: _paymentDetails!.reference,
         );
       } else {
         // If authUrl is null, it means PaystackService returned null (soft failure)
-        debugPrint('[PaymentScreen] Failed to get Paystack authorization URL (service returned null).');
+        debugPrint(
+            '[PaymentScreen] Failed to get Paystack authorization URL (service returned null).');
         _showSnackbar('Failed to initialize payment. Please try again.');
         NavigationService.instance.goBack();
       }
     } catch (e, st) {
       // Catch exceptions thrown by PaystackService
-      debugPrint('[PaymentScreen] Exception during payment initialization: $e\n$st');
+      debugPrint(
+          '[PaymentScreen] Exception during payment initialization: $e\n$st');
       _showSnackbar('Error initializing payment: ${e.toString()}');
       NavigationService.instance.goBack();
     } finally {
@@ -94,7 +100,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         SnackBar(content: Text(message)),
       );
     } else {
-      debugPrint('Attempted to show snackbar but widget was unmounted: $message');
+      debugPrint(
+          'Attempted to show snackbar but widget was unmounted: $message');
     }
   }
 
@@ -102,7 +109,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     required String paystackAuthUrl,
     required String paymentReference,
   }) {
-    debugPrint('[PaymentScreen] _initializeWebView called with URL: $paystackAuthUrl');
+    debugPrint(
+        '[PaymentScreen] _initializeWebView called with URL: $paystackAuthUrl');
 
     late final PlatformWebViewControllerCreationParams params;
     if (WebViewPlatform.instance is WebKitWebViewPlatform) {
@@ -150,21 +158,28 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           onNavigationRequest: (NavigationRequest request) async {
             debugPrint('[PaymentScreen] Navigating to: ${request.url}');
 
-            const String callbackDomain = 'your-app.com'; // **CRITICAL: Replace with your actual domain for the callback URL**
+            const String callbackDomain =
+                'your-app.com'; // **CRITICAL: Replace with your actual domain for the callback URL**
 
-            if (request.url.contains(callbackDomain) && request.url.contains('trxref=$paymentReference')) {
-              debugPrint('[PaymentScreen] Detected callback URL with reference. Initiating backend verification...');
+            if (request.url.contains(callbackDomain) &&
+                request.url.contains('trxref=$paymentReference')) {
+              debugPrint(
+                  '[PaymentScreen] Detected callback URL with reference. Initiating backend verification...');
               final paystackService = ref.read(paystackServiceProvider);
               try {
-                final bool? isVerified = await paystackService.verifyPayment(reference: paymentReference);
+                final bool? isVerified = await paystackService.verifyPayment(
+                    reference: paymentReference);
 
-                if (isVerified == true) { // Explicitly check for true
+                if (isVerified == true) {
+                  // Explicitly check for true
                   _handlePaymentSuccess();
-                } else { // Handles false or null (if service returned null for some reason)
+                } else {
+                  // Handles false or null (if service returned null for some reason)
                   _handlePaymentFailure();
                 }
               } catch (e, st) {
-                debugPrint('[PaymentScreen] Exception during payment verification: $e\n$st');
+                debugPrint(
+                    '[PaymentScreen] Exception during payment verification: $e\n$st');
                 _showSnackbar('Error verifying payment: ${e.toString()}');
                 _handlePaymentFailure(); // Assume failure if verification API call fails
               }
@@ -190,7 +205,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   void _handlePaymentSuccess() {
     if (!mounted) {
-      debugPrint('[PaymentScreen] _handlePaymentSuccess called but widget is unmounted.');
+      debugPrint(
+          '[PaymentScreen] _handlePaymentSuccess called but widget is unmounted.');
       return;
     }
     debugPrint('[PaymentScreen] Handling payment success.');
@@ -201,7 +217,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   void _handlePaymentFailure() {
     if (!mounted) {
-      debugPrint('[PaymentScreen] _handlePaymentFailure called but widget is unmounted.');
+      debugPrint(
+          '[PaymentScreen] _handlePaymentFailure called but widget is unmounted.');
       return;
     }
     debugPrint('[PaymentScreen] Handling payment failure.');
@@ -222,7 +239,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         children: [
           if (_controller != null && _paystackAuthUrl != null)
             WebViewWidget(controller: _controller!),
-          
           if (_isLoadingWebView || _paystackAuthUrl == null)
             const Center(
               child: CircularProgressIndicator(
@@ -230,7 +246,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               ),
             ),
           if (!_isLoadingWebView && _paystackAuthUrl == null)
-             const Center(child: Text('Failed to load payment page. Please try again.')),
+            const Center(
+                child: Text('Failed to load payment page. Please try again.')),
         ],
       ),
     );

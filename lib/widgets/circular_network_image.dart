@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_codes/core/constants/assets.dart';
 
 class CircularNetworkImage extends StatelessWidget {
   final String imageUrl;
@@ -30,7 +31,7 @@ class CircularNetworkImage extends StatelessWidget {
         color: Colors.grey.shade200, // Default background for placeholder/error
         child: FadeInImage.assetNetwork(
           placeholder: placeholderAsset ??
-              'assets/images/placeholder_user.png', // Fallback placeholder if none provided
+            ImageAsset.logo, // Fallback placeholder if none provided
           image: imageUrl,
           height: effectiveHeight,
           width: effectiveWidth,

@@ -30,7 +30,8 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
       ref.read(productListViewModelProvider.notifier).loadMoreProducts();
     }
   }
@@ -48,13 +49,16 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     final productListAsyncValue = ref.watch(productListViewModelProvider);
 
     final totalItemsInCart = ref.watch(cartProvider.select((cartItems) {
-      return cartItems.products.fold(0, (sum, item) => sum + (item.quantity ?? 0));
+      return cartItems.products
+          .fold(0, (sum, item) => sum + (item.quantity ?? 0));
     }));
 
     if (store == null) {
       return Scaffold(
         appBar: MiniAppBar(),
-        body: const Center(child: Text('No store selected. Please go back and select a store.')),
+        body: const Center(
+            child:
+                Text('No store selected. Please go back and select a store.')),
       );
     }
 
@@ -72,44 +76,51 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
               if (products.isEmpty && !productListState.isLoadingMore) {
                 return RefreshIndicator(
                   color: AppColors.primary,
-                  onRefresh: () => ref.read(productListViewModelProvider.notifier).refreshProducts(),
+                  onRefresh: () => ref
+                      .read(productListViewModelProvider.notifier)
+                      .refreshProducts(),
                   child: const SingleChildScrollView(
                     physics: AlwaysScrollableScrollPhysics(),
                     child: SizedBox(
-                      height: 200,
-                      child:const Center(
-                    child: EmptyContent(
-                      contentText: 'No Product Available in this store yet.',
-                    icon:Icons.production_quantity_limits,
-                    ),
-                  )
-                    ),
+                        height: 200,
+                        child: const Center(
+                          child: EmptyContent(
+                            contentText:
+                                'No Product Available in this store yet.',
+                            icon: Icons.production_quantity_limits,
+                          ),
+                        )),
                   ),
                 );
               }
 
               return RefreshIndicator(
                 color: AppColors.primary,
-                onRefresh: () => ref.read(productListViewModelProvider.notifier).refreshProducts(),
+                onRefresh: () => ref
+                    .read(productListViewModelProvider.notifier)
+                    .refreshProducts(),
                 child: GridView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16.0),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 16.0,
-                    mainAxisSpacing: 16.0,
+                    crossAxisSpacing: 10.0,
+                    mainAxisSpacing: 10.0,
                     // *** KEY CHANGE HERE ***
                     // Adjust this value to make cards taller relative to their width.
                     // A smaller value means taller cards.
-                    childAspectRatio: 0.6, // Or even 0.55 if content is still overflowing
+                    childAspectRatio:
+                        0.6, // Or even 0.55 if content is still overflowing
                   ),
-                  itemCount: products.length + (productListState.isLoadingMore ? 1 : 0),
+                  itemCount: products.length +
+                      (productListState.isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == products.length) {
                       return const Center(
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: 16.0),
-                          child: CircularProgressIndicator(color: AppColors.primary),
+                          child: CircularProgressIndicator(
+                              color: AppColors.primary),
                         ),
                       );
                     }
@@ -133,7 +144,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                     Gap.h16,
                     ElevatedButton(
                       onPressed: () {
-                        ref.read(productListViewModelProvider.notifier).refreshProducts();
+                        ref
+                            .read(productListViewModelProvider.notifier)
+                            .refreshProducts();
                       },
                       child: const Text('Retry'),
                     ),
