@@ -14,7 +14,9 @@ import 'package:flutter/foundation.dart'
 ///   options: DefaultFirebaseOptions.currentPlatform,
 /// );
 /// ```
+///
 class DefaultFirebaseOptions {
+//  final firebaseKey=  dotenv.env['PAYSTACK_SECRET_LIVE_KEY'];
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       throw UnsupportedError(

@@ -7,6 +7,7 @@ class ImageAsset {
   static const String riderBike = "$imagePath/rider_bike.png";
   static const String logout = "$imagePath/logout.png";
   static const String speechBubble = "$imagePath/speech.png";
+  static const String logo='$imagePath/logo.png';
 }
 
 class LottieAssets {

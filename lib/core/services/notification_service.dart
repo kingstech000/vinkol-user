@@ -28,6 +28,7 @@ class NotificationService {
   void setProviderContainer(ProviderContainer container) {
     _container = container;
   }
+
   Future<void> initialize() async {
     // Request permission for iOS
     await _firebaseMessaging.requestPermission(
@@ -35,7 +36,7 @@ class NotificationService {
       badge: true,
       sound: true,
     );
- 
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       showNotification(message);
     });
@@ -58,10 +59,10 @@ class NotificationService {
 
   Future<void> setupLocalNotifications() async {
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap-hdpi/ic_launcher.png');
 
     final DarwinInitializationSettings iOSSettings =
-         DarwinInitializationSettings();
+        DarwinInitializationSettings();
 
     final InitializationSettings settings = InitializationSettings(
       android: androidSettings,
@@ -76,11 +77,12 @@ class NotificationService {
     );
   }
 
-   Future<String> getToken() async {
-      final token = await _firebaseMessaging.getToken() ?? '';
-      print(token);
-      return token;
-    }
+  Future<String> getToken() async {
+    final token = await _firebaseMessaging.getToken() ?? '';
+    print(token);
+    return token;
+  }
+
   Future<void> showNotification(RemoteMessage message) async {
     final data = message.data;
     final String? sound = data['sound'];
@@ -125,17 +127,16 @@ class NotificationService {
       _container.read(navigationIndexProvider.notifier).state = int.parse(page);
     }
 
-    if (orderId != null && orderType !=null) {
+    if (orderId != null && orderType != null) {
       debugPrint('Order Type: $orderType');
-      if(orderType.toLowerCase()=='delivery'){
-      NavigationService.instance.navigateTo(NavigatorRoutes.bookingOrderScreen);
-      }else{
-        NavigationService.instance.navigateTo(NavigatorRoutes.storeOrderScreen); 
+      if (orderType.toLowerCase() == 'delivery') {
+        NavigationService.instance
+            .navigateTo(NavigatorRoutes.bookingOrderScreen);
+      } else {
+        NavigationService.instance.navigateTo(NavigatorRoutes.storeOrderScreen);
       }
-    } 
+    }
 
     return;
   }
-
-
 }

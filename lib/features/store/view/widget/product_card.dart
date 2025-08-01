@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/extensions/extensions.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
@@ -19,7 +20,8 @@ class ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final int currentQuantity = ref.watch(cartProvider.notifier).getProductQuantity(product);
+    final int currentQuantity =
+        ref.watch(cartProvider.notifier).getProductQuantity(product);
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -33,40 +35,40 @@ class ProductCard extends ConsumerWidget {
           Expanded(
             flex: 5, // Keep this flex for image for good proportion
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               child: CachedNetworkImage(
                 imageUrl: product.image.imageUrl,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => const Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 ),
                 errorWidget: (context, url, error) => const Icon(Icons.error),
               ),
             ),
           ),
-
-          Flexible( // Changed from Expanded to Flexible
+          Flexible(
+            // Changed from Expanded to Flexible
             flex: 4, // Keep the flex proportion
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end, // Align contents to the bottom
+                mainAxisAlignment:
+                    MainAxisAlignment.end, // Align contents to the bottom
                 children: [
                   AppText.free(
                     product.title,
-                  
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10, // Slightly reduced font size for title
-                      color: Colors.black,
-                  
-                  
+
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10, // Slightly reduced font size for title
+                    color: Colors.black,
+
                     // overflow: TextOverflow.ellipsis,
                   ),
-                
-  
                   Gap.h8,
                   Align(
                     alignment: Alignment.centerLeft,
@@ -74,29 +76,32 @@ class ProductCard extends ConsumerWidget {
                       product.price.toString().toMoney(),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 15, // Slightly reduced font size for price
+                        fontSize: 13, // Slightly reduced font size for price
                         color: AppColors.primary,
                       ),
                     ),
                   ),
                   Gap.h8,
-                  if (currentQuantity == 0)...[
-                      AppButton.primary(
+                  if (currentQuantity == 0) ...[
+                    SizedBox(
+                      height: 40.h,
+                      width: double.infinity,
+                      child: AppButton.primary(
                         onTap: () {
                           ref.read(cartProvider.notifier).addProduct(product);
                         },
-                    
-                    title: 'Add To Cart',
-                        ),]
-                      
-                  
-                  else
+                        title: 'Add To Cart',
+                      ),
+                    ),
+                  ] else
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         InkWell(
                           onTap: () {
-                            ref.read(cartProvider.notifier).removeProduct(product);
+                            ref
+                                .read(cartProvider.notifier)
+                                .removeProduct(product);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(6),
@@ -104,13 +109,15 @@ class ProductCard extends ConsumerWidget {
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.remove, color: Colors.white, size: 18),
+                            child: const Icon(Icons.remove,
+                                color: Colors.white, size: 18),
                           ),
                         ),
                         Text(
                           currentQuantity.toString(),
                           style: const TextStyle(
-                            fontSize: 15, // Slightly reduced font size for quantity
+                            fontSize:
+                                15, // Slightly reduced font size for quantity
                             fontWeight: FontWeight.bold,
                             color: AppColors.black,
                           ),
@@ -125,7 +132,8 @@ class ProductCard extends ConsumerWidget {
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.add, color: Colors.white, size: 18),
+                            child: const Icon(Icons.add,
+                                color: Colors.white, size: 18),
                           ),
                         ),
                       ],

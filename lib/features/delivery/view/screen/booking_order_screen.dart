@@ -97,14 +97,14 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                 error: (err, stack) => Container(color: Colors.red.shade100), // Error placeholder
               ),
             ),
-            SlidingSheet( elevation: 8,
+            SlidingSheet( 
+                elevation: 8,
                 cornerRadius: 20.r,
                 snapSpec: const SnapSpec(
                   snap: true,
                   snappings: [0.5, 0.8, 1.0],
                   positioning: SnapPositioning.relativeToSheetHeight,
                 ),
-              
               builder: (context, state) {
                 return Container(
                   decoration: BoxDecoration(
