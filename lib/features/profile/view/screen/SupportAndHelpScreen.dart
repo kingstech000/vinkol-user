@@ -36,17 +36,7 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
   Future<void> _launchUrl(BuildContext context, String urlString) async {
     final Uri url = Uri.parse(urlString);
     try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: AppText.body('Could not launch $urlString', color: Colors.white),
-            backgroundColor: Colors.red,
-          ),
-        );
-        debugPrint('Could not launch $urlString'); // Use debugPrint for Flutter logs
-      }
+      await launchUrl(url);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -116,7 +106,8 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // Added for consistent alignment
+        crossAxisAlignment:
+            CrossAxisAlignment.start, // Added for consistent alignment
         children: [
           Gap.h32,
           _ContactOption(
@@ -127,7 +118,8 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
             },
           ),
           _ContactOption(
-            icon: Icons.phone_in_talk_outlined, // Changed icon for visual distinction
+            icon: Icons
+                .phone_in_talk_outlined, // Changed icon for visual distinction
             title: 'Customer Service (Secondary): +234 8079 72231',
             onTap: () {
               _launchUrl(context, LinkRoutes.customerServicePhone2);
@@ -303,7 +295,7 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
           const _FAQItem(
             question: 'What are the community guidelines for riders?',
             answer:
-            'Our community guidelines emphasize professionalism, courtesy, safe driving/riding practices, and timely deliveries. Adhering to these ensures a positive experience for everyone.',
+                'Our community guidelines emphasize professionalism, courtesy, safe driving/riding practices, and timely deliveries. Adhering to these ensures a positive experience for everyone.',
           ),
 
           // --- App Functionality / Technical ---
@@ -346,13 +338,15 @@ class _ContactOption extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.h), // Consistent vertical padding
+        padding:
+            EdgeInsets.symmetric(vertical: 16.h), // Consistent vertical padding
         child: Row(
           children: [
             Icon(icon, color: AppColors.black, size: 24.w),
             Gap.w16,
             Expanded(
-              child: AppText.body(title, color: AppColors.black), // Display title as content
+              child: AppText.body(title,
+                  color: AppColors.black), // Display title as content
             ),
             Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18.w),
           ],
@@ -422,7 +416,9 @@ class _FAQItemState extends State<_FAQItem> {
           ),
           if (_isExpanded)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h), // Adjusted horizontal padding
+              padding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 10.h), // Adjusted horizontal padding
               child: AppText.body(
                 widget.answer,
                 color: Colors.grey.shade700,

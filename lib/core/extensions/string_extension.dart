@@ -26,16 +26,14 @@ extension StringExtension on String {
     return "${text[0].toUpperCase()}${lowercaseOther ? text.substring(1).toLowerCase() : text.substring(1)}";
   }
 
-   String toMoney() {
-    // Try parsing the string to a number
+  String toMoney() {
     var number = num.tryParse(this);
     if (number == null) {
-      return this; // Return original string if parsing fails
+      return this;
     }
-    // Format the number with two decimal places
-    var f = NumberFormat.currency(
-        symbol: '', decimalDigits: 2, locale: 'en_US', customPattern: '#,##0.00');
-    return '₦${f.format(number)}';
+
+    final formatter = NumberFormat('#,##0', 'en_US');
+    return '₦${formatter.format(number)}';
   }
 
   bool get isImage {

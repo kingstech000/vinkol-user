@@ -33,7 +33,9 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final selectedDelivery = ref.read(selectedDeliveryProvider);
       if (selectedDelivery != null && selectedDelivery.id != null) {
-        ref.read(deliveryDetailsViewModelProvider.notifier).fetchDeliveryById(selectedDelivery.id!);
+        ref
+            .read(deliveryDetailsViewModelProvider.notifier)
+            .fetchDeliveryById(selectedDelivery.id!);
       } else {
         debugPrint('Error: No delivery selected or ID is null.');
       }
@@ -51,7 +53,8 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
         if (didPop) return;
         if (isFromBookingScreen) {
           ref.read(comingFromBookingsScreenProvider.notifier).state = false;
-          NavigationService.instance.navigateToReplaceAll(NavigatorRoutes.dashboardScreen); // Navigate to dashboard
+          NavigationService.instance.navigateToReplaceAll(
+              NavigatorRoutes.dashboardScreen); // Navigate to dashboard
         } else {
           NavigationService.instance.goBack(); // Normal go back
         }
@@ -64,7 +67,8 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
           leading: GestureDetector(
             onTap: () {
               if (isFromBookingScreen) {
-                NavigationService.instance.navigateToReplaceAll(NavigatorRoutes.dashboardScreen); // Navigate to dashboard
+                NavigationService.instance.navigateToReplaceAll(
+                    NavigatorRoutes.dashboardScreen); // Navigate to dashboard
               } else {
                 NavigationService.instance.goBack();
               }
@@ -76,7 +80,8 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.arrow_back_ios, color: AppColors.black, size: 20.w),
+              child: Icon(Icons.arrow_back_ios,
+                  color: AppColors.black, size: 20.w),
             ),
           ),
         ),
@@ -86,29 +91,34 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
               child: deliveryDetailsAsync.when(
                 data: (delivery) {
                   if (delivery == null) {
-                    return Container(color: Colors.grey.shade400); // Placeholder
+                    return Container(
+                        color: Colors.grey.shade400); // Placeholder
                   }
                   return ReverseLocationStringMap(
                     pickupLocationString: delivery.pickupLocation,
                     dropoffLocationString: delivery.dropoffLocation,
                   );
                 },
-                loading: () => Container(color: Colors.grey.shade400), // Placeholder for map
-                error: (err, stack) => Container(color: Colors.red.shade100), // Error placeholder
+                loading: () => Container(
+                    color: Colors.grey.shade400), // Placeholder for map
+                error: (err, stack) =>
+                    Container(color: Colors.red.shade100), // Error placeholder
               ),
             ),
-            SlidingSheet( 
-                elevation: 8,
-                cornerRadius: 20.r,
-                snapSpec: const SnapSpec(
-                  snap: true,
-                  snappings: [0.5, 0.8, 1.0],
-                  positioning: SnapPositioning.relativeToSheetHeight,
-                ),
+            SlidingSheet(
+              elevation: 8,
+              cornerRadius: 20.r,
+              snapSpec: const SnapSpec(
+                snap: true,
+                initialSnap: 0.35,
+                snappings: [0.35, 0.5, 0.8, 1.0],
+                positioning: SnapPositioning.relativeToSheetHeight,
+              ),
               builder: (context, state) {
                 return Container(
                   decoration: BoxDecoration(
-                    color: Colors.black, // Dark background for the top part of the sheet
+                    color: Colors
+                        .black, // Dark background for the top part of the sheet
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(20.r),
                       topRight: Radius.circular(20.r),
@@ -140,7 +150,8 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                           }
 
                           bool isPending =
-                              delivery.status?.toLowerCase() == 'pending' || delivery.status?.toLowerCase() =='delivered';
+                              delivery.status?.toLowerCase() == 'pending' ||
+                                  delivery.status?.toLowerCase() == 'delivered';
 
                           return Column(
                             children: [
@@ -166,9 +177,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                         ),
                                         Gap.w8,
                                         AppText.button(
-                                            isPending
-                                                ? (delivery.status ?? 'Pending')
-                                                : 'You are on route to pick up',
+                                            delivery.status ?? 'Pending',
                                             color: AppColors.white,
                                             fontSize: 14.sp),
                                       ],
@@ -209,11 +218,12 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                           successMessage:
                                                               'Tracking ID copied!');
                                                     } else {
-                                                      ScaffoldMessenger.of(context)
+                                                      ScaffoldMessenger.of(
+                                                              context)
                                                           .showSnackBar(
-                                                          const SnackBar(
-                                                              content: Text(
-                                                                  'No tracking ID to copy.')));
+                                                              const SnackBar(
+                                                                  content: Text(
+                                                                      'No tracking ID to copy.')));
                                                     }
                                                   },
                                                   child: Row(
@@ -221,21 +231,25 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                         MainAxisSize.min,
                                                     children: [
                                                       AppText.h5(
-                                                        delivery.trackingId ?? 'N/A',
-                                                        fontWeight: FontWeight.bold,
+                                                        delivery.trackingId ??
+                                                            'N/A',
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                         fontSize: 18.sp,
                                                       ),
                                                       Gap.w4,
                                                       Icon(
                                                         Icons.copy_all_rounded,
                                                         size: 16.w,
-                                                        color: Colors.grey.shade600,
+                                                        color: Colors
+                                                            .grey.shade600,
                                                       ),
                                                     ],
                                                   ),
                                                 ),
                                                 AppText.caption(
-                                                    delivery.vehicleRequest ?? '',
+                                                    delivery.vehicleRequest ??
+                                                        '',
                                                     color: Colors.grey.shade600,
                                                     fontSize: 12.sp),
                                               ],
@@ -248,10 +262,10 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                   width: 70.w,
                                                 ),
                                                 Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                          horizontal: 10,
-                                                          vertical: 4),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 4),
                                                   decoration: BoxDecoration(
                                                     color: AppColors.white,
                                                     boxShadow: const [
@@ -291,57 +305,78 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                       _WhiteContainer(
                                         children: [
                                           Row(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
                                             children: [
                                               // Agent's image and details (Left Section)
                                               CircularNetworkImage(
-                                                imageUrl: delivery.deliveryAgent?.imageUrl ??
+                                                imageUrl: delivery.deliveryAgent
+                                                        ?.imageUrl ??
                                                     'https://via.placeholder.com/150/FF0000/FFFFFF?Text=User',
                                                 // Explicitly set a fixed size to prevent overflow
                                                 width: 40.w,
                                                 height: 40.w,
                                               ),
                                               Gap.w16, // Space between image and text
-                                              Expanded( // Allow the Column with text to take remaining space
+                                              Expanded(
+                                                // Allow the Column with text to take remaining space
                                                 child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
                                                     AppText.body(
-                                                      delivery.deliveryAgent?.fullName ?? 'N/A',
-                                                      fontWeight: FontWeight.bold,
+                                                      delivery.deliveryAgent
+                                                              ?.fullName ??
+                                                          'N/A',
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       fontSize: 16.sp,
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                     AppText.caption(
-                                                      delivery.deliveryAgent?.phone ?? 'N/A',
-                                                      color: Colors.grey.shade600,
+                                                      delivery.deliveryAgent
+                                                              ?.phone ??
+                                                          'N/A',
+                                                      color:
+                                                          Colors.grey.shade600,
                                                       fontSize: 12.sp,
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                   ],
                                                 ),
                                               ),
 
-                                          
-                                              Row( // Use a Row for the buttons themselves
-                                                mainAxisSize: MainAxisSize.min, // Important: make this row take only minimum space
+                                              Row(
+                                                // Use a Row for the buttons themselves
+                                                mainAxisSize: MainAxisSize
+                                                    .min, // Important: make this row take only minimum space
                                                 children: [
                                                   BorderedIconButton(
                                                     icon: Icons.call_outlined,
                                                     onPressed: () {
-                                                      if (delivery.deliveryAgent?.phone != null) {
-                                                        makePhoneCall(delivery.deliveryAgent!.phone!);
+                                                      if (delivery.deliveryAgent
+                                                              ?.phone !=
+                                                          null) {
+                                                        makePhoneCall(delivery
+                                                            .deliveryAgent!
+                                                            .phone!);
                                                       } else {
-                                                        debugPrint('No phone number available to call.');
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          const SnackBar(content: Text('No phone number available.')),
+                                                        debugPrint(
+                                                            'No phone number available to call.');
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                              content: Text(
+                                                                  'No phone number available.')),
                                                         );
                                                       }
                                                     },
-                                                          ),
-                                                 
+                                                  ),
                                                 ],
                                               ),
                                             ],
@@ -356,14 +391,16 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                           icon: Icons.location_on,
                                           iconColor: Colors.green,
                                           title: 'Pick-up Location',
-                                          address: delivery.pickupLocation ?? 'N/A',
+                                          address:
+                                              delivery.pickupLocation ?? 'N/A',
                                         ),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             Padding(
-                                              padding: EdgeInsets.only(left: 5.w),
+                                              padding:
+                                                  EdgeInsets.only(left: 5.w),
                                               child: SizedBox(
                                                 height: 60.h,
                                                 child: HorizontalDottedLine(
@@ -374,24 +411,44 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                 ),
                                               ),
                                             ),
+                                          ],
+                                        ),
+                                        Gap.h8,
+                                        _LocationInfo(
+                                          icon: Icons.location_on,
+                                          iconColor: AppColors.primary,
+                                          title: 'Drop-off Location',
+                                          address:
+                                              delivery.dropoffLocation ?? 'N/A',
+                                        ),
+                                      ],
+                                    ),
+                                    // Gap.h8,
+                                    // _WhiteContainer(children: [
+                                    //   AppText.caption('Package '),
+                                    //   AppText.h4(delivery.)
+                                    // ],),
+                                    Gap.h8,
+                                    _WhiteContainer(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            AppText.body(
+                                              'Delivery Code',
+                                            ),
                                             Padding(
-                                              padding: const EdgeInsets.all(8.0),
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
                                               child: AppText.button(
                                                   delivery.orderOtp.toString(),
                                                   fontSize: 18),
                                             )
                                           ],
-                                        ),
-                                        Gap.h16,
-                                        _LocationInfo(
-                                          icon: Icons.location_on,
-                                          iconColor: AppColors.primary,
-                                          title: 'Drop-off Location',
-                                          address: delivery.dropoffLocation ?? 'N/A',
-                                        ),
+                                        )
                                       ],
-                                    ),
-                                    Gap.h8,
+                                    )
                                   ],
                                 ),
                               ),
