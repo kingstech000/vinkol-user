@@ -14,12 +14,12 @@ import 'package:starter_codes/features/delivery/view/screen/product_order_modal.
 import 'package:starter_codes/features/delivery/view_model/delivery_detail_view_model.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
 import 'package:starter_codes/provider/navigation_provider.dart';
+import 'package:starter_codes/widgets/app_bar/HorizontalDottedLine.dart';
 import 'package:starter_codes/widgets/border_icon_button.dart';
 import 'package:starter_codes/widgets/circular_network_image.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/reverse_map.dart';
-
 
 class StoreOrderScreen extends ConsumerStatefulWidget {
   const StoreOrderScreen({super.key});
@@ -35,7 +35,9 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final selectedDelivery = ref.read(selectedDeliveryProvider);
       if (selectedDelivery != null && selectedDelivery.id != null) {
-        ref.read(deliveryDetailsViewModelProvider.notifier).fetchDeliveryById(selectedDelivery.id!);
+        ref
+            .read(deliveryDetailsViewModelProvider.notifier)
+            .fetchDeliveryById(selectedDelivery.id!);
       } else {
         debugPrint('Error: No delivery selected or ID is null.');
       }
@@ -48,15 +50,16 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
     final isFromBookingScreen = ref.watch(comingFromBookingsScreenProvider);
 
     return PopScope(
-      canPop: !isFromBookingScreen, // Prevent pop if coming from booking screen
+      canPop: !isFromBookingScreen,
       onPopInvoked: (didPop) {
         if (didPop) return;
         if (isFromBookingScreen) {
-             ref.read(comingFromBookingsScreenProvider.notifier).state = false;
-       
-          NavigationService.instance.navigateToReplaceAll(NavigatorRoutes.dashboardScreen); // Navigate to dashboard
+          ref.read(comingFromBookingsScreenProvider.notifier).state = false;
+
+          NavigationService.instance
+              .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
         } else {
-          NavigationService.instance.goBack(); // Normal go back
+          NavigationService.instance.goBack();
         }
       },
       child: Scaffold(
@@ -67,7 +70,10 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
           leading: GestureDetector(
             onTap: () {
               if (isFromBookingScreen) {
-                NavigationService.instance.navigateToReplaceAll(NavigatorRoutes.dashboardScreen); // Navigate to dashboard
+                ref.read(comingFromBookingsScreenProvider.notifier).state =
+                    false;
+                NavigationService.instance
+                    .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
               } else {
                 NavigationService.instance.goBack();
               }
@@ -79,7 +85,8 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.arrow_back_ios, color: AppColors.black, size: 20.w),
+              child: Icon(Icons.arrow_back_ios,
+                  color: AppColors.black, size: 20.w),
             ),
           ),
         ),
@@ -89,29 +96,30 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
               child: deliveryDetailsAsync.when(
                 data: (delivery) {
                   if (delivery == null) {
-                    return Container(color: Colors.grey.shade400); // Placeholder
+                    return Container(color: Colors.grey.shade400);
                   }
                   return ReverseLocationStringMap(
                     pickupLocationString: delivery.store!.address!,
                     dropoffLocationString: delivery.dropoffLocation,
                   );
                 },
-                loading: () => Container(color: Colors.grey.shade400), // Placeholder for map
-                error: (err, stack) => Container(color: Colors.red.shade100), // Error placeholder
+                loading: () => Container(color: Colors.grey.shade400),
+                error: (err, stack) => Container(color: Colors.red.shade100),
               ),
             ),
             SlidingSheet(
-                elevation: 8,
-                cornerRadius: 20.r,
-                snapSpec: const SnapSpec(
-                  snap: true,
-                  snappings: [0.5, 0.8, 1.0],
-                  positioning: SnapPositioning.relativeToSheetHeight,
-                ),
+              elevation: 8,
+              cornerRadius: 20.r,
+              snapSpec: const SnapSpec(
+                snap: true,
+                initialSnap: 0.35,
+                snappings: [0.35, 0.5, 0.8, 1.0],
+                positioning: SnapPositioning.relativeToSheetHeight,
+              ),
               builder: (context, state) {
                 return Container(
                   decoration: BoxDecoration(
-                    color: Colors.black, // Dark background for the top part of the sheet
+                    color: Colors.black,
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(20.r),
                       topRight: Radius.circular(20.r),
@@ -136,19 +144,24 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                       deliveryDetailsAsync.when(
                         data: (delivery) {
                           if (delivery == null) {
-                            debugPrint(delivery.toString());
-                            return const Center(child: Text('No delivery details found.', style: TextStyle(color: Colors.white)));
+                            return const Center(
+                                child: Text('No delivery details found.',
+                                    style: TextStyle(color: Colors.white)));
                           }
 
-                          bool isPending = delivery.status?.toLowerCase() == 'pending';
+                          bool isPending =
+                              delivery.status?.toLowerCase() == 'pending';
 
                           return Column(
                             children: [
                               Container(
-                                margin: EdgeInsets.symmetric(horizontal: 10.h, vertical: 5.w),
-                                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                                margin: EdgeInsets.symmetric(
+                                    horizontal: 10.h, vertical: 5.w),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w, vertical: 12.h),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
@@ -158,12 +171,14 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                               color: AppColors.primary,
                                               shape: BoxShape.circle),
                                           child: Icon(Icons.timelapse_outlined,
-                                              color: AppColors.white, size: 20.w),
+                                              color: AppColors.white,
+                                              size: 20.w),
                                         ),
                                         Gap.w8,
                                         AppText.button(
-                                            isPending ? (delivery.status ?? 'Pending') : 'You are on route to pick up',
-                                            color: AppColors.white, fontSize: 14.sp),
+                                            delivery.status ?? 'Pending',
+                                            color: AppColors.white,
+                                            fontSize: 14.sp),
                                       ],
                                     ),
                                   ],
@@ -184,42 +199,57 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                     _WhiteContainer(
                                       children: [
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                  GestureDetector(
+                                                GestureDetector(
                                                   onTap: () {
-                                                    final trackingId = delivery.trackingId;
-                                                    if (trackingId != null && trackingId.isNotEmpty) {
-                                                      copyToClipboard(context, trackingId,
-                                                          successMessage: 'Tracking ID copied!');
+                                                    final trackingId =
+                                                        delivery.trackingId;
+                                                    if (trackingId != null &&
+                                                        trackingId.isNotEmpty) {
+                                                      copyToClipboard(
+                                                          context, trackingId,
+                                                          successMessage:
+                                                              'Tracking ID copied!');
                                                     } else {
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        const SnackBar(content: Text('No tracking ID to copy.')),
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        const SnackBar(
+                                                            content: Text(
+                                                                'No tracking ID to copy.')),
                                                       );
                                                     }
                                                   },
                                                   child: Row(
-                                                    mainAxisSize: MainAxisSize.min, // Important! Prevents Row from taking full width
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
                                                     children: [
                                                       AppText.h5(
-                                                        delivery.trackingId ?? 'N/A',
-                                                        fontWeight: FontWeight.bold,
+                                                        delivery.trackingId ??
+                                                            'N/A',
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                         fontSize: 18.sp,
                                                       ),
-                                                      Gap.w4, // Small space between text and icon
+                                                      Gap.w4,
                                                       Icon(
-                                                        Icons.copy_all_rounded, // Or Icons.content_copy, Icons.copy
-                                                        size: 16.w, // Adjust size as needed
-                                                        color: Colors.grey.shade600, // Adjust color as needed
+                                                        Icons.copy_all_rounded,
+                                                        size: 16.w,
+                                                        color: Colors
+                                                            .grey.shade600,
                                                       ),
                                                     ],
                                                   ),
                                                 ),
-                                                // 
-                                                AppText.caption(delivery.vehicleRequest ?? 'N/A',
+                                                AppText.caption(
+                                                    delivery.vehicleRequest ??
+                                                        'N/A',
                                                     color: Colors.grey.shade600,
                                                     fontSize: 12.sp),
                                               ],
@@ -227,13 +257,15 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                             Column(
                                               children: [
                                                 Image.asset(
-                                                  ImageAsset.riderBike, // Placeholder, dynamically choose based on vehicleType
+                                                  ImageAsset.riderBike,
                                                   height: 40.h,
                                                   width: 70.w,
                                                 ),
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                      horizontal: 10, vertical: 4),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 4),
                                                   decoration: BoxDecoration(
                                                       color: AppColors.white,
                                                       boxShadow: const [
@@ -242,13 +274,19 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                             blurRadius: 2)
                                                       ],
                                                       borderRadius:
-                                                      BorderRadius.circular(10)),
+                                                          BorderRadius.circular(
+                                                              10)),
                                                   child: Row(
                                                     children: [
-                                                      Icon(Icons.check_circle_outline,
-                                                          color: Colors.blue, size: 16.w),
+                                                      Icon(
+                                                          Icons
+                                                              .check_circle_outline,
+                                                          color: Colors.blue,
+                                                          size: 16.w),
                                                       Gap.w4,
-                                                      AppText.button(delivery.deliveryType ?? 'N/A', // e.g., 'Express drop off'
+                                                      AppText.button(
+                                                          delivery.deliveryType ??
+                                                              'N/A',
                                                           fontSize: 12.sp),
                                                     ],
                                                   ),
@@ -261,93 +299,104 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                     ),
                                     Gap.h16,
                                     // Conditionally display rider details
-                                    if (!isPending) ...[
-                                    _WhiteContainer(
-              children: [
-                Row(
-                  // Use MainAxisAlignment.spaceBetween to push buttons to the end
-                  // and Expanded for the column
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Agent's image and details
-                    Row(
-                      mainAxisSize: MainAxisSize.min, // Keep this row as small as possible
-                      children: [
-                        CircularNetworkImage(
-                          imageUrl: delivery.deliveryAgent?.imageUrl ??
-                              'https://via.placeholder.com/150/FF0000/FFFFFF?Text=User',
-                        ),
-                        Gap.w16,
-                        Expanded( // <--- THIS IS THE KEY CHANGE
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AppText.body(
-                                delivery.deliveryAgent?.fullName ?? 'N/A',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.sp,
-                                maxLines: 1, // Limit lines for name
-                                overflow: TextOverflow.ellipsis, // Add ellipsis if it overflows
-                              ),
-                              AppText.caption(
-                                delivery.deliveryAgent?.phone ?? 'N/A',
-                                color: Colors.grey.shade600,
-                                fontSize: 12.sp,
-                                maxLines: 1, // Limit lines for phone
-                                overflow: TextOverflow.ellipsis, // Add ellipsis if it overflows
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Call and Chat Buttons
-                    Row(
-                      mainAxisSize: MainAxisSize.min, // Keep this row as small as possible
-                      children: [
-                        BorderedIconButton(
-                          icon: Icons.call_outlined,
-                          onPressed: () {
-                            LaunchLink.launchPhone(delivery.deliveryAgent!.phone.toString());
-                          },
-                        ),
-             
-                      ],
-                    ),
-                  ]
-                ),
-              ],
-            ),    Gap.h16,
+                                    if (delivery.status!.toLowerCase() ==
+                                        'picked') ...[
+                                      _WhiteContainer(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              // Agent's image and details
+                                              CircularNetworkImage(
+                                                imageUrl: delivery.deliveryAgent
+                                                        ?.imageUrl ??
+                                                    'https://via.placeholder.com/150/FF0000/FFFFFF?Text=User',
+                                              ),
+                                              Gap.w16,
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    AppText.body(
+                                                      delivery.deliveryAgent
+                                                              ?.fullName ??
+                                                          'N/A',
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16.sp,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                    AppText.caption(
+                                                      delivery.deliveryAgent
+                                                              ?.phone ??
+                                                          'N/A',
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontSize: 12.sp,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Gap.w8,
+                                              // Call and Chat Buttons
+                                              BorderedIconButton(
+                                                icon: Icons.call_outlined,
+                                                onPressed: () {
+                                                  LaunchLink.launchPhone(
+                                                      delivery.deliveryAgent
+                                                              ?.phone
+                                                              .toString() ??
+                                                          '');
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      Gap.h16,
                                     ],
                                     // Wrap this GestureDetector around the _WhiteContainer
                                     GestureDetector(
                                       onTap: () {
-                                        if (delivery.products != null && delivery.products!.isNotEmpty) {
+                                        if (delivery.products != null &&
+                                            delivery.products!.isNotEmpty) {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => ProductsOrderedModal(
+                                              builder: (context) =>
+                                                  ProductsOrderedModal(
                                                 products: delivery.products!,
                                               ),
                                             ),
                                           );
                                         } else {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('No products available for this order.')),
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    'No products available for this order.')),
                                           );
                                         }
                                       },
                                       child: _WhiteContainer(
                                         children: [
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
-                                              AppText.button('${delivery.totalItemsOrdered} Items'),
+                                              AppText.button(
+                                                  '${delivery.totalItemsOrdered} Items'),
                                               Padding(
-                                                padding: const EdgeInsets.all(8.0),
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
                                                 child: AppText.button(
-                                                  delivery.totalAmount!.toMoney(),
+                                                  delivery.totalAmount!
+                                                      .toMoney(),
                                                   color: AppColors.primary,
                                                 ),
                                               )
@@ -359,12 +408,39 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                     Gap.h8,
                                     _WhiteContainer(
                                       children: [
-                                        Gap.h16,
+                                        _LocationInfo(
+                                          icon: Icons.location_on,
+                                          iconColor: Colors.green,
+                                          title: 'Pick-up Location',
+                                          address:
+                                              delivery.store?.address ?? 'N/A',
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Padding(
+                                              padding:
+                                                  EdgeInsets.only(left: 5.w),
+                                              child: SizedBox(
+                                                height: 60.h,
+                                                child: HorizontalDottedLine(
+                                                  direction: Axis.vertical,
+                                                  dotSize: 2,
+                                                  dotSpace: 5,
+                                                  color: Colors.grey.shade500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Gap.h8,
                                         _LocationInfo(
                                           icon: Icons.location_on,
                                           iconColor: AppColors.primary,
-                                          title: 'Delivery Location',
-                                          address: delivery.dropoffLocation ?? 'N/A',
+                                          title: 'Drop-off Location',
+                                          address:
+                                              delivery.dropoffLocation ?? 'N/A',
                                         ),
                                       ],
                                     ),
@@ -372,12 +448,16 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                     _WhiteContainer(
                                       children: [
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             AppText.caption('Delivery Code'),
                                             Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: AppText.button(delivery.orderOtp.toString(), fontSize: 18),
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: AppText.button(
+                                                  delivery.orderOtp.toString(),
+                                                  fontSize: 18),
                                             )
                                           ],
                                         ),
@@ -395,7 +475,9 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                         ),
                         error: (err, stack) => Padding(
                           padding: const EdgeInsets.all(20.0),
-                          child: Center(child: Text('Error: ${err.toString()}', style: const TextStyle(color: Colors.red))),
+                          child: Center(
+                              child: Text('Error: ${err.toString()}',
+                                  style: const TextStyle(color: Colors.red))),
                         ),
                       ),
                     ],
