@@ -30,7 +30,7 @@ class PaystackService implements IPaystackService {
   String? _getSecretKey() {
     // It's generally good to load dotenv once, typically in main.dart
     // and ensure it's loaded before accessing it.
-    return dotenv.env['PAYSTACK_TEST_LIVE_KEY'];
+    return dotenv.env['PAYSTACK_SECRET_TEST_KEY'];
     // return  dotenv.env['PAYSTACK_SECRET_LIVE_KEY'];
   }
 
