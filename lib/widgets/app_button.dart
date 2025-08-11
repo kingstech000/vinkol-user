@@ -123,7 +123,7 @@ class AppButton extends StatelessWidget {
                     title,
                     color: textColor,
                     centered: true,
-                    fontSize: 16,
+                    fontSize: 14,
                   ),
           ],
         ),

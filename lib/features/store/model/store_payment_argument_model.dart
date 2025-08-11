@@ -8,6 +8,7 @@ class StorePaymentArguments {
   final List<CartItem> cartItems;
   final double totalProductAmount; // Sum of item prices
   final double deliveryFee;
+  final String state;
   final LocationModel? selectedDropoffLocation;
   final String formattedDropoffAddress; // The user-friendly address string
   final String deliveryType; // 'regular' or 'express'
@@ -17,6 +18,7 @@ class StorePaymentArguments {
     required this.storeId,
     required this.storeName,
     required this.cartItems,
+    required this.state,
     required this.totalProductAmount,
     required this.deliveryFee,
     this.selectedDropoffLocation,

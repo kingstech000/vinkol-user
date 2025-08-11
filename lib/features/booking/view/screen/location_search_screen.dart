@@ -88,7 +88,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
         notifier.setDropOffLocation(detailedLocation);
       }
       
-      Navigator.of(context).pop( detailedLocation);  // Go back to the previous screen
+      Navigator.of(context).pop(detailedLocation);  // Go back to the previous screen
     } catch (e) {
    
       ScaffoldMessenger.of(context).showSnackBar(
