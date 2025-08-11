@@ -1,4 +1,6 @@
 // lib/services/store_service.dart
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
@@ -62,7 +64,8 @@ class StoreService {
   /// Fetches a single store by its ID.
   ///
   /// [storeId]: The ID of the store to retrieve.
-  Future<SingleStoreData> getSingleStore(String storeId) async { // CHANGED: Return type from SingleStoreResponseData to SingleStoreData
+  Future<SingleStoreData> getSingleStore(String storeId) async {
+    // CHANGED: Return type from SingleStoreResponseData to SingleStoreData
     try {
       final responseData = await _networkClient.get(
         '${ApiRoute.stores}/$storeId',
@@ -71,7 +74,8 @@ class StoreService {
       logger.i('Single Store API response: $responseData');
 
       // NEW LOGIC: Parse the full response into SingleStoreResponse
-      final SingleStoreResponse singleStoreResponse = SingleStoreResponse.fromJson(responseData);
+      final SingleStoreResponse singleStoreResponse =
+          SingleStoreResponse.fromJson(responseData);
 
       // Then, return the nested 'data' object which is SingleStoreData
       return singleStoreResponse.data;
@@ -139,7 +143,8 @@ class StoreService {
     }
   }
 
-  Future<StoreProduct> getSingleProduct(String productId) async { // Reverted back to the original return type as per your instruction to only change singleStore.
+  Future<StoreProduct> getSingleProduct(String productId) async {
+    // Reverted back to the original return type as per your instruction to only change singleStore.
     try {
       final responseData = await _networkClient.get(
         '${ApiRoute.products}/$productId', // Assuming this endpoint
@@ -153,8 +158,9 @@ class StoreService {
       // For now, I'm making a safe assumption and returning the data field after parsing as StoreProduct.
       // You might need to adjust 'SingleProductResponse' if it's a wrapper for StoreProduct.
       // For this edit, I'm assuming 'StoreProduct' is the final desired object.
-       if (responseData['data'] is Map<String, dynamic>) {
-        return StoreProduct.fromJson(responseData['data'] as Map<String, dynamic>);
+      if (responseData['data'] is Map<String, dynamic>) {
+        return StoreProduct.fromJson(
+            responseData['data'] as Map<String, dynamic>);
       } else {
         throw Exception("Invalid data format for single product response.");
       }
@@ -168,8 +174,7 @@ class StoreService {
     }
   }
 
-
- /// Fetches the shopping delivery fee.
+  /// Fetches the shopping delivery fee.
   ///
   /// [storeId]: The ID of the store.
   /// [dropoffLocation]: The drop-off location details.
@@ -197,7 +202,8 @@ class StoreService {
 
       logger.i('Delivery Fee API response: $responseData');
 
-      if (responseData['data'] != null && responseData['data']['price'] != null) {
+      if (responseData['data'] != null &&
+          responseData['data']['price'] != null) {
         return (responseData['data']['price'] as num).toDouble();
       } else {
         throw Exception("Delivery fee not found in the response.");
@@ -211,8 +217,11 @@ class StoreService {
       rethrow;
     }
   }
-  Future<DeliveryModel> createStoreOrder(CreateStoreOrderPayload orderPayload) async {
-    logger.i('Attempting to create store order with payload: ${orderPayload.toJson()}');
+
+  Future<DeliveryModel> createStoreOrder(
+      CreateStoreOrderPayload orderPayload) async {
+    logger.i(
+        'Attempting to create store order with payload: ${orderPayload.toJson()}');
     try {
       final responseData = await _networkClient.post(
         ApiRoute.storeOrders, // Use the new API route constant
@@ -221,24 +230,29 @@ class StoreService {
 
       logger.i('Store order creation response: $responseData');
 
-      if (responseData['success'] == true) { // Assuming your API returns { "status": true, ... } on success
+      if (responseData['success'] == true) {
+        // Assuming your API returns { "status": true, ... } on success
         logger.i('Store order created successfully.');
-        final delivery= DeliveryModel.fromJson(responseData['data']);
-      return delivery; 
-         } else {
-        final String errorMessage = responseData['message'] ?? 'Unknown error creating order.';
-        logger.e('Failed to create store order: $errorMessage. Response: $responseData');
+        final delivery = DeliveryModel.fromJson(responseData['data']);
+        return delivery;
+      } else {
+        final String errorMessage =
+            responseData['message'] ?? 'Unknown error creating order.';
+        logger.e(
+            'Failed to create store order: $errorMessage. Response: $responseData');
         throw Exception(errorMessage);
       }
     } on DioException catch (e) {
-      logger.e('DioException creating store order: ${e.response?.data ?? e.message}');
-      throw Exception('Network error or API error creating order: ${e.response?.data?['message'] ?? e.message}');
+      logger.e(
+          'DioException creating store order: ${e.response?.data ?? e.message}');
+      throw Exception(
+          'Network error or API error creating order: ${e.response?.data?['message'] ?? e.message}');
     } catch (e, st) {
       logger.e('Error creating store order: $e\n$st');
-      throw Exception('An unexpected error occurred while creating order: ${e.toString()}');
+      throw Exception(
+          'An unexpected error occurred while creating order: ${e.toString()}');
     }
   }
-
 }
 
 // Riverpod provider for StoreService remains the same

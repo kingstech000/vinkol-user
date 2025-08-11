@@ -1,8 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
+import 'package:starter_codes/features/profile/view_model/personal_info_view_model.dart';
 import 'package:starter_codes/features/store/data/store_service.dart';
 import 'package:starter_codes/features/store/model/store_payment_argument_model.dart';
 import 'package:starter_codes/features/store/model/store_request_model.dart';
@@ -282,6 +285,7 @@ class _StorePaymentScreenState extends ConsumerState<StorePaymentScreen> {
 
   Future<void> _createStoreOrder() async {
     final storeService = ref.read(storeServiceProvider);
+    final initialPersonalInfo = ref.read(personalInfoViewModelProvider);
 
     final productPayloads = widget.arguments.cartItems.map((item) {
       return ProductOrderPayload(
@@ -295,7 +299,7 @@ class _StorePaymentScreenState extends ConsumerState<StorePaymentScreen> {
 
     final orderPayload = CreateStoreOrderPayload(
       paystackReference: _paymentReference, // Use the same reference
-      state: 'pending',
+      state: initialPersonalInfo.address,
       store: widget.arguments.storeId,
       products: productPayloads,
       amount: totalProductAmount,
@@ -306,6 +310,7 @@ class _StorePaymentScreenState extends ConsumerState<StorePaymentScreen> {
     );
 
     try {
+      log("Your current State is ${initialPersonalInfo.address}");
       final orderResponse = await storeService.createStoreOrder(orderPayload);
       ref.read(appLoggerProvider).i(
           '[StorePaymentScreen] Store order successfully created in backend.');
