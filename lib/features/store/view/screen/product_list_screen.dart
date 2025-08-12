@@ -8,8 +8,6 @@ import 'package:starter_codes/features/store/view/widget/product_card.dart';
 import 'package:starter_codes/features/store/view_model/product_list_view_model.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
-import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/empty_content.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 
@@ -55,129 +53,544 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
 
     if (store == null) {
       return Scaffold(
+        backgroundColor: Colors.grey[50],
         appBar: MiniAppBar(),
-        body: const Center(
-            child:
-                Text('No store selected. Please go back and select a store.')),
+        body: _buildNoStoreSelected(),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: MiniAppBar(
-        title: store.name,
-      ),
-      body: Stack(
-        children: [
-          productListAsyncValue.when(
-            data: (productListState) {
-              final products = productListState.products;
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _buildStoreHeader(store),
+                Expanded(
+                  child: productListAsyncValue.when(
+                    data: (productListState) {
+                      final products = productListState.products;
 
-              if (products.isEmpty && !productListState.isLoadingMore) {
-                return RefreshIndicator(
-                  color: AppColors.primary,
-                  onRefresh: () => ref
-                      .read(productListViewModelProvider.notifier)
-                      .refreshProducts(),
-                  child: const SingleChildScrollView(
-                    physics: AlwaysScrollableScrollPhysics(),
-                    child: SizedBox(
-                        height: 200,
-                        child: const Center(
-                          child: EmptyContent(
-                            contentText:
-                                'No Product Available in this store yet.',
-                            icon: Icons.production_quantity_limits,
+                      if (products.isEmpty && !productListState.isLoadingMore) {
+                        return RefreshIndicator(
+                          color: AppColors.primary,
+                          onRefresh: () => ref
+                              .read(productListViewModelProvider.notifier)
+                              .refreshProducts(),
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Container(
+                              height: MediaQuery.of(context).size.height * 0.6,
+                              child: _buildEmptyState(),
+                            ),
                           ),
-                        )),
-                  ),
-                );
-              }
+                        );
+                      }
 
-              return RefreshIndicator(
-                color: AppColors.primary,
-                onRefresh: () => ref
-                    .read(productListViewModelProvider.notifier)
-                    .refreshProducts(),
-                child: GridView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10.0,
-                    mainAxisSpacing: 10.0,
-                    // *** KEY CHANGE HERE ***
-                    // Adjust this value to make cards taller relative to their width.
-                    // A smaller value means taller cards.
-                    childAspectRatio:
-                        0.6, // Or even 0.55 if content is still overflowing
-                  ),
-                  itemCount: products.length +
-                      (productListState.isLoadingMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == products.length) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16.0),
-                          child: CircularProgressIndicator(
-                              color: AppColors.primary),
+                      return RefreshIndicator(
+                        color: AppColors.primary,
+                        onRefresh: () => ref
+                            .read(productListViewModelProvider.notifier)
+                            .refreshProducts(),
+                        child: Column(
+                          children: [
+                            // Products Header
+                            _buildProductsHeader(products.length),
+
+                            // Products Grid
+                            Expanded(
+                              child: GridView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.all(16.0),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 12.0,
+                                  mainAxisSpacing: 12.0,
+                                  childAspectRatio: 0.65,
+                                ),
+                                itemCount: products.length +
+                                    (productListState.isLoadingMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index == products.length) {
+                                    return _buildLoadMoreIndicator();
+                                  }
+                                  final product = products[index];
+                                  return ProductCard(
+                                    product: product,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       );
-                    }
-                    final product = products[index];
-                    return ProductCard(
-                      product: product,
-                    );
-                  },
+                    },
+                    loading: () => _buildLoadingState(),
+                    error: (error, stack) => _buildErrorState(error),
+                  ),
                 ),
-              );
-            },
-            loading: () => const Center(
-              child: DotSpinningIndicator(color: AppColors.primary),
+              ],
             ),
-            error: (error, stack) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(error.toString()),
-                    Gap.h16,
-                    ElevatedButton(
-                      onPressed: () {
-                        ref
-                            .read(productListViewModelProvider.notifier)
-                            .refreshProducts();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            },
+
+            Positioned(
+              bottom: 20,
+              left: 16,
+              right: 16,
+              child: _buildFloatingCartButton(totalItemsInCart),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoStoreSelected() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.orange[50],
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.orange[100]!,
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              Icons.store_outlined,
+              color: Colors.orange[400],
+              size: 40,
+            ),
           ),
-          Positioned(
-            bottom: 16,
-            left: 16,
-            right: 16,
-            child: _buildAddedToCartButton(totalItemsInCart),
+          Gap.h20,
+          Text(
+            'No Store Selected',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
+          Gap.h8,
+          Text(
+            'Please go back and select a store to\nview available products',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Gap.h24,
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: const Icon(Icons.arrow_back, size: 18),
+            label: const Text('Go Back'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAddedToCartButton(int totalItemsInCart) {
+  Widget _buildStoreHeader(Store store) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          InkWell(
+            splashColor: Colors.white,
+            highlightColor: Colors.white,
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: const Icon(
+              Icons.arrow_back,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          Gap.w16,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  store.name ?? "",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Gap.h4,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Available for delivery',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.green[500],
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Gap.w6,
+                Text(
+                  'Open',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.green[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductsHeader(int productCount) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '$productCount product${productCount != 1 ? 's' : ''} available',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Container(
+      color: Colors.grey[50],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const DotSpinningIndicator(color: AppColors.primary),
+            Gap.h16,
+            const Text(
+              'Loading products...',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.inventory_2_outlined,
+              color: Colors.grey[400],
+              size: 40,
+            ),
+          ),
+          Gap.h20,
+          Text(
+            'No Products Available',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          Gap.h8,
+          Text(
+            'This store doesn\'t have any products\navailable at the moment',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Gap.h24,
+          TextButton.icon(
+            onPressed: () {
+              ref.read(productListViewModelProvider.notifier).refreshProducts();
+            },
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('Refresh'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(dynamic error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Error Icon
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.red[50],
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.red[100]!,
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              Icons.wifi_off,
+              color: Colors.red[400],
+              size: 40,
+            ),
+          ),
+
+          Gap.h20,
+
+          // Error Title
+          Text(
+            'Failed to Load Products',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          Gap.h8,
+
+          // Error Description
+          Text(
+            'Unable to fetch products from the store.\nPlease check your connection and try again.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          Gap.h24,
+
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                ref
+                    .read(productListViewModelProvider.notifier)
+                    .refreshProducts();
+              },
+              icon: const Icon(
+                Icons.refresh,
+                size: 18,
+                color: Colors.white,
+              ),
+              label: const Text(
+                'Try Again',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreIndicator() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 2,
+              ),
+            ),
+            Gap.h8,
+            const Text(
+              'Loading...',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingCartButton(int totalItemsInCart) {
     if (totalItemsInCart == 0) {
       return const SizedBox.shrink();
     }
 
-    return AppButton(
-      title: '($totalItemsInCart) Added to Cart',
-      color: AppColors.black,
-      textColor: AppColors.white,
-      onTap: () {
-        NavigationService.instance.navigateTo(NavigatorRoutes.cartScreen);
-      },
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.black87,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            NavigationService.instance.navigateTo(NavigatorRoutes.cartScreen);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.shopping_cart,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                Gap.w12,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$totalItemsInCart item${totalItemsInCart != 1 ? 's' : ''} in cart',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Tap to view cart',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

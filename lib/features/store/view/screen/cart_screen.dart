@@ -162,6 +162,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       MaterialPageRoute(
         builder: (context) => StorePaymentScreen(
           arguments: StorePaymentArguments(
+            state: "",
             storeId: storeId,
             storeName: storeName,
             cartItems: cartItemsForPayment, // Pass the mapped list
