@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/payment/data/paystack_service.dart'; // Corrected path if needed
 import 'package:starter_codes/features/payment/model/payment_detail_model.dart';
 import 'package:starter_codes/provider/user_provider.dart';
@@ -231,9 +232,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Proceed to Payment'),
+        title: AppText.h4(
+          'Proceed to Payment',
+          color: AppColors.white,
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        leading: const Icon(Icons.chevron_left, color: Colors.white),
+        automaticallyImplyLeading: false,
       ),
       body: Stack(
         children: [
