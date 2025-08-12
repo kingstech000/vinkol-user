@@ -52,14 +52,14 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
 
     try {
       final locationController = ref.read(locationControllerProvider);
-      final results =
-          await locationController.searchPlaces(input, );
+      final results = await locationController.searchPlaces(
+        input,
+      );
 
       setState(() {
         _predictions = results;
       });
     } catch (e) {
-     
       setState(() {
         _predictions = [];
       });
@@ -87,10 +87,10 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
       } else {
         notifier.setDropOffLocation(detailedLocation);
       }
-      
-      Navigator.of(context).pop( detailedLocation);  // Go back to the previous screen
+
+      Navigator.of(context)
+          .pop(detailedLocation); // Go back to the previous screen
     } catch (e) {
-   
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to get location details: $e')),
       );
@@ -116,7 +116,8 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                 hintText: widget.isPickupLocation
                     ? 'Search Pick-up Location'
                     : 'Search Drop-off Location',
-                prefixIcon: const Icon(Icons.location_pin, color: AppColors.lightgrey),
+                prefixIcon:
+                    const Icon(Icons.location_pin, color: AppColors.lightgrey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
@@ -138,40 +139,48 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
             const SizedBox.shrink(), // No indicator if not loading
 
           Expanded(
-            child: _predictions.isEmpty && !_isLoading && _searchController.text.isNotEmpty
+            child: _predictions.isEmpty &&
+                    !_isLoading &&
+                    _searchController.text.isNotEmpty
                 ? Center(
                     child: AppText.body(
                       'No results found. Try a different search.',
                       color: Colors.grey,
                     ),
                   )
-                : _predictions.isEmpty && !_isLoading && _searchController.text.isEmpty
-                  ? Center(
-                      child: AppText.body(
-                        'Start typing to search for locations.',
-                        color: Colors.grey,
-                      ),
-                    )
-                  : ListView.builder(
-                    itemCount: _predictions.length,
-                    itemBuilder: (context, index) {
-                      final prediction = _predictions[index];
-                      return ListTile(
-                        leading: const Icon(Icons.location_on, color: AppColors.primary), // Consistent icon color
-                        title: AppText.button(
-                          prediction['description'] ?? 'No description',fontSize: 14,
+                : _predictions.isEmpty &&
+                        !_isLoading &&
+                        _searchController.text.isEmpty
+                    ? Center(
+                        child: AppText.body(
+                          'Start typing to search for locations.',
+                          color: Colors.grey,
                         ),
-                        // subtitle: AppText.caption(
-                        //   prediction['structured_formatting']?['secondary_text'] ?? '',
-                        // ),
-                        onTap: () {
-                          if (prediction['place_id'] != null) {
-                            _getPlaceDetailsAndSetLocation(prediction);
-                          }
+                      )
+                    : ListView.builder(
+                        itemCount: _predictions.length,
+                        itemBuilder: (context, index) {
+                          final prediction = _predictions[index];
+                          return ListTile(
+                            leading: const Icon(Icons.location_on,
+                                color:
+                                    AppColors.primary), // Consistent icon color
+                            title: AppText.button(
+                              prediction['description'] ?? 'No description',
+                              fontSize: 14,
+                            ),
+                            // subtitle: AppText.caption(
+                            //   prediction['structured_formatting']?['secondary_text'] ?? '',
+                            // ),
+                            onTap: () {
+                              if (prediction['place_id'] != null) {
+                                FocusScope.of(context).unfocus();
+                                _getPlaceDetailsAndSetLocation(prediction);
+                              }
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
           ),
         ],
       ),
