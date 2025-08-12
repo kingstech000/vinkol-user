@@ -48,14 +48,18 @@ class LoginViewModel extends BaseViewModel {
         password: _password,
       );
 
+      _authService.sendFcmTokenToBackend();
+
       logger.i('Login successful!');
+
       await _authService.getUserProfile();
 
       clearFields();
 
       changeState(const ViewModelState.idle());
 
-      NavigationService.instance.navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+      NavigationService.instance
+          .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
     } on Failure catch (e) {
       logger.e('Login failed: ${e.message}');
       changeState(ViewModelState.error(e));

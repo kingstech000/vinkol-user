@@ -25,120 +25,193 @@ class ProductCard extends ConsumerWidget {
 
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
-      elevation: 2,
+      elevation: 3,
+      shadowColor: Colors.black.withOpacity(0.1),
       color: AppColors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            flex: 5, // Keep this flex for image for good proportion
+            flex: 6,
             child: ClipRRect(
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: CachedNetworkImage(
                 imageUrl: product.image.imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(AppColors.primary),
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[50],
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      strokeWidth: 2,
+                    ),
                   ),
                 ),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[100],
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey,
+                    size: 32,
+                  ),
+                ),
               ),
             ),
           ),
-          Flexible(
-            // Changed from Expanded to Flexible
-            flex: 4, // Keep the flex proportion
+
+          Expanded(
+            flex: 4,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment:
-                    MainAxisAlignment.end, // Align contents to the bottom
                 children: [
-                  AppText.free(
-                    product.title,
-
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10, // Slightly reduced font size for title
-                    color: Colors.black,
-
-                    // overflow: TextOverflow.ellipsis,
+                  Expanded(
+                    flex: 2,
+                    child: AppText.free(
+                      product.title,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      color: Colors.black87,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  Gap.h8,
-                  Align(
-                    alignment: Alignment.centerLeft,
+
+                  const SizedBox(height: 4),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Text(
                       product.price.toString().toMoney(),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 13, // Slightly reduced font size for price
+                        fontSize: 13,
                         color: AppColors.primary,
                       ),
                     ),
                   ),
-                  Gap.h8,
-                  if (currentQuantity == 0) ...[
-                    SizedBox(
-                      height: 40.h,
-                      width: double.infinity,
-                      child: AppButton.primary(
-                        onTap: () {
-                          ref.read(cartProvider.notifier).addProduct(product);
-                        },
-                        title: 'Add To Cart',
-                      ),
-                    ),
-                  ] else
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            ref
-                                .read(cartProvider.notifier)
-                                .removeProduct(product);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.remove,
-                                color: Colors.white, size: 18),
-                          ),
-                        ),
-                        Text(
-                          currentQuantity.toString(),
-                          style: const TextStyle(
-                            fontSize:
-                                15, // Slightly reduced font size for quantity
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.black,
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            ref.read(cartProvider.notifier).addProduct(product);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.add,
-                                color: Colors.white, size: 18),
-                          ),
-                        ),
-                      ],
-                    ),
+
+                  const SizedBox(height: 8),
+
+                  SizedBox(
+                    height: 32,
+                    child: currentQuantity == 0
+                        ? AppButton.primary(
+                            onTap: () {
+                              ref
+                                  .read(cartProvider.notifier)
+                                  .addProduct(product);
+                            },
+                            title: 'Add To Cart',
+                          )
+                        : _buildQuantityControls(ref, currentQuantity),
+                  ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuantityControls(WidgetRef ref, int currentQuantity) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          // Decrease Button
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                ref.read(cartProvider.notifier).removeProduct(product);
+              },
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                bottomLeft: Radius.circular(8),
+              ),
+              child: Container(
+                height: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    bottomLeft: Radius.circular(8),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.remove,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
+              ),
+            ),
+          ),
+
+          // Quantity Display
+          Container(
+            width: 1,
+            color: Colors.grey[300],
+          ),
+          Expanded(
+            child: Container(
+              color: Colors.grey[50],
+              child: Center(
+                child: Text(
+                  currentQuantity.toString(),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width: 1,
+            color: Colors.grey[300],
+          ),
+
+          // Increase Button
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                ref.read(cartProvider.notifier).addProduct(product);
+              },
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+              child: Container(
+                height: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(8),
+                    bottomRight: Radius.circular(8),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.add,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
               ),
             ),
           ),

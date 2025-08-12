@@ -1,0 +1,2 @@
+C:/Users/HP/Desktop/vinkol app/vinkol-user/android/app/.cxx/Debug/1d234445/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/HP/Desktop/vinkol app/vinkol-user/android/app/.cxx/Debug/1d234445/arm64-v8a/CMakeFiles/rebuild_cache.dir
