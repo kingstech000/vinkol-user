@@ -268,6 +268,7 @@ class DeliveryModel extends Equatable {
   final double? totalAmount;
   final String? description;
   final String? note;
+  final String? createdAt;
   final AgentModel? deliveryAgent;
   final String? vehicleRequest;
   final String? vehicleType;
@@ -297,6 +298,7 @@ class DeliveryModel extends Equatable {
     this.vehicleType,
     this.date,
     this.time,
+    this.createdAt,
     this.description,
     this.note,
   });
@@ -377,6 +379,7 @@ class DeliveryModel extends Equatable {
         description: json['description'] as String?,
         time: json['time'],
         date: json['date'],
+        createdAt: json['createdAt'],
         note: json['note'] as String?);
   }
 
