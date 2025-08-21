@@ -47,15 +47,10 @@ class LoginViewModel extends BaseViewModel {
         email: _email,
         password: _password,
       );
-
       _authService.sendFcmTokenToBackend();
-
       logger.i('Login successful!');
-
       await _authService.getUserProfile();
-
       clearFields();
-
       changeState(const ViewModelState.idle());
 
       NavigationService.instance
