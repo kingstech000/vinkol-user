@@ -35,11 +35,9 @@ class StoreService {
       final Map<String, dynamic> queryParameters = {
         'page': page,
         'limit': limit,
+        'state': state
       };
 
-      if (state != null && state.isNotEmpty) {
-        queryParameters['state'] = state;
-      }
       if (search != null && search.isNotEmpty) {
         queryParameters['search'] = search;
       }

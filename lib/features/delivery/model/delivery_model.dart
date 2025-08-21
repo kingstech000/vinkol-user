@@ -27,7 +27,8 @@ class UserOrderModel extends Equatable {
       firstname: json['firstname'] as String?,
       lastname: json['lastname'] as String?,
       phone: json['phone'] as String?,
-      imageUrl: (json['avatar'] as Map<String, dynamic>?)?['imageUrl'] as String?,
+      imageUrl:
+          (json['avatar'] as Map<String, dynamic>?)?['imageUrl'] as String?,
     );
   }
 
@@ -61,12 +62,15 @@ class UserOrderModel extends Equatable {
 }
 
 class ProductModel extends Equatable {
-  final String? id; // This is the _id from the product entry in the order array itself
-  final String? productId; // This will hold the product ID (e.g., "68657e7da820a66130210f96")
+  final String?
+      id; // This is the _id from the product entry in the order array itself
+  final String?
+      productId; // This will hold the product ID (e.g., "68657e7da820a66130210f96")
   final String? title; // Product title, available when 'product' is populated
   final int? quantity;
   final double? price; // Price per unit, available when 'product' is populated
-  final String? imageUrl; // Product image URL, available when 'product' is populated
+  final String?
+      imageUrl; // Product image URL, available when 'product' is populated
 
   const ProductModel({
     this.id,
@@ -98,7 +102,8 @@ class ProductModel extends Equatable {
           currentPrice = double.tryParse(productData['price'] as String);
         }
       }
-      currentImageUrl = (productData['image'] as Map<String, dynamic>?)?['imageUrl'] as String?;
+      currentImageUrl = (productData['image']
+          as Map<String, dynamic>?)?['imageUrl'] as String?;
     }
 
     // --- POTENTIAL FIX FOR PRODUCT QUANTITY ---
@@ -110,7 +115,6 @@ class ProductModel extends Equatable {
         parsedQuantity = int.tryParse(json['quantity'] as String);
       }
     }
-
 
     return ProductModel(
       id: json['_id'] as String?,
@@ -160,8 +164,9 @@ class StoreModel extends Equatable {
       name: json['name'] as String?,
       phone: json['phone'] as String?,
       state: json['state'] as String?,
-      address:json['address'] as String?,
-      imageUrl: (json['avatar'] as Map<String, dynamic>?)?['imageUrl'] as String?,
+      address: json['address'] as String?,
+      imageUrl:
+          (json['avatar'] as Map<String, dynamic>?)?['imageUrl'] as String?,
     );
   }
 
@@ -172,7 +177,7 @@ class StoreModel extends Equatable {
       'name': name,
       'phone': phone,
       'state': state,
-      'address':address,
+      'address': address,
       'avatar': {
         'imageUrl': imageUrl,
       },
@@ -207,7 +212,8 @@ class AgentModel extends Equatable {
       firstname: json['firstname'] as String?,
       lastname: json['lastname'] as String?,
       phone: json['phone'] as String?,
-      imageUrl: (json['avatar'] as Map<String, dynamic>?)?['imageUrl'] as String?,
+      imageUrl:
+          (json['avatar'] as Map<String, dynamic>?)?['imageUrl'] as String?,
     );
   }
 
@@ -260,13 +266,14 @@ class DeliveryModel extends Equatable {
   final int? orderOtp;
   final String? trackingId;
   final double? totalAmount;
-
+  final String? description;
+  final String? note;
+  final String? createdAt;
   final AgentModel? deliveryAgent;
   final String? vehicleRequest;
   final String? vehicleType;
   final String? date;
   final String? time;
-
 
   const DeliveryModel({
     this.id,
@@ -291,6 +298,9 @@ class DeliveryModel extends Equatable {
     this.vehicleType,
     this.date,
     this.time,
+    this.createdAt,
+    this.description,
+    this.note,
   });
 
   factory DeliveryModel.fromJson(Map<String, dynamic> json) {
@@ -339,35 +349,38 @@ class DeliveryModel extends Equatable {
       }
     }
 
-
     return DeliveryModel(
-      id: json['_id'] as String?,
-      user: json['user'] is Map<String, dynamic>
-          ? UserOrderModel.fromJson(json['user'] as Map<String, dynamic>)
-          : null,
-      pickupLocation: json['pickupLocation'] as String?,
-      dropoffLocation: json['dropoffLocation'] as String?,
-      state: json['state'] as String?,
-      status: json['status'] as String?,
-      deliveryType: json['deliveryType'] as String?,
-      orderType: json['orderType'] as String?,
-      amount: parsedAmount, // Use the parsed amount
-      deliveryFee: parsedDeliveryFee, // Use the parsed deliveryFee
-      paystackReference: json['paystackReference'] as String?,
-      paymentStatus: json['paymentStatus'] as String?,
-      products: (json['products'] as List<dynamic>?)
-          ?.map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      store: json['store'] is Map<String, dynamic>
-          ? StoreModel.fromJson(json['store'] as Map<String, dynamic>)
-          : null,
-      orderOtp: parsedOrderOtp, // Use the parsed orderOtp
-      trackingId: json['trackingId'] as String?,
-      totalAmount: parsedTotalAmount, // Use the parsed totalAmount
-      deliveryAgent: agent,
-      vehicleRequest: json['vehicleRequest'] as String?,
-      vehicleType: json['vehicleType'] as String?,
-    );
+        id: json['_id'] as String?,
+        user: json['user'] is Map<String, dynamic>
+            ? UserOrderModel.fromJson(json['user'] as Map<String, dynamic>)
+            : null,
+        pickupLocation: json['pickupLocation'] as String?,
+        dropoffLocation: json['dropoffLocation'] as String?,
+        state: json['state'] as String?,
+        status: json['status'] as String?,
+        deliveryType: json['deliveryType'] as String?,
+        orderType: json['orderType'] as String?,
+        amount: parsedAmount, // Use the parsed amount
+        deliveryFee: parsedDeliveryFee, // Use the parsed deliveryFee
+        paystackReference: json['paystackReference'] as String?,
+        paymentStatus: json['paymentStatus'] as String?,
+        products: (json['products'] as List<dynamic>?)
+            ?.map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        store: json['store'] is Map<String, dynamic>
+            ? StoreModel.fromJson(json['store'] as Map<String, dynamic>)
+            : null,
+        orderOtp: parsedOrderOtp, // Use the parsed orderOtp
+        trackingId: json['trackingId'] as String?,
+        totalAmount: parsedTotalAmount, // Use the parsed totalAmount
+        deliveryAgent: agent,
+        vehicleRequest: json['vehicleRequest'] as String?,
+        vehicleType: json['vehicleType'] as String?,
+        description: json['description'] as String?,
+        time: json['time'],
+        date: json['date'],
+        createdAt: json['createdAt'],
+        note: json['note'] as String?);
   }
 
   Map<String, dynamic> toJson() {
@@ -402,17 +415,36 @@ class DeliveryModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, user, pickupLocation, dropoffLocation, state, status, deliveryType,
-        orderType, amount, deliveryFee, paystackReference, paymentStatus,
-        products, store, orderOtp, trackingId, totalAmount,
-        deliveryAgent, vehicleRequest, vehicleType, date, time,
+        id,
+        user,
+        pickupLocation,
+        dropoffLocation,
+        state,
+        status,
+        deliveryType,
+        orderType,
+        amount,
+        deliveryFee,
+        paystackReference,
+        paymentStatus,
+        products,
+        store,
+        orderOtp,
+        trackingId,
+        totalAmount,
+        deliveryAgent,
+        vehicleRequest,
+        vehicleType,
+        date,
+        time,
       ];
 
   int get totalItemsOrdered {
     if (products == null || products!.isEmpty) {
       return 0;
     }
-    return products!.fold<int>(0, (sum, product) => sum + (product.quantity ?? 0));
+    return products!
+        .fold<int>(0, (sum, product) => sum + (product.quantity ?? 0));
   }
 
   DeliveryModel copyWith({

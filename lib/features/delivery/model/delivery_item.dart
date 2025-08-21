@@ -45,11 +45,13 @@ class DeliveryItem {
     }
 
     // Use totalAmount for the display amount
-    final formattedAmount = '${delivery.totalAmount?.toMoney() }';
+    final formattedAmount = '${delivery.totalAmount?.toMoney()}';
 
     // Determine address based on orderType or deliveryType
     String displayAddress;
-    if (delivery.orderType?.toLowerCase() == 'delivery' || delivery.deliveryType == 'regular' || delivery.deliveryType == 'express') {
+    if (delivery.orderType?.toLowerCase() == 'delivery' ||
+        delivery.deliveryType == 'regular' ||
+        delivery.deliveryType == 'express') {
       displayAddress = delivery.dropoffLocation ?? 'No Dropoff Location';
     } else if (delivery.orderType?.toLowerCase() == 'storedelivery') {
       displayAddress = delivery.pickupLocation ?? 'No Pickup Location';
@@ -60,7 +62,7 @@ class DeliveryItem {
     // Determine customer name/type based on orderType
     String displayCustomerName;
     if (delivery.orderType?.toLowerCase() == 'delivery') {
-      displayCustomerName =  delivery.orderType.toString();
+      displayCustomerName = delivery.orderType.toString();
     } else if (delivery.orderType?.toLowerCase() == 'shopping') {
       // For store delivery, you might want to show the store name if available in the model
       // For now, it's generic 'Store Order'
@@ -68,7 +70,6 @@ class DeliveryItem {
     } else {
       displayCustomerName = 'Order Type N/A';
     }
-
 
     // Combine 'date' and 'time' for timestamp
     String formattedTimestamp = '';
@@ -78,22 +79,19 @@ class DeliveryItem {
         // Assuming date is "D-M-YYYY" and time is "HH:MM"
         // Adjust parsing if your format is different (e.g., "YYYY-MM-DD")
         final String dateTimeString = '${delivery.date} ${delivery.time}';
-        final DateFormat inputFormat = DateFormat("d-M-yyyy HH:mm"); // Adjust to match your format
-        final DateTime parsedDateTime = inputFormat.parse(dateTimeString);
-
+        formattedTimestamp = dateTimeString;
         // Format for display
-        formattedTimestamp =dateTimeString;// DateFormat('dd-MM-yyyy hh:mm a').format(parsedDateTime);
+        // DateFormat('dd-MM-yyyy hh:mm a').format(parsedDateTime);
       } catch (e) {
         debugPrint('Error parsing date/time: $e');
         formattedTimestamp = 'Invalid Date/Time';
       }
     }
 
-
     return DeliveryItem(
       orderId: delivery.id ?? UniqueKey().toString(),
       customerName: displayCustomerName,
-      status: delivery.status ?? 'Unknown Status',
+      status: delivery.status ?? '-',
       amount: formattedAmount,
       address: displayAddress,
       timestamp: formattedTimestamp,
