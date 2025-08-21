@@ -95,6 +95,7 @@ class NotificationService {
       channelDescription: 'This channel is used for important notifications.',
       importance: Importance.max,
       priority: Priority.high,
+      largeIcon: const DrawableResourceAndroidBitmap('logo'),
       sound: sound != null ? RawResourceAndroidNotificationSound(sound) : null,
     );
 

@@ -7,8 +7,10 @@ import 'package:starter_codes/features/delivery/view/widget/custom_tab_bar.dart'
 import 'package:starter_codes/features/delivery/view/widget/delivery_list_view.dart';
 import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_view_model.dart';
+import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/empty_content.dart';
+import 'package:starter_codes/widgets/gap.dart';
 
 class DeliveryScreen extends ConsumerStatefulWidget {
   const DeliveryScreen({super.key});
@@ -27,15 +29,12 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
     _tabController = TabController(length: 2, vsync: this);
 
     // Initial fetch for the first tab (Package Deliveries)
-    // We don't force refresh here, allowing stale data if not needed.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(deliveryViewModelProvider).fetchPackageDeliveries();
     });
 
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        // Fetch data for the newly selected tab, respecting stale time.
-        // The ViewModel will decide if a network call is necessary.
         if (_tabController.index == 0) {
           ref.read(deliveryViewModelProvider).fetchPackageDeliveries();
         } else {
@@ -57,18 +56,58 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
     await ref.read(deliveryViewModelProvider).refreshOrders(tabType);
   }
 
+  Widget _buildErrorWidget(String? errorMessage, VoidCallback onRetry) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Add the icon here
+            const Icon(
+              Icons.error_outline, // You can choose any icon here
+              color: AppColors.greyLight,
+              size: 50,
+            ),
+            const SizedBox(height: 16), // Add some spacing below the icon
+            const Text(
+              'Failed to load deliveries. Please try again.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black54, fontSize: 16),
+            ),
+            Gap.h4,
+            AppButton.primary(title: 'Try Again', onTap: onRetry),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // A helper function to handle retries for each tab
+  void _onRetry(OrderTabType tabType) {
+    if (tabType == OrderTabType.packageDelivery) {
+      ref.read(deliveryViewModelProvider).fetchPackageDeliveries();
+    } else {
+      ref.read(deliveryViewModelProvider).fetchStoreDeliveries();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final deliveryViewModel = ref.watch(deliveryViewModelProvider);
 
-    final List<DeliveryModel> rawPackageDeliveries = deliveryViewModel.packageDeliveries;
-    final List<DeliveryModel> rawStoreDeliveries = deliveryViewModel.storeDeliveries;
+    final List<DeliveryModel> rawPackageDeliveries =
+        deliveryViewModel.packageDeliveries;
+    final List<DeliveryModel> rawStoreDeliveries =
+        deliveryViewModel.storeDeliveries;
 
-    final List<DeliveryItem> displayPackageDeliveries =
-        rawPackageDeliveries.map((delivery) => DeliveryItem.fromDeliveryModel(delivery)).toList();
+    final List<DeliveryItem> displayPackageDeliveries = rawPackageDeliveries
+        .map((delivery) => DeliveryItem.fromDeliveryModel(delivery))
+        .toList();
 
-    final List<DeliveryItem> displayStoreDeliveries =
-        rawStoreDeliveries.map((delivery) => DeliveryItem.fromDeliveryModel(delivery)).toList();
+    final List<DeliveryItem> displayStoreDeliveries = rawStoreDeliveries
+        .map((delivery) => DeliveryItem.fromDeliveryModel(delivery))
+        .toList();
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -81,20 +120,23 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
               controller: _tabController,
               children: [
                 // Package Deliveries Tab Content
-                RefreshIndicator( color: AppColors.primary,     // --- Added RefreshIndicator ---
+                RefreshIndicator(
+                  color: AppColors.primary,
                   onRefresh: () => _onRefresh(OrderTabType.packageDelivery),
-                  child: deliveryViewModel.isLoadingPackageDeliveries && displayPackageDeliveries.isEmpty // Show loading only if list is empty or first load
+                  child: deliveryViewModel.isLoadingPackageDeliveries &&
+                          displayPackageDeliveries.isEmpty
                       ? const Center(child: DotSpinningIndicator())
                       : deliveryViewModel.packageDeliveryError != null
-                          ? Center(
-                              child: Text(
-                                deliveryViewModel.packageDeliveryError!,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.red),
-                              ),
+                          ? _buildErrorWidget(
+                              deliveryViewModel.packageDeliveryError,
+                              () => _onRetry(OrderTabType.packageDelivery),
                             )
                           : displayPackageDeliveries.isEmpty
-                              ? const Center(child: EmptyContent(contentText: 'No package deliveries found.',icon: Icons.delivery_dining,))
+                              ? const Center(
+                                  child: EmptyContent(
+                                  contentText: 'No package deliveries found.',
+                                  icon: Icons.delivery_dining,
+                                ))
                               : DeliveryListView(
                                   deliveries: displayPackageDeliveries,
                                   originalDeliveries: rawPackageDeliveries,
@@ -102,19 +144,23 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                 ),
 
                 // Store Deliveries Tab Content
-                RefreshIndicator( color: AppColors.primary,                  onRefresh: () => _onRefresh(OrderTabType.storeDelivery),
-                  child: deliveryViewModel.isLoadingStoreDeliveries && displayStoreDeliveries.isEmpty // Show loading only if list is empty or first load
+                RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () => _onRefresh(OrderTabType.storeDelivery),
+                  child: deliveryViewModel.isLoadingStoreDeliveries &&
+                          displayStoreDeliveries.isEmpty
                       ? const Center(child: DotSpinningIndicator())
                       : deliveryViewModel.storeDeliveryError != null
-                          ? Center(
-                              child: Text(
-                                deliveryViewModel.storeDeliveryError!,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.red),
-                              ),
+                          ? _buildErrorWidget(
+                              deliveryViewModel.storeDeliveryError,
+                              () => _onRetry(OrderTabType.storeDelivery),
                             )
                           : displayStoreDeliveries.isEmpty
-                              ? const Center(child: EmptyContent(contentText: 'No store deliveries found.',icon: Icons.store,))
+                              ? const Center(
+                                  child: EmptyContent(
+                                  contentText: 'No store deliveries found.',
+                                  icon: Icons.store,
+                                ))
                               : DeliveryListView(
                                   deliveries: displayStoreDeliveries,
                                   originalDeliveries: rawStoreDeliveries,
