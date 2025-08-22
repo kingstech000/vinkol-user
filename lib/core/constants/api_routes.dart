@@ -1,7 +1,8 @@
 class ApiRoute {
   /// Base Url
   static const String baseUrl =
-      "https://vinkol-server-staging.vercel.app/api/v1"; //  'https://vinkol-server.onrender.com/api/v1';
+      "https://vinkol-server-staging.vercel.app/api/v1";
+  // "https://vinkol-web.vercel.app/api/v1"; //  'https://vinkol-server.onrender.com/api/v1';
 
   // Auth Url
   static const String login = "$baseUrl/users/login";

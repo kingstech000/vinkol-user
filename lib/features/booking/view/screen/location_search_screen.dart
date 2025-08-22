@@ -90,9 +90,6 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
 
       Navigator.of(context)
           .pop(detailedLocation); // Go back to the previous screen
-
-      Navigator.of(context)
-          .pop(detailedLocation); // Go back to the previous screen
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to get location details: $e')),
