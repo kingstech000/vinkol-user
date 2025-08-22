@@ -4,7 +4,8 @@ import 'package:starter_codes/core/extensions/string_extension.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
-import 'package:starter_codes/widgets/gap.dart'; 
+import 'package:starter_codes/widgets/gap.dart';
+
 class CartItemCard extends StatelessWidget {
   final StoreProduct product;
   final Function(int) onQuantityChanged;
@@ -47,7 +48,8 @@ class CartItemCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   placeholder: (context, url) => const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   ),
                   errorWidget: (context, url, error) => const Icon(Icons.error),
@@ -57,7 +59,8 @@ class CartItemCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, // Align children to the start (left)
+                crossAxisAlignment: CrossAxisAlignment
+                    .start, // Align children to the start (left)
                 children: [
                   Row(
                     // This row contains the product title on the left
@@ -75,23 +78,21 @@ class CartItemCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8), // Space between title and prices
+                      const SizedBox(
+                          width: 8), // Space between title and prices
                       Column(
                         // Prices column, aligned to the end (right)
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           AppText.caption(
                             '${product.price.toString().toMoney()}/pc', // Unit price
-                          
-                              color: Colors.grey[600],
-                            
+
+                            color: Colors.grey[600],
                           ),
                           AppText.button(
-                            '₦${totalPrice.toStringAsFixed(2)}', // Total price
-                           // Larger font size for total price
-                              color: AppColors.primary, // Blue color from image
-                            ),
-                          
+                            totalPrice.toString().toMoney(),
+                            color: AppColors.primary, // Blue color from image
+                          ),
                         ],
                       ),
                     ],
@@ -102,7 +103,8 @@ class CartItemCard extends StatelessWidget {
                     children: [
                       // Quantity selector container
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
                           borderRadius: BorderRadius.circular(5),
@@ -112,24 +114,30 @@ class CartItemCard extends StatelessWidget {
                             GestureDetector(
                               onTap: () {
                                 if ((product.quantity ?? 0) > 0) {
-                                  onQuantityChanged((product.quantity ?? 0) - 1);
+                                  onQuantityChanged(
+                                      (product.quantity ?? 0) - 1);
                                 } else {
                                   // Optional: If quantity goes to 0, completely remove the item
                                   onRemoveCompletely?.call(product);
                                 }
                               },
-                              child: const Icon(Icons.remove, size: 20, color: Colors.black),
+                              child: const Icon(Icons.remove,
+                                  size: 20, color: Colors.black),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Text(
                                 '${product.quantity ?? 0}',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                             ),
                             GestureDetector(
-                              onTap: () => onQuantityChanged((product.quantity ?? 0) + 1),
-                              child: const Icon(Icons.add, size: 20, color: Colors.black),
+                              onTap: () => onQuantityChanged(
+                                  (product.quantity ?? 0) + 1),
+                              child: const Icon(Icons.add,
+                                  size: 20, color: Colors.black),
                             ),
                           ],
                         ),
@@ -140,7 +148,8 @@ class CartItemCard extends StatelessWidget {
                         GestureDetector(
                           onTap: () => onRemoveCompletely!(product),
                           // Using a normal Icon and GestureDetector for consistent sizing with buttons
-                          child: const Icon(Icons.delete_outline, color: Colors.grey, size: 24),
+                          child: const Icon(Icons.delete_outline,
+                              color: Colors.grey, size: 24),
                         ),
                     ],
                   ),
