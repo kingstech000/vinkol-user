@@ -1,8 +1,8 @@
 class ApiRoute {
   /// Base Url
-  static const String baseUrl =
-      "https://vinkol-server-staging.vercel.app/api/v1";
-  // "https://vinkol-web.vercel.app/api/v1"; //  'https://vinkol-server.onrender.com/api/v1';
+  static const String baseUrl = "https://vinkol-server.onrender.com/api/v1";
+  // "https://vinkol-server-staging.vercel.app/api/v1";
+  // "https://vinkol-web.vercel.app/api/v1"; //
 
   // Auth Url
   static const String login = "$baseUrl/users/login";
@@ -42,12 +42,12 @@ class ApiRoute {
   static const String paystackVerifyPayment =
       '$paystackBaseUrl/transaction/verify';
 
-// DELIVERY
+  // DELIVERY
   static const String delivery = '$baseUrl/orders/user-orders';
   static const String singleDelivery = '$baseUrl/orders';
   static const String updateToken = '$baseUrl/users/fcm-token';
   static const String reauthenticateToken = '$baseUrl/users/refresh-token';
 
-// WALLET
+  // WALLET
   static const String wallet = '$baseUrl/users/payments';
 }
