@@ -39,16 +39,20 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
   void _onSearchChanged() async {
     final input = _searchController.text;
     if (input.isEmpty) {
-      setState(() {
-        _predictions = [];
-        _isLoading = false; // Ensure loading is off if input is empty
-      });
+      if (mounted) {
+        setState(() {
+          _predictions = [];
+          _isLoading = false; // Ensure loading is off if input is empty
+        });
+      }
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       final locationController = ref.read(locationControllerProvider);
@@ -56,25 +60,33 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
         input,
       );
 
-      setState(() {
-        _predictions = results;
-      });
+      if (mounted) {
+        setState(() {
+          _predictions = results;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _predictions = [];
-      });
+      if (mounted) {
+        setState(() {
+          _predictions = [];
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _getPlaceDetailsAndSetLocation(
       Map<String, dynamic> predictionMap) async {
-    setState(() {
-      _isLoading = true; // Show loading when fetching details
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true; // Show loading when fetching details
+      });
+    }
     try {
       final tempLocationModel = LocationModel.fromPredictionMap(predictionMap);
       final locationController = ref.read(locationControllerProvider);
@@ -88,16 +100,22 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
         notifier.setDropOffLocation(detailedLocation);
       }
 
-      Navigator.of(context)
-          .pop(detailedLocation); // Go back to the previous screen
+      if (mounted) {
+        Navigator.of(context)
+            .pop(detailedLocation); // Go back to the previous screen
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to get location details: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to get location details: $e')),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false; // Hide loading when done
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // Hide loading when done
+        });
+      }
     }
   }
 

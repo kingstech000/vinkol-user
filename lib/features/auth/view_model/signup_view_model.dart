@@ -10,10 +10,13 @@ import 'package:starter_codes/models/app_state/view_model_state.dart'; // Your V
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/text_action_modal.dart'; // Your text_action_modal
+import 'package:starter_codes/core/data/local/local_cache.dart';
+import 'package:starter_codes/core/utils/locator.dart';
 
 class SignUpViewModel extends BaseViewModel {
   final AuthService _authService;
   final Ref ref;
+  final LocalCache _localCache = locator<LocalCache>();
 
   SignUpViewModel(this._authService, this.ref);
 
@@ -28,12 +31,15 @@ class SignUpViewModel extends BaseViewModel {
     required BuildContext context,
   }) async {
     changeState(const ViewModelState.busy());
-       FocusScope.of(context).unfocus();
+    FocusScope.of(context).unfocus();
     try {
       await _authService.signup(
         email: email,
         password: password,
       );
+
+      // Clear guest mode when user successfully signs up
+      await _localCache.setGuestMode(false);
 
       changeState(const ViewModelState.idle());
       ref.watch(verifyEmailProvider.notifier).state = email;

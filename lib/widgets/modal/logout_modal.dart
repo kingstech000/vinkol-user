@@ -9,6 +9,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
+import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
 
@@ -16,8 +17,10 @@ class LogoutModal extends ConsumerWidget {
   const LogoutModal({super.key});
 
   @override
-  Widget build(BuildContext context,WidgetRef ref) {
-    final localCache =locator<LocalCache>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Use watch to react to user authentication state changes
+    final user = ref.watch(userProvider);
+    final localCache = locator<LocalCache>();
     return Container(
       // The Container is now the direct child of the ModalBottomSheet
       padding: EdgeInsets.all(24.w),
@@ -78,11 +81,14 @@ class LogoutModal extends ConsumerWidget {
               Expanded(
                 child: AppButton.primary(
                   title: 'Log Out',
-                  onTap: () {
-                    localCache.saveToken('');
-                    ref.watch(navigationIndexProvider.notifier).state=0;
-                    NavigationService.instance.navigateToReplaceAll(NavigatorRoutes.loginScreen); // Close the modal
-                    // Perform actual logout logic here (e.g., clear tokens, navigate to login)
+                  onTap: () async {
+                    // Clear guest mode and token
+                    await localCache.setGuestMode(false);
+                    await localCache.saveToken('');
+                    ref.watch(navigationIndexProvider.notifier).state = 0;
+                    NavigationService.instance.navigateToReplaceAll(
+                        NavigatorRoutes
+                            .authChoiceScreen); // Navigate to auth choice
                     print('User logged out!');
                   },
                 ),
