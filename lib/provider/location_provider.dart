@@ -7,11 +7,12 @@ import 'package:http/http.dart' as http;
 import 'package:starter_codes/models/location_model.dart'; // Ensure this path is correct
 
 import 'package:geolocator/geolocator.dart';
-import 'package:starter_codes/provider/user_provider.dart'; 
+import 'package:starter_codes/provider/user_provider.dart';
+
 class LocationController {
   final String? BACKEND_URL;
   final String GOOGLE_MAP_API_KEY;
-final Ref ref;
+  final Ref ref;
   LatLng? _currentLatLng; // Private field to store the user's current location
 
   // Public getter to access the currentLatLng from outside the class
@@ -31,24 +32,32 @@ final Ref ref;
   Future<void> _initializeCurrentLocation() async {
     _currentLatLng = await _getCurrentLatLngLocation();
     if (_currentLatLng == null) {
-      print('Could not get initial user location. Some features might be limited.');
+      print(
+          'Could not get initial user location. Some features might be limited.');
       // Optionally, you could set a default location here, e.g., LatLng(0.0, 0.0)
       // or show a persistent message to the user to enable location services.
     }
   }
 
-  Future<List<Map<String, dynamic>>> searchPlaces(
-      String placeName, {LatLng? position}) async {
+  Future<List<Map<String, dynamic>>> searchPlaces(String placeName,
+      {LatLng? position}) async {
     List<Map<String, dynamic>> matchedLocations = [];
     final url = Uri.parse(
         'https://maps.googleapis.com/maps/api/place/autocomplete/json');
 
     // Use the provided position or fallback to the stored currentLatLng
-    final LatLng effectivePosition = position ?? _currentLatLng ?? const LatLng(6.5244, 3.3792); // Default to Lagos, Nigeria if no location is available
-final state = ref.watch(userProvider)!.currentState;
+    final LatLng effectivePosition = position ??
+        _currentLatLng ??
+        const LatLng(6.5244,
+            3.3792); // Default to Lagos, Nigeria if no location is available
+    final user = ref.watch(userProvider);
+    final state = user?.currentState ?? '';
+    final input =
+        state.isNotEmpty ? placeName : "$placeName $state state Nigeria";
     final params = {
-      'input': "$placeName $state state Nigeria",
-      'location': '${effectivePosition.latitude},${effectivePosition.longitude}',
+      'input': input,
+      'location':
+          '${effectivePosition.latitude},${effectivePosition.longitude}',
       'radius': '500', // Radius in meters
       'key': GOOGLE_MAP_API_KEY,
       'components': 'country:NG', // Limit results to Nigeria
@@ -125,7 +134,9 @@ final state = ref.watch(userProvider)!.currentState;
           return LocationModel(
             formattedAddress: result['formatted_address'],
             address: result['address_components'].firstWhere(
-              (component) => component['types'].contains('street_number') || component['types'].contains('route'),
+              (component) =>
+                  component['types'].contains('street_number') ||
+                  component['types'].contains('route'),
               orElse: () => {'long_name': ''},
             )['long_name'], // More robust way to get a basic address component
             coordinates: latLng,
@@ -194,7 +205,6 @@ final state = ref.watch(userProvider)!.currentState;
   }
 }
 
-
 // Provider for your LocationController
 final locationControllerProvider = Provider<LocationController>((ref) {
   // Ensure GOOGLE_MAP_API_KEY is loaded via dotenv
@@ -203,6 +213,6 @@ final locationControllerProvider = Provider<LocationController>((ref) {
   return LocationController(
     GOOGLE_MAP_API_KEY: googleApiKey,
     BACKEND_URL: backendUrl,
-    ref:ref,
+    ref: ref,
   );
 });

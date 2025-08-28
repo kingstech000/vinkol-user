@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/extensions/extensions.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 class ProductCard extends ConsumerWidget {
   final StoreProduct product;
@@ -62,7 +61,6 @@ class ProductCard extends ConsumerWidget {
               ),
             ),
           ),
-
           Expanded(
             flex: 4,
             child: Padding(
@@ -81,9 +79,7 @@ class ProductCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-
                   const SizedBox(height: 4),
-
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -102,21 +98,20 @@ class ProductCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 8),
-
+                  const SizedBox(height: 4), // Reduced from 8 to 4
                   SizedBox(
-                    height: 32,
+                    height: 28, // Reduced from 32 to 28
                     child: currentQuantity == 0
                         ? AppButton.primary(
                             onTap: () {
+                              // Allow adding to cart - auth check will be done at payment
                               ref
                                   .read(cartProvider.notifier)
                                   .addProduct(product);
                             },
                             title: 'Add To Cart',
                           )
-                        : _buildQuantityControls(ref, currentQuantity),
+                        : _buildQuantityControls(context, ref, currentQuantity),
                   ),
                 ],
               ),
@@ -127,7 +122,8 @@ class ProductCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuantityControls(WidgetRef ref, int currentQuantity) {
+  Widget _buildQuantityControls(
+      BuildContext context, WidgetRef ref, int currentQuantity) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey[300]!),
@@ -192,6 +188,7 @@ class ProductCard extends ConsumerWidget {
           Expanded(
             child: InkWell(
               onTap: () {
+                // Allow increasing quantity - auth check will be done at payment
                 ref.read(cartProvider.notifier).addProduct(product);
               },
               borderRadius: const BorderRadius.only(

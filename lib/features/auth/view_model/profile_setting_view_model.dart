@@ -11,9 +11,12 @@ import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/widgets/text_action_modal.dart';
 import 'package:dio/dio.dart'; // Import dio for MultipartFile
+import 'package:starter_codes/core/data/local/local_cache.dart';
+import 'package:starter_codes/core/utils/locator.dart';
 
 class ProfileSettingViewModel extends BaseViewModel {
   final AuthService _authService;
+  final LocalCache _localCache = locator<LocalCache>();
 
   String _firstName = '';
   String _surname = '';
@@ -69,7 +72,7 @@ class ProfileSettingViewModel extends BaseViewModel {
   Future<void> pickImage(ImageSource source, BuildContext context) async {
     final picker = ImagePicker();
     changeState(const ViewModelState.busy());
-       FocusScope.of(context).unfocus();
+    FocusScope.of(context).unfocus();
     try {
       final pickedFile = await picker.pickImage(source: source);
       if (pickedFile != null) {
@@ -112,6 +115,9 @@ class ProfileSettingViewModel extends BaseViewModel {
         phoneNumber: _phoneNumber,
         avatar: avatarFile,
       );
+
+      // Clear guest mode when profile is successfully completed
+      await _localCache.setGuestMode(false);
 
       logger.i('Profile setup successful for $_firstName $_surname');
       _authService.getUserProfile();
