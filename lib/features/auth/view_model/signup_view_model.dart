@@ -12,6 +12,7 @@ import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/text_action_modal.dart'; // Your text_action_modal
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 class SignUpViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -39,7 +40,7 @@ class SignUpViewModel extends BaseViewModel {
       );
 
       // Clear guest mode when user successfully signs up
-      await _localCache.setGuestMode(false);
+      await GuestModeUtils.clearGuestMode();
 
       changeState(const ViewModelState.idle());
       ref.watch(verifyEmailProvider.notifier).state = email;

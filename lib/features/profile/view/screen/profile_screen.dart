@@ -34,18 +34,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final User? user = ref.watch(userProvider);
     final bool isGuestMode = GuestModeUtils.isGuestMode();
 
-    // Determine the profile image based on the user data
-    ImageProvider<Object>? profileImageProvider;
-    Widget? avatarChild;
-
-    if (user?.avatar?.imageUrl != null && user!.avatar!.imageUrl.isNotEmpty) {
-      // Use NetworkImage if avatar URL is available
-      profileImageProvider = NetworkImage(user.avatar!.imageUrl);
-    } else {
-      // Use a local asset or default icon instead of network image
-      profileImageProvider = null;
-      avatarChild = Icon(Icons.person, size: 40.w, color: Colors.white);
-    }
+    // Profile image is now handled directly in the CircleAvatar widget
 
     // Determine user name and role
     final String displayUserName = isGuestMode
@@ -75,8 +64,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   CircleAvatar(
                     backgroundColor: AppColors.primary,
                     radius: 40.r,
-                    backgroundImage: profileImageProvider,
-                    child: avatarChild, // Shows icon if no image
+                    child: user?.avatar?.imageUrl != null &&
+                            user!.avatar!.imageUrl.isNotEmpty
+                        ? ClipOval(
+                            child: Image.network(
+                              user.avatar!.imageUrl,
+                              width: 80.w,
+                              height: 80.w,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  width: 80.w,
+                                  height: 80.w,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.person,
+                                      size: 40.w, color: Colors.white),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 80.w,
+                                  height: 80.w,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.person,
+                                      size: 40.w, color: Colors.white),
+                                );
+                              },
+                            ),
+                          )
+                        : Icon(Icons.person, size: 40.w, color: Colors.white),
                   ),
                   Gap.w8,
                   Column(

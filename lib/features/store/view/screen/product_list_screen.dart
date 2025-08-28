@@ -51,7 +51,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         crossAxisCount: 1,
         crossAxisSpacing: 8.0,
         mainAxisSpacing: 8.0,
-        childAspectRatio: 1.2,
+        childAspectRatio: 0.65, // Much longer cards for single column
       );
     }
     // For small screens (320px - 480px width)
@@ -60,7 +60,8 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 8.0,
         mainAxisSpacing: 8.0,
-        childAspectRatio: 0.7,
+        childAspectRatio:
+            0.6, // Much longer cards for better content visibility
       );
     }
     // For medium screens (480px - 768px width)
@@ -69,7 +70,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12.0,
         mainAxisSpacing: 12.0,
-        childAspectRatio: 0.65,
+        childAspectRatio: 0.65, // Longer cards for medium screens
       );
     }
     // For large screens (768px and above)
@@ -78,7 +79,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 15.0,
         mainAxisSpacing: 15.0,
-        childAspectRatio: 0.8,
+        childAspectRatio: 0.7, // Longer cards for large screens
       );
     }
   }

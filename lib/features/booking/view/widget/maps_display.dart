@@ -26,7 +26,15 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
     _fetchAndSetLocation();
   }
 
+  @override
+  void dispose() {
+    // Clean up any resources if needed
+    super.dispose();
+  }
+
   Future<void> _fetchAndSetLocation() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true; // Show loading indicator
       _currentAddress = "Fetching location...";
@@ -38,6 +46,8 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
     // try to refresh it.
     position ??=
         await ref.read(locationControllerProvider).refreshCurrentLocation();
+
+    if (!mounted) return;
 
     if (position != null) {
       _currentPosition = position;
@@ -53,6 +63,9 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
       LocationModel? locationModel = await ref
           .read(locationControllerProvider)
           .getAddressFromLatLng(_currentPosition!);
+
+      if (!mounted) return;
+
       if (locationModel != null) {
         _currentAddress = locationModel.formattedAddress ?? "Unknown Address";
       } else {
@@ -71,6 +84,8 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
         ),
       };
     }
+
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false; // Hide loading indicator
