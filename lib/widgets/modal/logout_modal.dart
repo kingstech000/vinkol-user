@@ -10,6 +10,7 @@ import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
 
@@ -83,7 +84,7 @@ class LogoutModal extends ConsumerWidget {
                   title: 'Log Out',
                   onTap: () async {
                     // Clear guest mode and token
-                    await localCache.setGuestMode(false);
+                    await GuestModeUtils.clearGuestMode();
                     await localCache.saveToken('');
                     ref.watch(navigationIndexProvider.notifier).state = 0;
                     NavigationService.instance.navigateToReplaceAll(

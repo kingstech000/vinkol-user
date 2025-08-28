@@ -11,6 +11,19 @@ class GuestModeUtils {
     return localCache.isGuestMode();
   }
 
+  /// Force refresh guest mode state from cache
+  static Future<bool> refreshGuestModeState() async {
+    // This method can be used to force refresh the guest mode state
+    // Useful when the state might be stale
+    return localCache.isGuestMode();
+  }
+
+  /// Clear guest mode and return the new state
+  static Future<bool> clearGuestMode() async {
+    await localCache.setGuestMode(false);
+    return false; // Return false since guest mode is now cleared
+  }
+
   /// Show auth prompt for guest users when they try to access authenticated features
   static void showAuthPromptForGuest(
     BuildContext context, {

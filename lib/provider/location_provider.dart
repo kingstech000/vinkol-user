@@ -32,8 +32,6 @@ class LocationController {
   Future<void> _initializeCurrentLocation() async {
     _currentLatLng = await _getCurrentLatLngLocation();
     if (_currentLatLng == null) {
-      print(
-          'Could not get initial user location. Some features might be limited.');
       // Optionally, you could set a default location here, e.g., LatLng(0.0, 0.0)
       // or show a persistent message to the user to enable location services.
     }
@@ -51,14 +49,15 @@ class LocationController {
         const LatLng(6.5244,
             3.3792); // Default to Lagos, Nigeria if no location is available
     final user = ref.watch(userProvider);
-    final state = user?.currentState ?? '';
-    final input =
-        state.isNotEmpty ? placeName : "$placeName $state state Nigeria";
+    final state = user?.currentState;
+    final input = state != null && state.isNotEmpty
+        ? "$placeName $state state Nigeria"
+        : "$placeName Nigeria";
     final params = {
       'input': input,
       'location':
           '${effectivePosition.latitude},${effectivePosition.longitude}',
-      'radius': '500', // Radius in meters
+      'radius': '500', // Ra,,,dius in meters
       'key': GOOGLE_MAP_API_KEY,
       'components': 'country:NG', // Limit results to Nigeria
     };
@@ -73,11 +72,16 @@ class LocationController {
                   return prediction;
                 }) ??
                 []);
+
+        // Debug logging
+        print(
+            'Location search for: "$input" returned ${matchedLocations.length} results');
       } else {
-        print('Request failed with status: ${response.statusCode}.');
+        print('Location search failed with status: ${response.statusCode}');
+        print('Response body: ${response.body}');
       }
     } catch (e) {
-      print('Error occurred while searching for places: $e');
+      print('Location search error: $e');
     }
 
     return matchedLocations;
@@ -111,11 +115,9 @@ class LocationController {
           throw Exception('No result found for the place ID.');
         }
       } else {
-        print('Request failed with status: ${response.statusCode}.');
         throw Exception('Failed to fetch place details.');
       }
     } catch (e) {
-      print('Error occurred while fetching coordinates: $e');
       rethrow;
     }
   }
@@ -143,12 +145,8 @@ class LocationController {
             placeId: result['place_id'],
           );
         }
-      } else {
-        print('Reverse geocoding failed with status: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error during reverse geocoding: $e');
-    }
+      } else {}
+    } catch (e) {}
     return null;
   }
 
@@ -162,7 +160,6 @@ class LocationController {
     // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      print('Location services are disabled.');
       // This case should ideally be handled by guiding the user to enable services.
       // For this implementation, we just return null.
       return null;
@@ -172,14 +169,11 @@ class LocationController {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print('Location permissions are denied');
         return null;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print(
-          'Location permissions are permanently denied, we cannot request permissions.');
       return null;
     }
 
@@ -189,10 +183,8 @@ class LocationController {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      print('Current position: ${position.latitude}, ${position.longitude}');
       return LatLng(position.latitude, position.longitude);
     } catch (e) {
-      print('Error getting current position: $e');
       return null;
     }
   }

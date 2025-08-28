@@ -11,6 +11,7 @@ import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/widgets/text_action_modal.dart'; // Your text_action_modal
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 class LoginViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -58,7 +59,7 @@ class LoginViewModel extends BaseViewModel {
       await _authService.getUserProfile();
 
       // Clear guest mode when user successfully logs in
-      await _localCache.setGuestMode(false);
+      await GuestModeUtils.clearGuestMode();
 
       clearFields();
 
