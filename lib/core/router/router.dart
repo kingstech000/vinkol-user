@@ -8,6 +8,7 @@ import 'package:starter_codes/features/auth/view/screen/reset_password_screen.da
 import 'package:starter_codes/features/auth/view/screen/set_new_password_screen.dart';
 import 'package:starter_codes/features/auth/view/screen/signup_screen.dart';
 import 'package:starter_codes/features/auth/view/screen/verify_email_otp_screen.dart';
+import 'package:starter_codes/features/auth/view/screens/auth_choice_screen.dart';
 import 'package:starter_codes/features/delivery/view/screen/booking_order_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/map_with_quote_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/package_info_screen.dart';
@@ -67,8 +68,6 @@ class AppRouter {
                 child: child,
               ),
             );
-
-        
         }
       },
     );
@@ -92,6 +91,11 @@ class AppRouter {
         return _getPageRoute(
             settings: settings,
             viewToShow: const OnboardingScreen(),
+            transition: transition);
+      case NavigatorRoutes.authChoiceScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const AuthChoiceScreen(),
             transition: transition);
       case NavigatorRoutes.loginScreen:
         return _getPageRoute(
@@ -190,12 +194,12 @@ class AppRouter {
             viewToShow: const BookingOrderScreen(),
             transition: transition);
 
-          //PAYMENT SCREEN
-                case NavigatorRoutes.deliveryPaymentScreen:
+      //PAYMENT SCREEN
+      case NavigatorRoutes.deliveryPaymentScreen:
         return _getPageRoute(
             settings: settings,
             viewToShow: const PaymentScreen(),
-            transition: transition); 
+            transition: transition);
       // STORE
       case NavigatorRoutes.productListScreen:
         return _getPageRoute(

@@ -19,6 +19,8 @@ class LinkRoutes {
   static const String termsAndCondition =
       'https://www.vinkol.ng/terms-and-conditions';
   static const String about = 'https://www.vinkol.ng/about';
+
+  static const String deleteAccount = 'https://www.vinkol.ng/delete-account';
   static const String productSupport = 'https://www.vinkol.ng/product-support';
 
   // Social Media

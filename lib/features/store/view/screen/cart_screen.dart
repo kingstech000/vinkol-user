@@ -20,9 +20,9 @@ import 'package:starter_codes/widgets/empty_content.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 
-final appLoggerProvider = Provider((ref) => const AppLogger(CartScreen)); 
-
+final appLoggerProvider = Provider((ref) => const AppLogger(CartScreen));
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -93,12 +93,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   Future<void> _handleProceedToPayment() async {
     final appLogger = ref.read(appLoggerProvider);
-    final cartState = ref.read(cartProvider); // Use read as we are performing an action
+    final cartState =
+        ref.read(cartProvider); // Use read as we are performing an action
 
     final cartProducts = cartState.products; // This is List<StoreProduct>
     final dropOffLocation = cartState.dropOffLocation;
     final selectedDeliveryType = cartState.deliveryType;
     final currentUser = ref.read(userProvider);
+
+    // Check if user is guest and trying to make a purchase
+    if (!GuestModeUtils.requireAuthForBuying(context)) {
+      return; // Auth prompt will be shown by the utility method
+    }
 
     // Basic validation
     if (cartProducts.isEmpty) {
@@ -118,7 +124,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       return;
     }
 
-    double subtotal = cartProducts.fold(0.0, (sum, item) => sum + (item.price * (item.quantity ?? 0)));
+    double subtotal = cartProducts.fold(
+        0.0, (sum, item) => sum + (item.price * (item.quantity ?? 0)));
 
     final AsyncValue<double> deliveryFeeAsync = ref.read(
       deliveryFeeProvider(DeliveryFeeParams(
@@ -134,14 +141,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       return;
     } else if (deliveryFeeAsync.hasError) {
       _showSnackbar('Error calculating delivery fee. Please try again.');
-      appLogger.e('Error getting delivery fee for payment: ${deliveryFeeAsync.error}', error: deliveryFeeAsync.error, stackTrace: deliveryFeeAsync.stackTrace);
+      appLogger.e(
+          'Error getting delivery fee for payment: ${deliveryFeeAsync.error}',
+          error: deliveryFeeAsync.error,
+          stackTrace: deliveryFeeAsync.stackTrace);
       return;
     } else {
       deliveryFee = deliveryFeeAsync.value!;
     }
 
     // Determine the store ID and Name
-    final String? storeId = cartProducts.isNotEmpty ? cartProducts.first.store : '';
+    final String? storeId =
+        cartProducts.isNotEmpty ? cartProducts.first.store : '';
     final String storeName = ref.watch(currentStoreProvider)!.name ?? '';
 
     if (storeId == null || storeId.isEmpty) {
@@ -151,10 +162,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     }
 
     // Create CartItem list for StorePaymentArguments
-    final List<CartItem> cartItemsForPayment = cartProducts.map((p) => CartItem(product: p, quantity: p.quantity ?? 1)).toList();
+    final List<CartItem> cartItemsForPayment = cartProducts
+        .map((p) => CartItem(product: p, quantity: p.quantity ?? 1))
+        .toList();
 
-
-    appLogger.d('Navigating to StorePaymentScreen with total amount: ${subtotal + deliveryFee}');
+    appLogger.d(
+        'Navigating to StorePaymentScreen with total amount: ${subtotal + deliveryFee}');
 
     // Navigate to StorePaymentScreen and wait for result
     final bool? paymentSuccess = await Navigator.push<bool?>(
@@ -171,7 +184,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             selectedDropoffLocation: dropOffLocation,
             formattedDropoffAddress: dropOffLocation.formattedAddress!,
             deliveryType: selectedDeliveryType,
-            orderType: 'delivery', // Adjust as per your actual order type logic ('delivery' or 'pickup')
+            orderType:
+                'delivery', // Adjust as per your actual order type logic ('delivery' or 'pickup')
           ),
         ),
       ),
@@ -182,7 +196,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     // based on the result of the WebView payment.
     // The pop(true/false) from StorePaymentScreen will control this part.
     if (paymentSuccess == true) {
-      appLogger.i('Payment successful and order process completed on StorePaymentScreen.');
+      appLogger.i(
+          'Payment successful and order process completed on StorePaymentScreen.');
       // The StorePaymentScreen already navigates to OrderSuccessScreen and clears stack.
       // So no further action needed here on success.
     } else {
@@ -211,8 +226,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     appLogger.d('CartScreen: Build method called.');
     appLogger.d('   Cart Items Count: ${cartItems.length}');
-    appLogger.d('   Drop-off Location (from CartState): ${dropOffLocation?.formattedAddress ?? 'NULL'}');
-    appLogger.d('   Selected Delivery Type (from CartState): $selectedDeliveryType');
+    appLogger.d(
+        '   Drop-off Location (from CartState): ${dropOffLocation?.formattedAddress ?? 'NULL'}');
+    appLogger
+        .d('   Selected Delivery Type (from CartState): $selectedDeliveryType');
 
     final deliveryFeeParams = DeliveryFeeParams(
       dropOffLocation: dropOffLocation,
@@ -221,7 +238,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
 
     appLogger.d('   DeliveryFeeParams created:');
-    appLogger.d('     dropOffLocation: ${deliveryFeeParams.dropOffLocation?.formattedAddress ?? 'N/A'}');
+    appLogger.d(
+        '     dropOffLocation: ${deliveryFeeParams.dropOffLocation?.formattedAddress ?? 'N/A'}');
     appLogger.d('     products count: ${deliveryFeeParams.products.length}');
     appLogger.d('     deliveryType: ${deliveryFeeParams.deliveryType}');
     appLogger.d('     Params hashCode: ${deliveryFeeParams.hashCode}');
@@ -240,7 +258,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         return 0.0;
       },
       error: (e, s) {
-        appLogger.e('Delivery Fee: Error in AsyncValue.when: $e', error: e, stackTrace: s);
+        appLogger.e('Delivery Fee: Error in AsyncValue.when: $e',
+            error: e, stackTrace: s);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -255,7 +274,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     double total = subtotal + deliveryFee;
 
     return Scaffold(
-      appBar:  MiniAppBar(
+      appBar: MiniAppBar(
         title: 'Cart',
       ),
       body: Column(
@@ -265,7 +284,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ? const Center(
                     child: EmptyContent(
                       contentText: 'Your cart is empty!',
-                    icon:CupertinoIcons.cart,
+                      icon: CupertinoIcons.cart,
                     ),
                   )
                 : ListView.builder(
@@ -329,7 +348,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           value: 'regular',
                           groupValue: selectedDeliveryType,
                           onChanged: (value) {
-                            ref.read(cartProvider.notifier).setDeliveryType(value);
+                            ref
+                                .read(cartProvider.notifier)
+                                .setDeliveryType(value);
                           },
                         ),
                       ),
@@ -340,7 +361,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           value: 'express',
                           groupValue: selectedDeliveryType,
                           onChanged: (value) {
-                            ref.read(cartProvider.notifier).setDeliveryType(value);
+                            ref
+                                .read(cartProvider.notifier)
+                                .setDeliveryType(value);
                           },
                         ),
                       ),
@@ -365,7 +388,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               child: ElevatedButton(
                 onPressed: cartItems.isEmpty ||
                         dropOffLocation == null ||
-                        deliveryFeeAsync.isLoading // Disable if delivery fee is loading
+                        deliveryFeeAsync
+                            .isLoading // Disable if delivery fee is loading
                     ? null
                     : _handleProceedToPayment, // Call the new method
                 style: ElevatedButton.styleFrom(
@@ -380,7 +404,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
                         'Proceed to Payment',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
               ),
             ),
@@ -433,17 +458,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          _buildSummaryRow('Sub total', subtotal.toMoney(),
-              isBold: false),
-          _buildSummaryRow(
-              'Delivery Fee',
-              isLoadingDeliveryFee
-                  ? 'Calculating...'
-                  : deliveryFee.toMoney(),
+          _buildSummaryRow('Sub total', subtotal.toMoney(), isBold: false),
+          _buildSummaryRow('Delivery Fee',
+              isLoadingDeliveryFee ? 'Calculating...' : deliveryFee.toMoney(),
               isBold: false),
           Divider(height: 20, color: Colors.grey[300]),
-          _buildSummaryRow('Total', total.toMoney(),
-              isBold: true),
+          _buildSummaryRow('Total', total.toMoney(), isBold: true),
         ],
       ),
     );
@@ -519,9 +539,6 @@ class LocationInput extends StatelessWidget {
   }
 }
 
-
-
-
 // --- Delivery Fee Provider (with even more internal logging) ---
 class DeliveryFeeParams extends Equatable {
   final LocationModel? dropOffLocation;
@@ -544,8 +561,10 @@ final deliveryFeeProvider = FutureProvider.family<double, DeliveryFeeParams>(
     final appLogger = ref.read(appLoggerProvider); // Get the logger
 
     appLogger.d('>>> DELIVERY FEE PROVIDER FUNCTION STARTED <<<');
-    appLogger.d('  Params Hash Code RECEIVED: ${params.hashCode}'); // This should match what's logged in CartScreen build
-    appLogger.d('  Drop-off Location: ${params.dropOffLocation?.formattedAddress ?? 'N/A'}');
+    appLogger.d(
+        '  Params Hash Code RECEIVED: ${params.hashCode}'); // This should match what's logged in CartScreen build
+    appLogger.d(
+        '  Drop-off Location: ${params.dropOffLocation?.formattedAddress ?? 'N/A'}');
     appLogger.d('  Delivery Type: ${params.deliveryType}');
     appLogger.d('  Number of Products: ${params.products.length}');
 
@@ -556,7 +575,8 @@ final deliveryFeeProvider = FutureProvider.family<double, DeliveryFeeParams>(
     final deliveryType = params.deliveryType;
 
     if (dropOffLocation == null) {
-      appLogger.w('DeliveryFeeProvider: dropOffLocation is null. Returning 0.0.');
+      appLogger
+          .w('DeliveryFeeProvider: dropOffLocation is null. Returning 0.0.');
       return 0.0;
     }
     if (cartProducts.isEmpty) {
@@ -565,8 +585,10 @@ final deliveryFeeProvider = FutureProvider.family<double, DeliveryFeeParams>(
     }
 
     final storeId = cartProducts.first.store;
-    if (storeId == null || storeId.isEmpty) { // Added .isEmpty check
-      appLogger.e('DeliveryFeeProvider: Store ID is null or empty for products in cart. Cannot calculate fee.');
+    if (storeId == null || storeId.isEmpty) {
+      // Added .isEmpty check
+      appLogger.e(
+          'DeliveryFeeProvider: Store ID is null or empty for products in cart. Cannot calculate fee.');
       // Optional: Log the first product to inspect its 'store' field
       return 0.0;
     }
@@ -583,7 +605,8 @@ final deliveryFeeProvider = FutureProvider.family<double, DeliveryFeeParams>(
       appLogger.d('<<< DELIVERY FEE PROVIDER FUNCTION ENDED (SUCCESS) >>>');
       return fee;
     } catch (e, st) {
-      appLogger.e('Failed to fetch delivery fee in service call: $e', error: e, stackTrace: st);
+      appLogger.e('Failed to fetch delivery fee in service call: $e',
+          error: e, stackTrace: st);
       appLogger.d('<<< DELIVERY FEE PROVIDER FUNCTION ENDED (ERROR) >>>');
       return 0.0;
     }

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +5,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/gap.dart'; // Assuming this provider exists and provides a User model
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 class NavAppBar extends ConsumerWidget implements PreferredSizeWidget {
   // Changed to ConsumerWidget
@@ -26,6 +26,7 @@ class NavAppBar extends ConsumerWidget implements PreferredSizeWidget {
     // Added WidgetRef ref
     // Watch the userProvider to get the user data
     final user = ref.watch(userProvider);
+    final bool isGuestMode = GuestModeUtils.isGuestMode();
 
     return AppBar(
       scrolledUnderElevation: 0,
@@ -41,8 +42,8 @@ class NavAppBar extends ConsumerWidget implements PreferredSizeWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AppText.h1(
-              // Use user.firstName from the provider
-              'Hi ${user!.firstname}',
+              // Use user.firstName from the provider or show guest message
+              isGuestMode ? 'Hi Guest' : 'Hi ${user?.firstname ?? 'User'}',
               color: AppColors.black,
               fontSize: 20.sp,
               fontWeight: FontWeight.bold,

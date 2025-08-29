@@ -16,6 +16,7 @@ import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal_form_field.dart';
 import 'package:starter_codes/features/booking/model/request.dart';
 import 'package:starter_codes/features/booking/model/order_model.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 class PackageInfoScreen extends ConsumerStatefulWidget {
   const PackageInfoScreen({super.key});
@@ -89,7 +90,8 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
               ),
             ),
             textTheme: const TextTheme(
-              displayMedium: TextStyle(color: AppColors.primary, fontSize: 32.0),
+              displayMedium:
+                  TextStyle(color: AppColors.primary, fontSize: 32.0),
               bodyLarge: TextStyle(color: Colors.blueGrey),
             ),
           ),
@@ -97,7 +99,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
         );
       },
     );
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() {
         _pickupTime = picked.format(context);
       });
@@ -106,7 +108,8 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime now = DateTime.now();
-    final DateTime threeMonthsFromNow = DateTime(now.year, now.month + 3, now.day);
+    final DateTime threeMonthsFromNow =
+        DateTime(now.year, now.month + 3, now.day);
 
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -127,7 +130,8 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
                 foregroundColor: AppColors.primary,
               ),
             ),
-            dialogTheme: DialogThemeData( // Corrected
+            dialogTheme: DialogThemeData(
+              // Corrected
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
                 side: const BorderSide(color: AppColors.primary, width: 2.0),
@@ -138,7 +142,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
         );
       },
     );
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() {
         _pickupDate = DateFormat('dd-MM-yyyy').format(picked);
       });
@@ -181,12 +185,30 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       final bookingService = ref.read(bookingServiceProvider);
+
+      // Check if user is guest and trying to get quote
+      if (!GuestModeUtils.requireAuthForDelivery(context)) {
+        return; // Auth prompt will be shown by the utility method
+      }
+
+      final user = ref.watch(userProvider);
+      final userState = user?.currentState;
+
+      if (userState == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('User state not available. Please try again.')),
+        );
+        return;
+      }
 
       final quoteRequest = GetQuoteRequest(
         note: _noteController.text,
@@ -199,15 +221,14 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
         dropoffLocation: LocationData(
             lat: dropOffLocation.coordinates!.latitude.toString(),
             lng: dropOffLocation.coordinates!.longitude.toString()),
-        state: ref.read(userProvider)!.currentState!,
+        state: userState,
         orderType: 'Delivery',
         // deliveryType: _priorityController.text.toLowerCase(),
         vehicleRequest: _vehicleController.text.toLowerCase(),
       );
 
-      final List<QuoteResponseModel> quoteResponse =
-          await bookingService.getAllQuotesForDeliveryTypes(baseQuoteDetails: quoteRequest);
-   
+      final List<QuoteResponseModel> quoteResponse = await bookingService
+          .getAllQuotesForDeliveryTypes(baseQuoteDetails: quoteRequest);
 
       ref.read(rideLocationProvider.notifier).setQuoteRequest(quoteRequest);
       ref.read(rideLocationProvider.notifier).setQuoteResponse(quoteResponse);
@@ -221,9 +242,11 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
         SnackBar(content: Text('Failed to get quote: $e')),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart'; // Ensure this path is correct
 
@@ -25,7 +26,15 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
     _fetchAndSetLocation();
   }
 
+  @override
+  void dispose() {
+    // Clean up any resources if needed
+    super.dispose();
+  }
+
   Future<void> _fetchAndSetLocation() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true; // Show loading indicator
       _currentAddress = "Fetching location...";
@@ -35,7 +44,10 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
 
     // If currentLatLng is null (e.g., first load, permission not granted yet),
     // try to refresh it.
-    position ??= await ref.read(locationControllerProvider).refreshCurrentLocation();
+    position ??=
+        await ref.read(locationControllerProvider).refreshCurrentLocation();
+
+    if (!mounted) return;
 
     if (position != null) {
       _currentPosition = position;
@@ -48,8 +60,12 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
       };
 
       // Get address from coordinates
-      LocationModel? locationModel =
-          await ref.read(locationControllerProvider).getAddressFromLatLng(_currentPosition!);
+      LocationModel? locationModel = await ref
+          .read(locationControllerProvider)
+          .getAddressFromLatLng(_currentPosition!);
+
+      if (!mounted) return;
+
       if (locationModel != null) {
         _currentAddress = locationModel.formattedAddress ?? "Unknown Address";
       } else {
@@ -58,7 +74,8 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
     } else {
       // Handle cases where location is not available
       _currentPosition = const LatLng(6.3361, 5.6125); // Default to Benin City
-      _currentAddress = "Location not available. Please enable location services.";
+      _currentAddress =
+          "Location not available. Please enable location services.";
       _markers = {
         Marker(
           markerId: const MarkerId('defaultLocation'),
@@ -67,6 +84,8 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
         ),
       };
     }
+
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false; // Hide loading indicator
@@ -77,7 +96,8 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
   Widget build(BuildContext context) {
     // Determine the camera position based on whether current location is available
     final CameraPosition initialCameraPosition = CameraPosition(
-      target: _currentPosition ?? const LatLng(6.3361, 5.6125), // Default to Benin City if null
+      target: _currentPosition ??
+          const LatLng(6.3361, 5.6125), // Default to Benin City if null
       zoom: 14,
     );
 
@@ -105,6 +125,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
             right: 16,
             child: Card(
               elevation: 4,
+              color: AppColors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -114,7 +135,9 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _currentAddress.split(',').first, // Get the first part of the address
+                      _currentAddress
+                          .split(',')
+                          .first, // Get the first part of the address
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -123,7 +146,9 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                     ),
                     Text(
                       _currentAddress.contains(',')
-                          ? _currentAddress.substring(_currentAddress.indexOf(',') + 1).trim()
+                          ? _currentAddress
+                              .substring(_currentAddress.indexOf(',') + 1)
+                              .trim()
                           : _currentAddress, // Rest of the address or full if no comma
                       style: TextStyle(
                         color: Colors.grey[600],
@@ -187,13 +212,18 @@ class MapShimmerPlaceholder extends StatelessWidget {
             right: 16,
             child: Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              color: AppColors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(width: double.infinity, height: 14, color: Colors.grey[300]),
+                    Container(
+                        width: double.infinity,
+                        height: 14,
+                        color: Colors.grey[300]),
                     const SizedBox(height: 8),
                     Container(width: 150, height: 12, color: Colors.grey[300]),
                   ],

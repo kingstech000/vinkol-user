@@ -50,6 +50,48 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
     super.dispose();
   }
 
+  // Responsive grid configuration
+  SliverGridDelegateWithFixedCrossAxisCount _getResponsiveGridDelegate() {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // For very small screens (less than 320px width)
+    if (screenWidth < 320) {
+      return const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 1,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1.5,
+      );
+    }
+    // For small screens (320px - 480px width)
+    else if (screenWidth < 480) {
+      return const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 0.9,
+      );
+    }
+    // For medium screens (480px - 768px width)
+    else if (screenWidth < 768) {
+      return const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.85,
+      );
+    }
+    // For large screens (768px and above)
+    else {
+      return const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 15,
+        childAspectRatio: 1.0,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final storesAsyncValue = ref.watch(storesViewModelProvider);
@@ -219,13 +261,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                           Expanded(
                             child: GridView.builder(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 0.85,
-                              ),
+                              gridDelegate: _getResponsiveGridDelegate(),
                               itemCount: stores.length,
                               itemBuilder: (context, index) {
                                 final store = stores[index];
@@ -258,16 +294,13 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                           .read(storesViewModelProvider.notifier)
                           .refreshStores(),
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(
+                            MediaQuery.of(context).size.width < 320
+                                ? 8.0
+                                : 16.0),
                         child: GridView.builder(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.85,
-                          ),
+                          gridDelegate: _getResponsiveGridDelegate(),
                           itemCount: storesAsyncValue.value!.stores.length,
                           itemBuilder: (context, index) {
                             final store = storesAsyncValue.value!.stores[index];

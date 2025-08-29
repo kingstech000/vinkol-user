@@ -41,6 +41,49 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     super.dispose();
   }
 
+  // Responsive grid configuration
+  SliverGridDelegateWithFixedCrossAxisCount _getResponsiveGridDelegate() {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // For very small screens (less than 320px width)
+    if (screenWidth < 320) {
+      return const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 1,
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
+        childAspectRatio: 0.65, // Much longer cards for single column
+      );
+    }
+    // For small screens (320px - 480px width)
+    else if (screenWidth < 480) {
+      return const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
+        childAspectRatio:
+            0.6, // Much longer cards for better content visibility
+      );
+    }
+    // For medium screens (480px - 768px width)
+    else if (screenWidth < 768) {
+      return const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12.0,
+        mainAxisSpacing: 12.0,
+        childAspectRatio: 0.65, // Longer cards for medium screens
+      );
+    }
+    // For large screens (768px and above)
+    else {
+      return const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 15.0,
+        mainAxisSpacing: 15.0,
+        childAspectRatio: 0.7, // Longer cards for large screens
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final store = ref.watch(currentStoreProvider);
@@ -102,14 +145,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                             Expanded(
                               child: GridView.builder(
                                 controller: _scrollController,
-                                padding: const EdgeInsets.all(16.0),
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 12.0,
-                                  mainAxisSpacing: 12.0,
-                                  childAspectRatio: 0.65,
-                                ),
+                                padding: EdgeInsets.all(
+                                    MediaQuery.of(context).size.width < 320
+                                        ? 8.0
+                                        : 16.0),
+                                gridDelegate: _getResponsiveGridDelegate(),
                                 itemCount: products.length +
                                     (productListState.isLoadingMore ? 1 : 0),
                                 itemBuilder: (context, index) {
@@ -133,7 +173,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 ),
               ],
             ),
-
             Positioned(
               bottom: 20,
               left: 16,

@@ -3,6 +3,7 @@ class NavigatorRoutes {
   static const String onboardingScreen = "/onboarding-screen";
   static const String splashScreen = 'splash-screen';
   // AUTH
+  static const String authChoiceScreen = '/auth-choice-screen';
   static const String loginScreen = '/login-screen';
   static const String signupScreen = '/signup-screen';
   static const String resetPasswordScreen = '/reset-password-screen';
@@ -39,8 +40,8 @@ class NavigatorRoutes {
   static const String bookingOrderScreen = 'booking-order-screen';
 
 // PAYMENT SCREEN
-static const deliveryPaymentScreen = 'delivery-payment-screen';
-static const storePaymentScreen = 'store-payment-screen';
+  static const deliveryPaymentScreen = 'delivery-payment-screen';
+  static const storePaymentScreen = 'store-payment-screen';
   // STORE
   static const String productListScreen = 'product-list-screen';
   static const String cartScreen = 'cart-screen';

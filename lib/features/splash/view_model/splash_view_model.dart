@@ -26,6 +26,17 @@ class SplashViewModel extends BaseViewModel {
       _logger.i('isOnboarded:$isOnBoarded');
 
       if (isOnBoarded) {
+        // Check if user is in guest mode
+        bool isGuestMode = localCache.isGuestMode();
+
+        if (isGuestMode) {
+          _logger.i('User is in guest mode. Proceeding to dashboard.');
+          _navigationService
+              .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+          changeState(const ViewModelState.idle());
+          return;
+        }
+
         final token = localCache.getToken(); // Retrieve the token
 
         if (token != null && token.isNotEmpty) {
@@ -34,35 +45,43 @@ class SplashViewModel extends BaseViewModel {
             bool hasExpired = JwtDecoder.isExpired(token);
 
             if (hasExpired) {
-              _logger.i('JWT token expired. Redirecting to login.');
-              // Clear expired token if necessary, though login will handle re-authentication
-              await localCache.saveToken(''); // Uncomment if you have this method
-              _navigationService.navigateToReplaceAll(NavigatorRoutes.loginScreen);
+              _logger.i('JWT token expired. Redirecting to auth choice.');
+              // Clear expired token
+              await localCache.saveToken('');
+              _navigationService
+                  .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
             } else {
               _logger.i('JWT token is valid. Proceeding to dashboard.');
               // Token is valid, send FCM token and redirect to dashboard
-             await  _ref.read(authServiceProvider).sendFcmTokenToBackend(); // Use .read for one-time operations
-              _navigationService.navigateToReplaceAll(NavigatorRoutes.dashboardScreen); // Redirect to your main dashboard
+              await _ref
+                  .read(authServiceProvider)
+                  .sendFcmTokenToBackend(); // Use .read for one-time operations
+              _navigationService.navigateToReplaceAll(NavigatorRoutes
+                  .dashboardScreen); // Redirect to your main dashboard
             }
           } catch (e) {
             // Handle cases where the token is malformed or invalid
-            _logger.e('Error decoding JWT token: $e. Redirecting to login.');
-            _navigationService.navigateToReplaceAll(NavigatorRoutes.loginScreen);
+            _logger
+                .e('Error decoding JWT token: $e. Redirecting to auth choice.');
+            _navigationService
+                .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
           }
         } else {
-          _logger.i('No token found. Redirecting to login.');
-          _navigationService.navigateToReplaceAll(NavigatorRoutes.loginScreen);
+          _logger.i('No token found. Redirecting to auth choice.');
+          _navigationService
+              .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
         }
       } else {
         _logger.i('Not onboarded. Redirecting to onboarding screen.');
-        _navigationService.navigateToReplaceAll(NavigatorRoutes.onboardingScreen);
+        _navigationService
+            .navigateToReplaceAll(NavigatorRoutes.onboardingScreen);
       }
       changeState(const ViewModelState.idle());
     } on Failure catch (e) {
       _logger.e('Initialization failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      // Optionally navigate to an error screen or login
-      _navigationService.navigateToReplaceAll(NavigatorRoutes.loginScreen);
+      // Optionally navigate to an error screen or auth choice
+      _navigationService.navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
     }
   }
 }

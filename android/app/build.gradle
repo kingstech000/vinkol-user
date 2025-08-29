@@ -22,6 +22,14 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 android {
     namespace "app.vinkol.user"
     compileSdk= 35
@@ -47,18 +55,29 @@ android {
         applicationId "app.vinkol.user"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 34
+        minSdkVersion 21
+        targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
+       signingConfigs {
+        release {
+            storeFile rootProject.file(keystoreProperties.getProperty('storeFile')) 
+            storePassword keystoreProperties.getProperty('storePassword')
+            keyAlias keystoreProperties.getProperty('keyAlias')
+            keyPassword keystoreProperties.getProperty('keyPassword')
+        }
+    }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
-        }
+       
+         release {
+                 signingConfig signingConfigs.release // Use a proper release key
+                minifyEnabled true // Disables code shrinking
+                shrinkResources true // Disables resource shrinking
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                 }
+    
     }
 }
 
@@ -67,7 +86,9 @@ flutter {
 }
 
 dependencies {
+    
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+
 }
 
 

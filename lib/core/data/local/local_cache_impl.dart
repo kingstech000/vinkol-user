@@ -8,6 +8,7 @@ class LocalCacheImpl implements LocalCache {
   static const _userDataKey = 'userData';
   static const _onBoardedKey = 'true';
   static const _balanceKey = 'balanceKey';
+  static const _guestModeKey = 'guestModeKey';
   late final _log = appLogger(LocalCacheImpl);
 
   late SharedPreferences _sharedPreferences;
@@ -58,6 +59,28 @@ class LocalCacheImpl implements LocalCache {
       return value ?? false;
     } catch (e) {
       _log.e('Error  fetching balance status: $e');
+      return false;
+    }
+  }
+
+  // GUEST MODE METHODS
+  @override
+  Future<void> setGuestMode(bool isGuest) async {
+    try {
+      await saveToLocalCache(key: _guestModeKey, value: isGuest);
+      _log.i('Guest mode set to: $isGuest');
+    } catch (e) {
+      _log.e('Error setting guest mode: $e');
+    }
+  }
+
+  @override
+  bool isGuestMode() {
+    try {
+      final value = getFromLocalCache(_guestModeKey) as bool?;
+      return value ?? false;
+    } catch (e) {
+      _log.e('Error fetching guest mode status: $e');
       return false;
     }
   }

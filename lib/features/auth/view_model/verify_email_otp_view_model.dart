@@ -7,10 +7,14 @@ import 'package:starter_codes/features/auth/data/auth_service.dart'; // Your Aut
 import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/widgets/text_action_modal.dart';
+import 'package:starter_codes/core/data/local/local_cache.dart';
+import 'package:starter_codes/core/utils/locator.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 import 'dart:async'; // Import for Timer
 
 class VerifyEmailOtpViewModel extends BaseViewModel {
   final AuthService _authService;
+  final LocalCache _localCache = locator<LocalCache>();
   String _email = ''; // Internal state for the email
 
   // Cooldown properties
@@ -71,7 +75,7 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
     required BuildContext context,
   }) async {
     changeState(const ViewModelState.busy());
-       FocusScope.of(context).unfocus();
+    FocusScope.of(context).unfocus();
     try {
       // Basic validation
       if (otp.isEmpty || otp.length != 4) {
@@ -79,6 +83,9 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
       }
 
       await _authService.verifyEmail(email: _email, otp: otp);
+
+      // Clear guest mode when email is successfully verified
+      await GuestModeUtils.clearGuestMode();
 
       logger.i('Email OTP verification successful for $_email');
       clearField(); // Clear fields and stop countdown on success
