@@ -20,6 +20,10 @@ abstract class LocalCache {
   Future<void> toggleBalanceVisibility();
   bool isBalanceVisible();
 
+  // GUEST MODE
+  Future<void> setGuestMode(bool isGuest);
+  bool isGuestMode();
+
   ///Saves `value` to cache using `key`
   Future<void> saveToLocalCache({
     required String key,

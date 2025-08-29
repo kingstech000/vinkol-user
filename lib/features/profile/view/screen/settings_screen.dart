@@ -93,7 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _SettingsLink(
               title: 'Delete Account',
               onTap: () {
-               launchUrlString(LinkRoutes.contactUrl);
+                launchUrlString(LinkRoutes.deleteAccount);
                 // NavigationService.instance
                 //     .navigateTo(NavigatorRoutes.deleteAccountScreen);
               },

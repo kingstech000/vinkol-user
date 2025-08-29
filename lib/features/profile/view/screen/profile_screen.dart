@@ -12,6 +12,7 @@ import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/logout_modal.dart';
 import 'package:starter_codes/features/auth/model/user_model.dart'; // Ensure User model is imported if not already via provider
+import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 // Change StatelessWidget to ConsumerStatefulWidget
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -29,32 +30,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the userProvider to get the current user state
+    // Use watch to react to user authentication state changes
     final User? user = ref.watch(userProvider);
+    final bool isGuestMode = GuestModeUtils.isGuestMode();
 
-    // Determine the profile image based on the user data
-    ImageProvider<Object>? profileImageProvider;
-    Widget? avatarChild;
-
-    if (user?.avatar?.imageUrl != null && user!.avatar!.imageUrl.isNotEmpty) {
-      // Use NetworkImage if avatar URL is available
-      profileImageProvider = NetworkImage(user.avatar!.imageUrl);
-    } else {
-
-      profileImageProvider = const NetworkImage('https://via.placeholder.com/150/0000FF/808080?Text=User');
-      avatarChild = Icon(Icons.person, size: 40.w, color: Colors.white);
-    }
+    // Profile image is now handled directly in the CircleAvatar widget
 
     // Determine user name and role
-    final String displayUserName = user != null
-        ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim().isNotEmpty
-            ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim()
-            : user.email // Fallback to email if first/last name are empty
-        : 'Guest User'; // Default if no user is logged in
+    final String displayUserName = isGuestMode
+        ? 'Guest User'
+        : (user != null
+            ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim().isNotEmpty
+                ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim()
+                : user.email // Fallback to email if first/last name are empty
+            : 'Guest User'); // Default if no user is logged in
 
-    final String displayUserRole = user != null
-        ? ' ${user.state}| ${user.role}' // Truncate ID for display
-        : 'Not Logged In'; // Default if no user is logged in
+    final String displayUserRole = isGuestMode
+        ? 'Continue as guest'
+        : (user != null
+            ? ' ${user.state}| ${user.role}' // Truncate ID for display
+            : 'Not Logged In'); // Default if no user is logged in
 
     return Scaffold(
       appBar: const EmptyAppBar(),
@@ -66,10 +61,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(backgroundColor: AppColors.primary,
+                  CircleAvatar(
+                    backgroundColor: AppColors.primary,
                     radius: 40.r,
-                    backgroundImage: profileImageProvider,
-                    child: avatarChild, // Shows icon if no image
+                    child: user?.avatar?.imageUrl != null &&
+                            user!.avatar!.imageUrl.isNotEmpty
+                        ? ClipOval(
+                            child: Image.network(
+                              user.avatar!.imageUrl,
+                              width: 80.w,
+                              height: 80.w,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  width: 80.w,
+                                  height: 80.w,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.person,
+                                      size: 40.w, color: Colors.white),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 80.w,
+                                  height: 80.w,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.person,
+                                      size: 40.w, color: Colors.white),
+                                );
+                              },
+                            ),
+                          )
+                        : Icon(Icons.person, size: 40.w, color: Colors.white),
                   ),
                   Gap.w8,
                   Column(
@@ -90,38 +121,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: Colors.grey.shade50,
                 child: Column(
                   children: [
-                    _ProfileOption(
-                      icon: Icons.person_outline,
-                      title: 'Personal Info',
-                      onTap: () {
-                        NavigationService.instance
-                            .navigateTo(NavigatorRoutes.personalInfoScreen);
-                      },
-                    ),
-                    // _ProfileOption(
-                    //   icon: Icons.notifications_none,
-                    //   title: 'Notification',
-                    //   onTap: () {
-                    //     NavigationService.instance.navigateTo(
-                    //         NavigatorRoutes.notificationSettingsScreen);
-                    //   },
-                    // ),
-                    _ProfileOption(
-                      icon: Icons.security,
-                      title: 'Security',
-                      onTap: () {
-                        NavigationService.instance
-                            .navigateTo(NavigatorRoutes.securityScreen);
-                      },
-                    ),
-                    _ProfileOption(
-                      icon: Icons.settings_outlined,
-                      title: 'Settings',
-                      onTap: () {
-                        NavigationService.instance
-                            .navigateTo(NavigatorRoutes.settingsScreen);
-                      },
-                    ),
+                    if (!isGuestMode) ...[
+                      _ProfileOption(
+                        icon: Icons.person_outline,
+                        title: 'Personal Info',
+                        onTap: () {
+                          NavigationService.instance
+                              .navigateTo(NavigatorRoutes.personalInfoScreen);
+                        },
+                      ),
+                      _ProfileOption(
+                        icon: Icons.security,
+                        title: 'Security',
+                        onTap: () {
+                          NavigationService.instance
+                              .navigateTo(NavigatorRoutes.securityScreen);
+                        },
+                      ),
+                      _ProfileOption(
+                        icon: Icons.settings_outlined,
+                        title: 'Settings',
+                        onTap: () {
+                          NavigationService.instance
+                              .navigateTo(NavigatorRoutes.settingsScreen);
+                        },
+                      ),
+                    ],
                     _ProfileOption(
                       icon: Icons.help_outline,
                       title: 'Support & Help',
@@ -131,12 +156,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       },
                     ),
                     _ProfileOption(
-                      icon: Icons.logout,
-                      title: 'Log Out',
+                      icon: isGuestMode ? Icons.login : Icons.logout,
+                      title: isGuestMode ? 'Sign In / Sign Up' : 'Log Out',
                       onTap: () {
-                        showLogoutModal(context);
-                        // In a real app, you'd also clear the user state in the provider here
-                        // ref.read(userProvider.notifier).clearUser();
+                        if (isGuestMode) {
+                          // For guest users, navigate to auth choice screen
+                          NavigationService.instance.navigateToReplaceAll(
+                              NavigatorRoutes.authChoiceScreen);
+                        } else {
+                          // For authenticated users, show logout modal
+                          showLogoutModal(context);
+                        }
                       },
                     ),
                   ],
