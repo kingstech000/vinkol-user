@@ -104,7 +104,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     onTap: () {
                       ref.read(onBoardingViewModelProvider).markAsOnBoarded();
                       NavigationService.instance
-                          .navigateTo(NavigatorRoutes.signupScreen);
+                          .navigateTo(NavigatorRoutes.authChoiceScreen);
                     },
                   ),
                   Gap.h12,
