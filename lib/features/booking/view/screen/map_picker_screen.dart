@@ -35,7 +35,9 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
     // Set _initialCameraPosition based on currentLatLng or a default if not available
     _initialCameraPosition = CameraPosition(
-      target: userCurrentLocation ?? const LatLng(6.3361, 5.6125), // Default to Benin City if current location is null
+      target: userCurrentLocation ??
+          const LatLng(6.3361,
+              5.6125), // Default to Benin City if current location is null
       zoom: 14.0,
     );
 
@@ -51,7 +53,8 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     // Animate to the actual initial position if the map was created after init
     // This handles cases where _initialCameraPosition might have changed
     // since the map was initially rendered (e.g., if location loaded asynchronously).
-    _mapController!.animateCamera(CameraUpdate.newCameraPosition(_initialCameraPosition));
+    _mapController!
+        .animateCamera(CameraUpdate.newCameraPosition(_initialCameraPosition));
   }
 
   void _onCameraMove(CameraPosition position) {
@@ -64,23 +67,40 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
   Future<void> _getAddressFromLatLng(LatLng latLng) async {
+    if (!mounted) return;
+
     setState(() {
       _isLoadingAddress = true;
       _pickedAddress = null; // Clear previous address
     });
+
     try {
       final locationController = ref.read(locationControllerProvider);
       final location = await locationController.getAddressFromLatLng(latLng);
+
+      if (!mounted) return;
+
       setState(() {
         _pickedAddress = location?.formattedAddress ?? 'Unknown location';
       });
     } catch (e) {
       debugPrint('Error getting address: $e');
+
+      if (!mounted) return;
+
       setState(() {
         _pickedAddress = 'Failed to load address';
       });
     } finally {
+      if (!mounted) return;
+
       setState(() {
         _isLoadingAddress = false;
       });
@@ -88,7 +108,8 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
   }
 
   void _confirmLocation() {
-    if (_pickedLocation != null && _pickedAddress != null) { // Ensure address is also available
+    if (_pickedLocation != null && _pickedAddress != null) {
+      // Ensure address is also available
       final selectedLocation = LocationModel.fromLatLng(
         _pickedLocation!,
         formattedAddress: _pickedAddress,
@@ -97,19 +118,22 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     } else {
       // Optionally provide user feedback if location or address isn't ready
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please wait for location details to load.')),
+        const SnackBar(
+            content: Text('Please wait for location details to load.')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final userState = ref.watch(userProvider)!.currentState;
+    // Use watch to react to user authentication state changes
+    final user = ref.watch(userProvider);
     return Scaffold(
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition: _initialCameraPosition, // Now correctly initialized in initState
+            initialCameraPosition:
+                _initialCameraPosition, // Now correctly initialized in initState
             onMapCreated: _onMapCreated,
             onCameraMove: _onCameraMove,
             onCameraIdle: _onCameraIdle,
@@ -167,7 +191,9 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                     child: AppButton.primary(
                       title: 'Confirm This Location',
                       // Disable button if address is still loading or not available
-                      onTap: (_isLoadingAddress || _pickedAddress == null) ? null : _confirmLocation,
+                      onTap: (_isLoadingAddress || _pickedAddress == null)
+                          ? null
+                          : _confirmLocation,
                     ),
                   ),
                 ],
