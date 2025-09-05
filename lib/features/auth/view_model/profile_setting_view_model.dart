@@ -99,6 +99,7 @@ class ProfileSettingViewModel extends BaseViewModel {
   /// Submits the profile settings.
   Future<void> submitProfile({required BuildContext context}) async {
     changeState(const ViewModelState.busy());
+    FocusScope.of(context).unfocus();
     try {
       // Prepare MultipartFile for avatar if an image is selected
       MultipartFile? avatarFile;

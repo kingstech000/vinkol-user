@@ -12,15 +12,17 @@ import 'package:starter_codes/widgets/text_action_modal.dart'; // Your text_acti
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
+import 'package:starter_codes/provider/user_provider.dart';
 
 class LoginViewModel extends BaseViewModel {
   final AuthService _authService;
+  final Ref ref;
   final LocalCache _localCache = locator<LocalCache>();
 
   String _email = '';
   String _password = '';
 
-  LoginViewModel(this._authService);
+  LoginViewModel(this._authService, this.ref);
 
   String get email => _email;
   String get password => _password;
@@ -47,26 +49,75 @@ class LoginViewModel extends BaseViewModel {
     changeState(const ViewModelState.busy());
     FocusScope.of(context).unfocus();
     try {
-      await _authService.login(
+      final responseData = await _authService.login(
         email: _email,
         password: _password,
       );
 
-      _authService.sendFcmTokenToBackend();
+      // Check if login was successful
+      if (responseData['success'] == true) {
+        final userData = responseData['data'] as Map<String, dynamic>;
+        final isEmailVerified = userData['isEmailVerified'] ?? false;
+        final message = responseData['message'] ?? '';
 
-      logger.i('Login successful!');
+        if (!isEmailVerified) {
+          // Email not verified - send OTP first, then redirect to verification screen
+          logger.i(
+              'Login successful but email not verified. Sending OTP first, then redirecting to verification screen.');
 
-      await _authService.getUserProfile();
+          // Store email in provider for verification screen
+          ref.read(verifyEmailProvider.notifier).state = _email;
 
-      // Clear guest mode when user successfully logs in
-      await GuestModeUtils.clearGuestMode();
+          // Send OTP first before navigating
 
-      clearFields();
+          // Show message and navigate to verification screen
+          textActionModal(
+            context,
+            onPressed: () async {
+              try {
+                await _authService.resendOtp(email: _email);
+                logger.i('OTP sent successfully for: $_email');
+                // Navigate to verification screen after user dismisses message
+                NavigationService.instance
+                    .navigateToReplace(NavigatorRoutes.verifyEmailOtpScreen);
+              } catch (e) {
+                logger.e('Failed to send OTP: $e');
+                // Continue anyway - user can request OTP again on verification screen
+              }
+            },
+            dialogText: message,
+            buttonText: "Verify Email",
+          );
 
-      changeState(const ViewModelState.idle());
+          changeState(const ViewModelState.idle());
+          return;
+        }
 
-      NavigationService.instance
-          .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+        // Email is verified - proceed with normal login flow
+        logger.i('Login successful! Email verified. Proceeding to dashboard.');
+
+        _authService.sendFcmTokenToBackend();
+
+        await _authService.getUserProfile();
+
+        // Clear guest mode when user successfully logs in
+        await GuestModeUtils.clearGuestMode();
+
+        clearFields();
+
+        changeState(const ViewModelState.idle());
+
+        NavigationService.instance
+            .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+      } else {
+        // Login failed
+        textActionModal(
+          context,
+          onPressed: () {},
+          dialogText: responseData['message'] ?? 'Login failed',
+          buttonText: "Dismiss",
+        );
+      }
     } on Failure catch (e) {
       logger.e('Login failed: ${e.message}');
       changeState(ViewModelState.error(e));
@@ -87,5 +138,5 @@ class LoginViewModel extends BaseViewModel {
 final loginViewModelProvider = ChangeNotifierProvider<LoginViewModel>((ref) {
   final authService =
       ref.watch(authServiceProvider); // Get AuthService from its provider
-  return LoginViewModel(authService);
+  return LoginViewModel(authService, ref);
 });

@@ -35,9 +35,9 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
 
   final List<String> _countries = [
     'Nigeria',
-    'Ghana',
-    'Kenya',
-    'South Africa'
+    // 'Ghana',
+    // 'Kenya',
+    // 'South Africa'
   ]; // Example countries
 
   @override
@@ -134,38 +134,38 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                     Gap.h16,
                     AppText.caption('Country'),
                     Gap.h4,
-                     ModalFormField(
-                title: viewModel.country.isEmpty
+                    ModalFormField(
+                      title: viewModel.country.isEmpty
                           ? 'Select Country'
                           : viewModel.country,
-                textColor: viewModel.country.isEmpty
+                      textColor: viewModel.country.isEmpty
                           ? AppColors.darkgrey.withOpacity(0.5)
                           : AppColors.black,
-                options: _countries, // Get states from ViewModel
-                controller: _countryController,
-                onOptionSelected: (option) {
-                  viewModel.setCountry(option);
-                }, // Control ModalFormField's text
-              ),
+                      options: _countries, // Get states from ViewModel
+                      controller: _countryController,
+                      onOptionSelected: (option) {
+                        viewModel.setCountry(option);
+                      }, // Control ModalFormField's text
+                    ),
                     Gap.h16,
                     AppText.caption('State'),
                     Gap.h4,
-                     ModalFormField(
-                title: viewModel.selectedState.isEmpty
+                    ModalFormField(
+                      title: viewModel.selectedState.isEmpty
                           ? 'Select State'
                           : viewModel.selectedState,
-                textColor: viewModel.selectedState.isEmpty
+                      textColor: viewModel.selectedState.isEmpty
                           ? AppColors.darkgrey.withOpacity(0.5)
                           : AppColors.black,
-                options: _states, // Get states from ViewModel
-                controller: _stateController,
-                enableSearch: true,
-                modalHeightFactor: 0.9,
-                onOptionSelected: (option) {
-                  viewModel.setSelectedState(option);
-                }, // Control ModalFormField's text
-              ),
-                      Gap.h16,
+                      options: _states, // Get states from ViewModel
+                      controller: _stateController,
+                      enableSearch: true,
+                      modalHeightFactor: 0.9,
+                      onOptionSelected: (option) {
+                        viewModel.setSelectedState(option);
+                      }, // Control ModalFormField's text
+                    ),
+                    Gap.h16,
                     AppText.caption('Phone number'),
                     Gap.h4,
                     Row(
