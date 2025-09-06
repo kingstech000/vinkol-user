@@ -2,14 +2,12 @@
 
 class LinkRoutes {
   // Customer Service & Support
-  static const String customerServicePhone1 = 'tel:+23433670745';
-  static const String customerServicePhone2 = 'tel:+234807972231';
-  static const String emailSupport1 =
-      'mailto:info@vinkol.com?subject=General%20Inquiry';
-  static const String emailSupport2 =
-      'mailto:info@vinkolventures.onmicrosoft.com?subject=Support%20Request';
-  static const String whatsAppChat =
-      'https://wa.me/2348012345678?text=Hello%20I%20need%20help%20with...';
+  static const String customerServicePhone1 = 'tel:+2348079722331';
+  static const String customerServicePhone2 = 'tel:+2347018488479';
+  static const String emailSupport1 = 'mailto:Vinkollogistics@gmail.com';
+  static const String emailSupport2 = 'mailto:vinkolltd@gmail.com';
+  static const String whatsAppChat = 'https://wa.link/xuhpbs';
+  static const String whatsAppChat2 = 'https://wa.link/5l5uvs';
 
   // Official Website
 
@@ -31,6 +29,6 @@ class LinkRoutes {
   static const String twitterProfile =
       'https://x.com/vinkolltd?s=21&t=fwDDLMrWPBCeOetcu1W7Gw';
   static const String linkedInProfile =
-      'https://www.linkedin.com/company/vinkol-logistics'; // Replace with actual company/profile
+      'https://www.linkedin.com/in/vinkol-materials-and-commercial-ventures-limited-8224441b6?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'; // Replace with actual company/profile
   // Add other social media links as needed, e.g., TikTok, YouTube, etc.
 }
