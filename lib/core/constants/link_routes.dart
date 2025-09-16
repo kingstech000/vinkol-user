@@ -15,7 +15,7 @@ class LinkRoutes {
   static const String contactUrl = 'https://www.vinkol.ng/contact';
   static const String privacyPolicy = 'https://www.vinkol.ng/privacy-policy';
   static const String termsAndCondition =
-      'https://www.vinkol.ng/terms-and-conditions';
+      'https://www.vinkol.ng/terms-and-conditions-customer';
   static const String about = 'https://www.vinkol.ng/about';
 
   static const String deleteAccount = 'https://www.vinkol.ng/delete-account';
