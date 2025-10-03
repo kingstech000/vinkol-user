@@ -14,6 +14,7 @@ import 'package:dio/dio.dart'; // Import dio for MultipartFile
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
+import 'package:starter_codes/utils/phone_number_utils.dart';
 
 class ProfileSettingViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -101,6 +102,23 @@ class ProfileSettingViewModel extends BaseViewModel {
     changeState(const ViewModelState.busy());
     FocusScope.of(context).unfocus();
     try {
+      // Validate and format phone number before sending to service
+      String? formattedPhoneNumber =
+          PhoneNumberUtils.validateAndFormatPhoneNumber(
+              _phoneNumber, _phoneNumberPrefix);
+
+      if (formattedPhoneNumber == null) {
+        changeState(const ViewModelState.idle());
+        textActionModal(
+          context,
+          onPressed: () => {},
+          dialogText:
+              "Please enter a valid Nigerian phone number (10 digits starting with 70, 80, 81, 90, or 91)",
+          buttonText: "OK",
+        );
+        return;
+      }
+
       // Prepare MultipartFile for avatar if an image is selected
       MultipartFile? avatarFile;
       if (_profileImage != null) {
@@ -110,11 +128,14 @@ class ProfileSettingViewModel extends BaseViewModel {
         );
       }
 
+      logger.i('Sending formatted phone number: $formattedPhoneNumber');
+
       await _authService.updateProfile(
         firstname: _firstName,
         lastName: _surname,
         state: _selectedState,
-        phoneNumber: _phoneNumber,
+        phoneNumber:
+            formattedPhoneNumber, // Use the validated and formatted number
         avatar: avatarFile,
       );
 

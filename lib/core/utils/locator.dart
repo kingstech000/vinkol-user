@@ -6,16 +6,32 @@ import 'package:starter_codes/widgets/app_flushbar.dart';
 
 GetIt locator = GetIt.instance;
 Future<void> setupLocator() async {
-  final sharedPreferences = await SharedPreferences.getInstance();
-  locator.registerSingleton(sharedPreferences);
+  try {
+    // Initialize SharedPreferences with proper error handling for iOS
+    final sharedPreferences = await SharedPreferences.getInstance();
 
-  locator.registerLazySingleton<LocalCache>(
-    () => LocalCacheImpl(
-      sharedPreferences: sharedPreferences,
-    ),
-  );
+    // Verify that SharedPreferences is working by testing a simple operation
+    await sharedPreferences.setBool('_test_key', true);
+    final testResult = sharedPreferences.getBool('_test_key');
+    await sharedPreferences.remove('_test_key');
 
-  locator.registerLazySingleton<AppFlushBar>(
-    () => AppFlushBar(),
-  );
+    if (testResult != true) {
+      throw Exception('SharedPreferences initialization failed on iOS');
+    }
+
+    locator.registerSingleton(sharedPreferences);
+
+    locator.registerLazySingleton<LocalCache>(
+      () => LocalCacheImpl(
+        sharedPreferences: sharedPreferences,
+      ),
+    );
+
+    locator.registerLazySingleton<AppFlushBar>(
+      () => AppFlushBar(),
+    );
+  } catch (e) {
+    print('Error setting up locator: $e');
+    rethrow;
+  }
 }

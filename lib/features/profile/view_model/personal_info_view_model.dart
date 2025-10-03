@@ -9,11 +9,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/utils/phone_number_utils.dart';
 
 final personalInfoViewModelProvider =
     StateNotifierProvider<PersonalInfoViewModel, PersonalInfoState>((ref) {
   final authService = ref.watch(authServiceProvider);
-  final user = ref.watch(userProvider); // Listen to user changes for initial state
+  final user =
+      ref.watch(userProvider); // Listen to user changes for initial state
   return PersonalInfoViewModel(authService, user, ref);
 });
 
@@ -27,23 +29,28 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
 
   // Methods to update individual fields in the state
   void updateFirstName(String value) {
-    state = state.copyWith(firstname: value, errorMessage: null, successMessage: null);
+    state = state.copyWith(
+        firstname: value, errorMessage: null, successMessage: null);
   }
 
   void updateLastName(String value) {
-    state = state.copyWith(lastname: value, errorMessage: null, successMessage: null);
+    state = state.copyWith(
+        lastname: value, errorMessage: null, successMessage: null);
   }
 
   void updateEmail(String value) {
-    state = state.copyWith(email: value, errorMessage: null, successMessage: null);
+    state =
+        state.copyWith(email: value, errorMessage: null, successMessage: null);
   }
 
   void updatePhoneNumber(String value) {
-    state = state.copyWith(phoneNumber: value, errorMessage: null, successMessage: null);
+    state = state.copyWith(
+        phoneNumber: value, errorMessage: null, successMessage: null);
   }
 
   void updateAddress(String value) {
-    state = state.copyWith(address: value, errorMessage: null, successMessage: null);
+    state = state.copyWith(
+        address: value, errorMessage: null, successMessage: null);
   }
 
   Future<void> pickImage(ImageSource source) async {
@@ -53,7 +60,10 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
       if (pickedFile != null) {
         // Ensure the StateNotifier is still mounted before updating state
         if (!mounted) return;
-        state = state.copyWith(profileImage: File(pickedFile.path), errorMessage: null, successMessage: null);
+        state = state.copyWith(
+            profileImage: File(pickedFile.path),
+            errorMessage: null,
+            successMessage: null);
         logger.d('Image picked: ${pickedFile.path}');
       } else {
         logger.d('No image selected.');
@@ -61,15 +71,18 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
     } catch (e) {
       // Ensure the StateNotifier is still mounted before updating state
       if (!mounted) return;
-      state = state.copyWith(errorMessage: 'Failed to pick image: ${e.toString()}');
+      state =
+          state.copyWith(errorMessage: 'Failed to pick image: ${e.toString()}');
       logger.e('Error picking image: $e');
     }
   }
 
   Future<bool> updateProfile() async {
     // Set loading state and clear previous messages
-    if (!mounted) return false; // Important: Check mounted at the very beginning
-    state = state.copyWith(isLoading: true, errorMessage: null, successMessage: null);
+    if (!mounted)
+      return false; // Important: Check mounted at the very beginning
+    state = state.copyWith(
+        isLoading: true, errorMessage: null, successMessage: null);
     try {
       MultipartFile? avatarFile;
       if (state.profileImage != null) {
@@ -77,24 +90,55 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
             filename: state.profileImage!.path.split('/').last);
       }
 
+      // Validate and format phone number before sending to service
+      String? formattedPhoneNumber =
+          PhoneNumberUtils.validateAndFormatPhoneNumber(
+              state.phoneNumber, '+234' // Assuming Nigerian country code
+              );
+
+      if (formattedPhoneNumber == null) {
+        state = state.copyWith(
+          errorMessage:
+              "Please enter a valid Nigerian phone number (10 digits starting with 70, 80, 81, 90, or 91)",
+          successMessage: null,
+        );
+        return false;
+      }
+
+      // Additional validation for Nigerian mobile number patterns
+      if (!PhoneNumberUtils.isValidNigerianNumber(formattedPhoneNumber)) {
+        state = state.copyWith(
+          errorMessage:
+              "Please enter a valid Nigerian mobile number (starting with 70, 80, 81, 90, or 91)",
+          successMessage: null,
+        );
+        return false;
+      }
+
+      logger.i('Sending formatted phone number: $formattedPhoneNumber');
+
       await _authService.updateProfile(
         firstname: state.firstname,
         lastName: state.lastname,
-        state: state.address, // Assuming 'address' in your state maps to 'state' in backend
-        phoneNumber: state.phoneNumber,
+        state: state
+            .address, // Assuming 'address' in your state maps to 'state' in backend
+        phoneNumber:
+            formattedPhoneNumber, // Use the validated and formatted number
         avatar: avatarFile,
       );
 
       // IMPORTANT: Check if the StateNotifier is still mounted BEFORE updating state
       // after an asynchronous operation, especially if navigation might occur.
-      if (!mounted) return true; // Return true because the operation succeeded from a business logic perspective
+      if (!mounted)
+        return true; // Return true because the operation succeeded from a business logic perspective
 
       // After successful update, fetch the latest user profile to update the userProvider
       // This is another async call, so another mounted check might be prudent if it's long-running.
       await _authService.getUserProfile();
 
       // IMPORTANT: Check mounted again before final state update
-      if (!mounted) return true; // Operation succeeded, but we can't update state
+      if (!mounted)
+        return true; // Operation succeeded, but we can't update state
 
       state = state.copyWith(
         isLoading: false,
@@ -106,18 +150,23 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
     } on Failure catch (e) {
       // IMPORTANT: Check mounted before updating state in catch block
       if (!mounted) return false;
-      state = state.copyWith(isLoading: false, errorMessage: e.message, successMessage: null);
+      state = state.copyWith(
+          isLoading: false, errorMessage: e.message, successMessage: null);
       logger.e('Profile update failed: ${e.message}');
       return false;
     } catch (e) {
       // IMPORTANT: Check mounted before updating state in catch block
       if (!mounted) return false;
-      state = state.copyWith(isLoading: false, errorMessage: 'An unexpected error occurred: ${e.toString()}', successMessage: null);
+      state = state.copyWith(
+          isLoading: false,
+          errorMessage: 'An unexpected error occurred: ${e.toString()}',
+          successMessage: null);
       logger.e('Unexpected error during profile update: $e');
       return false;
     }
   }
 }
+
 class PersonalInfoState {
   final String firstname;
   final String lastname;
@@ -173,7 +222,8 @@ class PersonalInfoState {
       lastname: user?.lastname ?? '',
       email: user?.email ?? '',
       phoneNumber: user?.phoneNumber ?? '',
-      address: user?.state ?? '', // Assuming 'state' in User model maps to 'address' on screen
+      address: user?.state ??
+          '', // Assuming 'state' in User model maps to 'address' on screen
     );
   }
 }

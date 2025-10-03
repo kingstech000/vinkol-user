@@ -62,5 +62,10 @@
 	<string>This app needs access to your location to provide accurate delivery services, show nearby stores, and calculate delivery distances.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs access to your camera to take photos of delivery items, scan QR codes, and capture important documents.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>background-processing</string>
+	</array>
 </dict>
 </plist>
