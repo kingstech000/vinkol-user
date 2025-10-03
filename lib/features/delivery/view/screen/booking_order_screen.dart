@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:sliding_sheet2/sliding_sheet2.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/constants/assets.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
@@ -382,9 +381,25 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                                   .deliveryAgent
                                                                   ?.phone !=
                                                               null) {
-                                                            makePhoneCall(delivery
-                                                                .deliveryAgent!
-                                                                .phone!);
+                                                            final validatedPhone =
+                                                                validateAndFormatPhoneNumber(
+                                                                    delivery
+                                                                        .deliveryAgent!
+                                                                        .phone!);
+                                                            if (validatedPhone !=
+                                                                null) {
+                                                              makePhoneCall(
+                                                                  validatedPhone);
+                                                            } else {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                      'Invalid phone number format.'),
+                                                                ),
+                                                              );
+                                                            }
                                                           } else {
                                                             ScaffoldMessenger
                                                                     .of(context)

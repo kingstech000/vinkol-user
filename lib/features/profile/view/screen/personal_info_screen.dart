@@ -15,6 +15,7 @@ import 'package:starter_codes/widgets/gap.dart';
 
 import 'package:starter_codes/features/profile/view_model/personal_info_view_model.dart';
 import 'package:starter_codes/widgets/modal_form_field.dart';
+import 'package:starter_codes/widgets/phone_number_input.dart';
 
 class PersonalInfoScreen extends ConsumerStatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -27,7 +28,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
   late final TextEditingController _addressController;
 
   @override
@@ -40,8 +40,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     _lastNameController =
         TextEditingController(text: initialPersonalInfo.lastname);
     _emailController = TextEditingController(text: initialPersonalInfo.email);
-    _phoneController =
-        TextEditingController(text: initialPersonalInfo.phoneNumber);
     _addressController =
         TextEditingController(text: initialPersonalInfo.address);
 
@@ -61,11 +59,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
           .read(personalInfoViewModelProvider.notifier)
           .updateEmail(_emailController.text);
     });
-    _phoneController.addListener(() {
-      ref
-          .read(personalInfoViewModelProvider.notifier)
-          .updatePhoneNumber(_phoneController.text);
-    });
     _addressController.addListener(() {
       ref
           .read(personalInfoViewModelProvider.notifier)
@@ -79,7 +72,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _addressController.dispose();
     super.dispose();
   }
@@ -217,11 +209,15 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
             Gap.h16,
             AppText.caption('Phone Number'),
             Gap.h4,
-            AppTextField(
-              controller: _phoneController,
-              hint: 'Phone Number',
-              enabled: false, // Phone number is typically not editable
-              keyboardType: TextInputType.phone,
+            PhoneNumberInput(
+              initialPhoneNumber: personalInfoState.phoneNumber,
+              onPhoneNumberChanged: (fullPhoneNumber) {
+                ref
+                    .read(personalInfoViewModelProvider.notifier)
+                    .updatePhoneNumber(fullPhoneNumber);
+              },
+              enabled: true, // Allow editing of phone number
+              hint: 'Enter phone number',
             ),
             Gap.h16,
             AppText.caption('State '),
