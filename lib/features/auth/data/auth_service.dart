@@ -19,7 +19,8 @@ class AuthService {
 
   AuthService(this._networkClient, this._localCache, this.logger, this._ref);
 
-  Future<void> login({required String email, required String password}) async {
+  Future<Map<String, dynamic>> login(
+      {required String email, required String password}) async {
     try {
       final responseData = await _networkClient.post(
         ApiRoute.login,
@@ -28,12 +29,22 @@ class AuthService {
           "password": password,
         },
       );
-      logger.i(responseData);
-      if (responseData.containsKey('token')) {
-        await _localCache.saveToken(responseData['token'] as String);
+      logger.i("Login response: $responseData");
+
+      // Check if login was successful but email not verified
+      if (responseData['success'] == true && responseData.containsKey('data')) {
+        final userData = responseData['data'] as Map<String, dynamic>;
+        final isEmailVerified = userData['isEmailVerified'] ?? false;
+
+        // Only save token if email is verified
+        if (isEmailVerified && responseData.containsKey('token')) {
+          await _localCache.saveToken(responseData['token'] as String);
+        }
       }
+
+      return responseData;
     } catch (e) {
-      logger.e('Login failed: $e');
+      logger.e('Login failed: $e.');
       rethrow;
     }
   }
@@ -60,15 +71,11 @@ class AuthService {
     }
   }
 
-
-
-   Future<void> forgotPassword({required String email}) async {
+  Future<void> forgotPassword({required String email}) async {
     try {
       await _networkClient.post(
         ApiRoute.forgotPassword,
-        queryParameters: {
-          'app':true
-        },
+        queryParameters: {'app': true},
         body: {
           "email": email, // Assuming resend OTP also takes email in the body
         },
@@ -80,16 +87,16 @@ class AuthService {
     }
   }
 
-    Future<void> setPassword({required String otp,required String password}) async {
+  Future<void> setPassword(
+      {required String otp, required String password}) async {
     try {
       await _networkClient.patch(
         ApiRoute.resetPassword,
-        queryParameters: {
-          'app':true
-        },
+        queryParameters: {'app': true},
         body: {
-          "otp":otp,
-          "password":password // Assuming resend OTP also takes email in the body
+          "otp": otp,
+          "password":
+              password // Assuming resend OTP also takes email in the body
         },
       );
       logger.i('Reset Password request successful for: $otp');
@@ -166,7 +173,7 @@ class AuthService {
       if (firstname != null) {
         data['firstname'] = firstname;
       }
-       if (lastName != null) {
+      if (lastName != null) {
         data['lastname'] = lastName;
       }
       if (state != null) {
@@ -175,7 +182,7 @@ class AuthService {
       if (avatar != null) {
         data['avatar'] = avatar; // Add MultipartFile directly to map
       }
-            if (phoneNumber != null) {
+      if (phoneNumber != null) {
         data['phone'] = phoneNumber; // Add MultipartFile directly to map
       }
 
@@ -208,30 +215,33 @@ class AuthService {
       rethrow;
     }
   }
+
   Future<void> sendFcmTokenToBackend() async {
     try {
       String? fcmToken = await NotificationService.instance.getToken();
-     
-      if ( fcmToken.isNotEmpty ) {
+
+      if (fcmToken.isNotEmpty) {
         logger.i('Sending FCM token for user : $fcmToken');
         // Use your NetworkClient to send the FCM token
         final response = await _networkClient.patch(
-          ApiRoute.updateToken, // Use your actual API route for updating FCM token
+          ApiRoute
+              .updateToken, // Use your actual API route for updating FCM token
           body: {
             'token': fcmToken,
           },
         );
-        final responseData=response  as Map<String, dynamic>;
+        final responseData = response as Map<String, dynamic>;
         logger.i('FCM token update response: $response');
-      _localCache.saveToken(responseData['token']);
-      await getUserProfile();
+        _localCache.saveToken(responseData['token']);
+        await getUserProfile();
       } else {
-        logger.w('Cannot send FCM token: FCM token or User ID is missing. FCM: $fcmToken, User ID: ');
+        logger.w(
+            'Cannot send FCM token: FCM token or User ID is missing. FCM: $fcmToken, User ID: ');
       }
     } on Failure catch (e) {
       logger.e('Failed to send FCM token to backend: ${e.message}');
       // Do not rethrow here, as FCM token update failure shouldn't block app initialization
-    } 
+    }
   }
 }
 

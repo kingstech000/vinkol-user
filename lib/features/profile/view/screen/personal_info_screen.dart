@@ -15,6 +15,7 @@ import 'package:starter_codes/widgets/gap.dart';
 
 import 'package:starter_codes/features/profile/view_model/personal_info_view_model.dart';
 import 'package:starter_codes/widgets/modal_form_field.dart';
+import 'package:starter_codes/widgets/phone_number_input.dart';
 
 class PersonalInfoScreen extends ConsumerStatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -27,7 +28,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
   late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
   late final TextEditingController _addressController;
 
   @override
@@ -35,27 +35,34 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     super.initState();
     // Initialize controllers with the current state from the view model
     final initialPersonalInfo = ref.read(personalInfoViewModelProvider);
-    _firstNameController = TextEditingController(text: initialPersonalInfo.firstname);
-    _lastNameController = TextEditingController(text: initialPersonalInfo.lastname);
+    _firstNameController =
+        TextEditingController(text: initialPersonalInfo.firstname);
+    _lastNameController =
+        TextEditingController(text: initialPersonalInfo.lastname);
     _emailController = TextEditingController(text: initialPersonalInfo.email);
-    _phoneController = TextEditingController(text: initialPersonalInfo.phoneNumber);
-    _addressController = TextEditingController(text: initialPersonalInfo.address);
+    _addressController =
+        TextEditingController(text: initialPersonalInfo.address);
 
     // Add listeners to update the view model state as text changes
     _firstNameController.addListener(() {
-      ref.read(personalInfoViewModelProvider.notifier).updateFirstName(_firstNameController.text);
+      ref
+          .read(personalInfoViewModelProvider.notifier)
+          .updateFirstName(_firstNameController.text);
     });
     _lastNameController.addListener(() {
-      ref.read(personalInfoViewModelProvider.notifier).updateLastName(_lastNameController.text);
+      ref
+          .read(personalInfoViewModelProvider.notifier)
+          .updateLastName(_lastNameController.text);
     });
     _emailController.addListener(() {
-      ref.read(personalInfoViewModelProvider.notifier).updateEmail(_emailController.text);
-    });
-    _phoneController.addListener(() {
-      ref.read(personalInfoViewModelProvider.notifier).updatePhoneNumber(_phoneController.text);
+      ref
+          .read(personalInfoViewModelProvider.notifier)
+          .updateEmail(_emailController.text);
     });
     _addressController.addListener(() {
-      ref.read(personalInfoViewModelProvider.notifier).updateAddress(_addressController.text);
+      ref
+          .read(personalInfoViewModelProvider.notifier)
+          .updateAddress(_addressController.text);
     });
   }
 
@@ -65,14 +72,14 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _addressController.dispose();
     super.dispose();
   }
 
   void _showImagePickerOptions() {
     showModalBottomSheet(
-      context: context,backgroundColor: AppColors.white,
+      context: context,
+      backgroundColor: AppColors.white,
       builder: (BuildContext context) {
         return Padding(
           padding: EdgeInsets.all(16.w),
@@ -84,7 +91,9 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 title: const Text('Take a picture'),
                 onTap: () {
                   Navigator.pop(context); // Close the bottom sheet
-                  ref.read(personalInfoViewModelProvider.notifier).pickImage(ImageSource.camera);
+                  ref
+                      .read(personalInfoViewModelProvider.notifier)
+                      .pickImage(ImageSource.camera);
                 },
               ),
               ListTile(
@@ -92,7 +101,9 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 title: AppText.body('Choose from gallery'),
                 onTap: () {
                   Navigator.pop(context); // Close the bottom sheet
-                  ref.read(personalInfoViewModelProvider.notifier).pickImage(ImageSource.gallery);
+                  ref
+                      .read(personalInfoViewModelProvider.notifier)
+                      .pickImage(ImageSource.gallery);
                 },
               ),
             ],
@@ -104,7 +115,9 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
 
   void _onAddressSelected(String selectedState) {
     _addressController.text = selectedState; // Update the TextEditingController
-    ref.read(personalInfoViewModelProvider.notifier).updateAddress(selectedState); // Update the view model
+    ref
+        .read(personalInfoViewModelProvider.notifier)
+        .updateAddress(selectedState); // Update the view model
   }
 
   @override
@@ -120,31 +133,37 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     // Logic to determine which image to display for the avatar
     if (personalInfoState.profileImage != null) {
       displayImageProvider = FileImage(personalInfoState.profileImage!);
-    } else if (currentUser?.avatar?.imageUrl != null && currentUser!.avatar!.imageUrl.isNotEmpty) {
+    } else if (currentUser?.avatar?.imageUrl != null &&
+        currentUser!.avatar!.imageUrl.isNotEmpty) {
       displayImageProvider = NetworkImage(currentUser.avatar!.imageUrl);
     } else {
-      displayImageProvider = const NetworkImage('https://via.placeholder.com/150/0000FF/808080?Text=User');
+      displayImageProvider = const NetworkImage(
+          'https://via.placeholder.com/150/0000FF/808080?Text=User');
       avatarPlaceholder = Icon(Icons.person, size: 40.w, color: Colors.white);
     }
 
     // Use ref.listen to react to one-off state changes like success/error messages.
-    ref.listen<PersonalInfoState>(personalInfoViewModelProvider, (previous, next) {
+    ref.listen<PersonalInfoState>(personalInfoViewModelProvider,
+        (previous, next) {
       // Show SnackBar for success message
-      if (next.successMessage != null && next.successMessage != previous?.successMessage) {
+      if (next.successMessage != null &&
+          next.successMessage != previous?.successMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.successMessage!)),
         );
       }
       // Show error SnackBar if errorMessage is set
-      else if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
+      else if (next.errorMessage != null &&
+          next.errorMessage != previous?.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.errorMessage!), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text(next.errorMessage!), backgroundColor: Colors.red),
         );
       }
     });
 
     return Scaffold(
-      appBar:  MiniAppBar(
+      appBar: MiniAppBar(
         title: 'Personal Info',
       ),
       body: SingleChildScrollView(
@@ -190,11 +209,15 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
             Gap.h16,
             AppText.caption('Phone Number'),
             Gap.h4,
-            AppTextField(
-              controller: _phoneController,
-              hint: 'Phone Number',
-              enabled: false, // Phone number is typically not editable
-              keyboardType: TextInputType.phone,
+            PhoneNumberInput(
+              initialPhoneNumber: personalInfoState.phoneNumber,
+              onPhoneNumberChanged: (fullPhoneNumber) {
+                ref
+                    .read(personalInfoViewModelProvider.notifier)
+                    .updatePhoneNumber(fullPhoneNumber);
+              },
+              enabled: true, // Allow editing of phone number
+              hint: 'Enter phone number',
             ),
             Gap.h16,
             AppText.caption('State '),
@@ -218,12 +241,20 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                     : () async {
                         FocusScope.of(context).unfocus(); // Dismiss keyboard
                         // Trigger the updateProfile method and await its completion.
-                        final success = await ref.read(personalInfoViewModelProvider.notifier).updateProfile();
+                        final success = await ref
+                            .read(personalInfoViewModelProvider.notifier)
+                            .updateProfile();
 
                         // Only navigate back if the update was successful AND
                         // the widget is still mounted (i.e., screen hasn't been popped already).
                         if (success && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: AppText.button('Updated Successfully',color: AppColors.white,),backgroundColor: AppColors.green,));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: AppText.button(
+                              'Updated Successfully',
+                              color: AppColors.white,
+                            ),
+                            backgroundColor: AppColors.green,
+                          ));
                           NavigationService.instance.goBack();
                         }
                       },

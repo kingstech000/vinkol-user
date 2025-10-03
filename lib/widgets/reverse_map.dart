@@ -52,13 +52,17 @@ class _ReverseLocationStringMapState
     LatLng? newDropoffCoordinates;
 
     // Fetch pickup coordinates if available
-    if (widget.pickupLocationString != null && widget.pickupLocationString!.isNotEmpty) {
-      newPickupCoordinates = await _getCoordinatesFromAddress(widget.pickupLocationString!);
+    if (widget.pickupLocationString != null &&
+        widget.pickupLocationString!.isNotEmpty) {
+      newPickupCoordinates =
+          await _getCoordinatesFromAddress(widget.pickupLocationString!);
     }
 
     // Fetch dropoff coordinates if available
-    if (widget.dropoffLocationString != null && widget.dropoffLocationString!.isNotEmpty) {
-      newDropoffCoordinates = await _getCoordinatesFromAddress(widget.dropoffLocationString!);
+    if (widget.dropoffLocationString != null &&
+        widget.dropoffLocationString!.isNotEmpty) {
+      newDropoffCoordinates =
+          await _getCoordinatesFromAddress(widget.dropoffLocationString!);
     }
 
     // Check if the widget is still mounted before calling setState
@@ -84,16 +88,16 @@ class _ReverseLocationStringMapState
     // Animate camera to the available location (pickup or dropoff)
     if (_mapController != null && cameraTarget != null) {
       if (!mounted) return;
-      _mapController!.animateCamera(CameraUpdate.newLatLngZoom(cameraTarget, 14)); // Zoom in a bit more for single marker
+      _mapController!.animateCamera(CameraUpdate.newLatLngZoom(
+          cameraTarget, 14)); // Zoom in a bit more for single marker
     }
-
 
     // --- Core Logic Change: Only draw polyline if BOTH coordinates are present ---
     if (_pickupCoordinates != null && _dropoffCoordinates != null) {
-      final pickupPoint =
-          PointLatLng(_pickupCoordinates!.latitude, _pickupCoordinates!.longitude);
-      final dropoffPoint =
-          PointLatLng(_dropoffCoordinates!.latitude, _dropoffCoordinates!.longitude);
+      final pickupPoint = PointLatLng(
+          _pickupCoordinates!.latitude, _pickupCoordinates!.longitude);
+      final dropoffPoint = PointLatLng(
+          _dropoffCoordinates!.latitude, _dropoffCoordinates!.longitude);
 
       final polylineCoordinates = await createPolyline(
         pickup: pickupPoint,
@@ -115,7 +119,7 @@ class _ReverseLocationStringMapState
     } else {
       // If only one or no locations, ensure polylines are cleared
       if (_polylines.isNotEmpty) {
-         if (!mounted) return;
+        if (!mounted) return;
         setState(() {
           _polylines.clear();
         });
@@ -172,8 +176,8 @@ class _ReverseLocationStringMapState
         const LatLng(6.5244, 3.3792); // Default to Lagos, Nigeria
 
     // Determine the zoom level. Higher zoom for single marker, lower for route.
-    final double initialZoom = (_pickupCoordinates != null && _dropoffCoordinates != null) ? 12 : 14;
-
+    final double initialZoom =
+        (_pickupCoordinates != null && _dropoffCoordinates != null) ? 12 : 14;
 
     return GoogleMap(
       initialCameraPosition: CameraPosition(
@@ -195,7 +199,8 @@ class _ReverseLocationStringMapState
           Marker(
             markerId: const MarkerId('pickupLocation'),
             position: _pickupCoordinates!,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueGreen),
             infoWindow: InfoWindow(title: widget.pickupLocationString),
           ),
         // Only add dropoff marker if coordinates are available
@@ -203,7 +208,8 @@ class _ReverseLocationStringMapState
           Marker(
             markerId: const MarkerId('dropoffLocation'),
             position: _dropoffCoordinates!,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             infoWindow: InfoWindow(title: widget.dropoffLocationString),
           ),
       },

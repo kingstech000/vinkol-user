@@ -10,23 +10,33 @@ import 'package:starter_codes/core/services/notification_service.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/firebase_options.dart';
 import 'package:starter_codes/widgets/app_flushbar.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    await dotenv.load(fileName: ".env"); 
-        await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
- final rootContainer = ProviderContainer();
-  await setupLocator();
-  NotificationService.instance.setProviderContainer(rootContainer); // Pass it to your service
 
-  
+  try {
+    await dotenv.load(fileName: ".env");
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  await NotificationService.instance.initialize();
-  runApp(  UncontrolledProviderScope( // Use UncontrolledProviderScope for the root
+    final rootContainer = ProviderContainer();
+
+    // Initialize SharedPreferences and locator first
+    await setupLocator();
+
+    NotificationService.instance.setProviderContainer(rootContainer);
+    await NotificationService.instance.initialize();
+
+    runApp(UncontrolledProviderScope(
       container: rootContainer,
-      child: const MyApp(), 
-    ),);
+      child: const MyApp(),
+    ));
+  } catch (e) {
+    print('Error initializing app: $e');
+    // Fallback initialization
+    runApp(const MyApp());
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -57,4 +67,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
