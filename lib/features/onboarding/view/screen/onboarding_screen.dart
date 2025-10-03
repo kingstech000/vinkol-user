@@ -1,114 +1,169 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart'; // Import smooth_page_indicator
-import 'package:starter_codes/core/constants/assets.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/features/onboarding/view_model/onboarding_view_model.dart';
-import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/gap.dart';
 
-class OnboardingScreen extends ConsumerStatefulWidget {
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  _OnboardingScreenState createState() => _OnboardingScreenState();
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  Timer? _timer;
 
-  final List<Map<String, String>> onboardingData = [
-    {
-      'image': ImageAsset.onboarding1,
-      'title': 'Welcome To Vinkol ',
-      'description':
-          'Join Vinkol today and be able to send package anyday anytime also shop from closest store and get it delivered to your door steps'
-    },
+  final List<OnboardingData> _onboardingData = [
+    OnboardingData(
+      title: "Welcome to Vinkol",
+      description: "Your trusted delivery partner for all your needs",
+      image: Icons.delivery_dining,
+    ),
+    OnboardingData(
+      title: "Fast & Reliable",
+      description: "Get your items delivered quickly and safely",
+      image: Icons.speed,
+    ),
+    OnboardingData(
+      title: "Track Your Orders",
+      description: "Real-time tracking for all your deliveries",
+      image: Icons.location_on,
+    ),
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    // Start the timer to auto-scroll every 5 seconds
-    _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
-      if (_currentPage < onboardingData.length - 1) {
-        _currentPage++;
-      } else {
-        _currentPage = 0; // Reset to first page after reaching the last page
-      }
-      _pageController.animateToPage(
-        _currentPage,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel(); // Cancel the timer when the widget is disposed
-    _pageController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            flex: 7,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: onboardingData.length,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              itemBuilder: (context, index) => OnboardingPage(
-                image: onboardingData[index]['image']!,
-                title: onboardingData[index]['title']!,
-                description: onboardingData[index]['description']!,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemCount: _onboardingData.length,
+                itemBuilder: (context, index) {
+                  return _buildOnboardingPage(_onboardingData[index]);
+                },
+              ),
+            ),
+            _buildBottomSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOnboardingPage(OnboardingData data) {
+    return Padding(
+      padding: EdgeInsets.all(24.w),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 200.w,
+            height: 200.w,
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(100.w),
+            ),
+            child: Icon(
+              data.image,
+              size: 100.w,
+              color: Colors.blue,
+            ),
+          ),
+          SizedBox(height: 48.h),
+          Text(
+            data.title,
+            style: TextStyle(
+              fontSize: 28.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            data.description,
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: Colors.grey.shade600,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomSection() {
+    return Padding(
+      padding: EdgeInsets.all(24.w),
+      child: Column(
+        children: [
+          // Page indicators
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              _onboardingData.length,
+              (index) => Container(
+                margin: EdgeInsets.symmetric(horizontal: 4.w),
+                width: _currentPage == index ? 24.w : 8.w,
+                height: 8.h,
+                decoration: BoxDecoration(
+                  color: _currentPage == index
+                      ? Colors.blue
+                      : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
               ),
             ),
           ),
-          // Page Indicator and Buttons
-          Expanded(
-            flex: 3,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.0.w),
-              child: Column(
-                children: <Widget>[
-                  SmoothPageIndicator(
-                    controller: _pageController,
-                    count: onboardingData.length,
-                    effect: const WormEffect(
-                      dotHeight: 10,
-                      dotWidth: 10,
-                      activeDotColor: AppColors.primary,
-                      dotColor: Colors.grey,
-                      spacing: 8,
-                    ),
-                  ),
-                  Gap.h36,
-                  AppButton.primary(
-                    title: 'Get Started ',
-                    onTap: () {
-                      ref.read(onBoardingViewModelProvider).markAsOnBoarded();
-                      NavigationService.instance
-                          .navigateTo(NavigatorRoutes.authChoiceScreen);
-                    },
-                  ),
-                  Gap.h12,
-                ],
+          SizedBox(height: 32.h),
+
+          // Next/Get Started button
+          SizedBox(
+            width: double.infinity,
+            height: 56.h,
+            child: ElevatedButton(
+              onPressed: _nextPage,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                elevation: 2,
+              ),
+              child: Text(
+                _currentPage == _onboardingData.length - 1
+                    ? 'Get Started'
+                    : 'Next',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // Skip button
+          TextButton(
+            onPressed: _skipOnboarding,
+            child: Text(
+              'Skip',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.grey.shade600,
               ),
             ),
           ),
@@ -116,59 +171,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
     );
   }
+
+  void _nextPage() {
+    if (_currentPage < _onboardingData.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _completeOnboarding();
+    }
+  }
+
+  void _skipOnboarding() {
+    _completeOnboarding();
+  }
+
+  void _completeOnboarding() {
+    // Navigate to dashboard after onboarding
+    NavigationService.instance
+        .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+  }
 }
 
-class OnboardingPage extends StatelessWidget {
-  final String image;
+class OnboardingData {
   final String title;
   final String description;
+  final IconData image;
 
-  const OnboardingPage({
-    super.key,
-    required this.image,
+  OnboardingData({
     required this.title,
     required this.description,
+    required this.image,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          width: double.infinity,
-          height: 400.h,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(image),
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Gap.h24,
-              AppText.h4(
-                title,
-                fontSize: 22,
-                color: AppColors.black,
-              ),
-              Gap.h12,
-              AppText.free(
-                description,
-                textAlign: TextAlign.center,
-                centered: true,
-                color: AppColors.darkgrey,
-              ),
-            ],
-          ),
-        ),
-        Gap.h16,
-      ],
-    );
-  }
 }

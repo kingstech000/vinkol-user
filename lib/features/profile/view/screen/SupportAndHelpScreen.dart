@@ -112,7 +112,7 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
           Gap.h32,
           _ContactOption(
             icon: Icons.phone_outlined,
-            title: 'Customer Service (Primary): +234 3367 0745',
+            title: 'Customer Service (Primary)',
             onTap: () {
               _launchUrl(context, LinkRoutes.customerServicePhone1);
             },
@@ -120,30 +120,37 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
           _ContactOption(
             icon: Icons
                 .phone_in_talk_outlined, // Changed icon for visual distinction
-            title: 'Customer Service (Secondary): +234 8079 72231',
+            title: 'Customer Service (Secondary)',
             onTap: () {
               _launchUrl(context, LinkRoutes.customerServicePhone2);
             },
           ),
           _ContactOption(
             icon: Icons.email_outlined,
-            title: 'Email Us: info@vinkol.com',
+            title: 'Email Us: Vinkollogistics@gmail.com',
             onTap: () {
               _launchUrl(context, LinkRoutes.emailSupport1);
             },
           ),
           _ContactOption(
             icon: Icons.mail_outline, // Changed icon for visual distinction
-            title: 'Email Us: info@vinkolventures.onmicrosoft.com',
+            title: 'Email Us: vinkolltd@gmail.com',
             onTap: () {
               _launchUrl(context, LinkRoutes.emailSupport2);
             },
           ),
           _ContactOption(
             icon: Icons.chat_bubble_outline,
-            title: 'Chat on WhatsApp: +234 8012 345678',
+            title: 'Chat on WhatsApp 1',
             onTap: () {
               _launchUrl(context, LinkRoutes.whatsAppChat);
+            },
+          ),
+          _ContactOption(
+            icon: Icons.chat_bubble_outline,
+            title: 'Chat on WhatsApp 2',
+            onTap: () {
+              _launchUrl(context, LinkRoutes.whatsAppChat2);
             },
           ),
           Gap.h32,
@@ -182,21 +189,21 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
           ),
           _ContactOption(
             icon: Icons.camera_alt_outlined,
-            title: 'Follow Us on Instagram: @vinkollogistics',
+            title: 'Follow Us on Instagram',
             onTap: () {
               _launchUrl(context, LinkRoutes.instagramProfile);
             },
           ),
           _ContactOption(
             icon: Icons.alternate_email,
-            title: 'Follow Us on X (Twitter): @vinkolltd',
+            title: 'Follow Us on X (Twitter)',
             onTap: () {
               _launchUrl(context, LinkRoutes.twitterProfile);
             },
           ),
           _ContactOption(
             icon: Icons.link,
-            title: 'Connect on LinkedIn: Vinkol Logistics',
+            title: 'Connect on LinkedIn',
             onTap: () {
               _launchUrl(context, LinkRoutes.linkedInProfile);
             },

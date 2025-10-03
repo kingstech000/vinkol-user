@@ -26,11 +26,14 @@ class _VerifyEmailOtpScreenState extends ConsumerState<VerifyEmailOtpScreen> {
   @override
   void initState() {
     super.initState();
-    // Get the email from the provider and set it in the ViewModel
-    final emailFromProvider = ref.read(verifyEmailProvider);
-    ref.read(verifyEmailOtpViewModelProvider).setEmail(emailFromProvider);
-    // Start cooldown if it was active previously (e.g. if the user navigated back)
-    ref.read(verifyEmailOtpViewModelProvider).startResendCooldown();
+    // Use addPostFrameCallback to defer provider modifications until after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Get the email from the provider and set it in the ViewModel
+      final emailFromProvider = ref.read(verifyEmailProvider);
+      ref.read(verifyEmailOtpViewModelProvider).setEmail(emailFromProvider);
+      // Start cooldown if it was active previously (e.g. if the user navigated back)
+      ref.read(verifyEmailOtpViewModelProvider).startResendCooldown();
+    });
   }
 
   @override

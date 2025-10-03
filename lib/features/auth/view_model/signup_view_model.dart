@@ -45,7 +45,7 @@ class SignUpViewModel extends BaseViewModel {
       changeState(const ViewModelState.idle());
       ref.watch(verifyEmailProvider.notifier).state = email;
       NavigationService.instance
-          .navigateToReplaceAll(NavigatorRoutes.verifyEmailOtpScreen);
+          .navigateTo(NavigatorRoutes.verifyEmailOtpScreen);
     } on Failure catch (e) {
       logger.e('Signup failed: ${e.message}');
       changeState(ViewModelState.error(e));

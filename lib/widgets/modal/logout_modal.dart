@@ -80,7 +80,9 @@ class LogoutModal extends ConsumerWidget {
               ),
               Gap.w16,
               Expanded(
-                child: AppButton.primary(
+                child: AppButton(
+                  color: AppColors.red,
+                  textColor: AppColors.white,
                   title: 'Log Out',
                   onTap: () async {
                     // Clear guest mode and token
@@ -90,7 +92,6 @@ class LogoutModal extends ConsumerWidget {
                     NavigationService.instance.navigateToReplaceAll(
                         NavigatorRoutes
                             .authChoiceScreen); // Navigate to auth choice
-                    print('User logged out!');
                   },
                 ),
               ),

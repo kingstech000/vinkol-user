@@ -65,6 +65,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '642058483038',
     projectId: 'vinkol',
     storageBucket: 'vinkol.firebasestorage.app',
-    iosBundleId: 'com.example.starterCodes',
+    iosBundleId: 'app.vinkol.user',
   );
 }

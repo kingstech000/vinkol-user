@@ -12,7 +12,6 @@ import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/logout_modal.dart';
 import 'package:starter_codes/features/auth/model/user_model.dart'; // Ensure User model is imported if not already via provider
-import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 // Change StatelessWidget to ConsumerStatefulWidget
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -30,144 +29,211 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Use watch to react to user authentication state changes
+    // Watch the userProvider to get the current user state
     final User? user = ref.watch(userProvider);
-    final bool isGuestMode = GuestModeUtils.isGuestMode();
 
-    // Profile image is now handled directly in the CircleAvatar widget
+    // Determine the profile image based on the user data
+    ImageProvider<Object>? profileImageProvider;
+
+    if (user?.avatar?.imageUrl != null && user!.avatar!.imageUrl.isNotEmpty) {
+      // Use NetworkImage if avatar URL is available
+      profileImageProvider = NetworkImage(user.avatar!.imageUrl);
+    } else {
+      // No image available
+      profileImageProvider = null;
+    }
 
     // Determine user name and role
-    final String displayUserName = isGuestMode
-        ? 'Guest User'
-        : (user != null
-            ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim().isNotEmpty
-                ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim()
-                : user.email // Fallback to email if first/last name are empty
-            : 'Guest User'); // Default if no user is logged in
+    final String displayUserName = user != null
+        ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim().isNotEmpty
+            ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim()
+            : user.email ?? '' // Fallback to email if first/last name are empty
+        : 'Guest User'; // Default if no user is logged in
 
-    final String displayUserRole = isGuestMode
-        ? 'Continue as guest'
-        : (user != null
-            ? ' ${user.state}| ${user.role}' // Truncate ID for display
-            : 'Not Logged In'); // Default if no user is logged in
+    final String displayUserRole = user != null
+        ? '${user.state ?? ''} | ${user.role ?? ''}' // Handle null values
+        : 'Not Logged In'; // Default if no user is logged in
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: const EmptyAppBar(),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    backgroundColor: AppColors.primary,
-                    radius: 40.r,
-                    child: user?.avatar?.imageUrl != null &&
-                            user!.avatar!.imageUrl.isNotEmpty
-                        ? ClipOval(
-                            child: Image.network(
-                              user.avatar!.imageUrl,
-                              width: 80.w,
-                              height: 80.w,
-                              fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Container(
-                                  width: 80.w,
-                                  height: 80.w,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(Icons.person,
-                                      size: 40.w, color: Colors.white),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 80.w,
-                                  height: 80.w,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(Icons.person,
-                                      size: 40.w, color: Colors.white),
-                                );
-                              },
-                            ),
-                          )
-                        : Icon(Icons.person, size: 40.w, color: Colors.white),
-                  ),
-                  Gap.w8,
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Gap.h16,
-                      AppText.h2(displayUserName, fontWeight: FontWeight.bold),
-                      Gap.h4,
-                      AppText.body(displayUserRole,
-                          color: Colors.grey.shade600, fontSize: 12.sp),
+              // Profile Header Section
+              Container(
+                padding: EdgeInsets.all(24.r),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withOpacity(0.8),
                     ],
-                  )
-                ],
-              ),
-              const Gap.h(72),
-              Card(
-                elevation: 1,
-                color: Colors.grey.shade50,
+                  ),
+                  borderRadius: BorderRadius.circular(20.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
                 child: Column(
                   children: [
-                    if (!isGuestMode) ...[
-                      _ProfileOption(
-                        icon: Icons.person_outline,
-                        title: 'Personal Info',
-                        onTap: () {
-                          NavigationService.instance
-                              .navigateTo(NavigatorRoutes.personalInfoScreen);
-                        },
+                    // Centered Avatar with Border
+                    Center(
+                      child: Container(
+                        width: 100.r,
+                        height: 100.r,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 4.r,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: profileImageProvider != null
+                            ? ClipOval(
+                                child: Image(
+                                  image: profileImageProvider!,
+                                  width: 100.r,
+                                  height: 100.r,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.person,
+                                      size: 50.w,
+                                      color: AppColors.primary,
+                                    );
+                                  },
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Icon(
+                                      Icons.person,
+                                      size: 50.w,
+                                      color: AppColors.primary,
+                                    );
+                                  },
+                                ),
+                              )
+                            : Icon(
+                                Icons.person,
+                                size: 50.w,
+                                color: AppColors.primary,
+                              ),
                       ),
-                      _ProfileOption(
-                        icon: Icons.security,
-                        title: 'Security',
-                        onTap: () {
-                          NavigationService.instance
-                              .navigateTo(NavigatorRoutes.securityScreen);
-                        },
+                    ),
+                    Gap.h20,
+                    // Centered User Info
+                    Center(
+                      child: Column(
+                        children: [
+                          AppText.h3(
+                            displayUserName,
+                            fontWeight: FontWeight.bold,
+                            textAlign: TextAlign.center,
+                            color: Colors.white,
+                          ),
+                          Gap.h8,
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16.r, vertical: 8.r),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20.r),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: AppText.body(
+                              displayUserRole,
+                              color: Colors.white,
+                              fontSize: 14.sp,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                       ),
-                      _ProfileOption(
-                        icon: Icons.settings_outlined,
-                        title: 'Settings',
-                        onTap: () {
-                          NavigationService.instance
-                              .navigateTo(NavigatorRoutes.settingsScreen);
-                        },
-                      ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+              Gap.h32,
+              // Profile Options Section
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _ProfileOption(
+                      icon: Icons.person_outline,
+                      title: 'Personal Info',
+                      subtitle: 'Manage your personal information',
+                      onTap: () {
+                        NavigationService.instance
+                            .navigateTo(NavigatorRoutes.personalInfoScreen);
+                      },
+                    ),
+                    _ProfileOption(
+                      icon: Icons.security,
+                      title: 'Security',
+                      subtitle: 'Password and security settings',
+                      onTap: () {
+                        NavigationService.instance
+                            .navigateTo(NavigatorRoutes.securityScreen);
+                      },
+                    ),
+                    _ProfileOption(
+                      icon: Icons.settings_outlined,
+                      title: 'Settings',
+                      subtitle: 'App preferences and configuration',
+                      onTap: () {
+                        NavigationService.instance
+                            .navigateTo(NavigatorRoutes.settingsScreen);
+                      },
+                    ),
                     _ProfileOption(
                       icon: Icons.help_outline,
                       title: 'Support & Help',
+                      subtitle: 'Get help and contact support',
                       onTap: () {
                         NavigationService.instance
                             .navigateTo(NavigatorRoutes.supportAndHelpScreen);
                       },
                     ),
                     _ProfileOption(
-                      icon: isGuestMode ? Icons.login : Icons.logout,
-                      title: isGuestMode ? 'Sign In / Sign Up' : 'Log Out',
+                      icon: Icons.logout,
+                      title: 'Log Out',
+                      subtitle: 'Sign out of your account',
                       onTap: () {
-                        if (isGuestMode) {
-                          // For guest users, navigate to auth choice screen
-                          NavigationService.instance.navigateToReplaceAll(
-                              NavigatorRoutes.authChoiceScreen);
-                        } else {
-                          // For authenticated users, show logout modal
-                          showLogoutModal(context);
-                        }
+                        showLogoutModal(context);
                       },
+                      isDestructive: true,
                     ),
                   ],
                 ),
@@ -183,28 +249,76 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 class _ProfileOption extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
+  final bool isDestructive;
 
   const _ProfileOption({
     required this.icon,
     required this.title,
+    this.subtitle,
     required this.onTap,
+    this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16.r, vertical: 4.r),
+        padding: EdgeInsets.all(16.r),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: isDestructive
+                ? Colors.red.withOpacity(0.2)
+                : Colors.grey.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.black, size: 24.w),
+            Container(
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(
+                color: isDestructive
+                    ? Colors.red.withOpacity(0.1)
+                    : AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(icon,
+                  color: isDestructive ? Colors.red : AppColors.primary,
+                  size: 24.w),
+            ),
             Gap.w16,
             Expanded(
-              child: AppText.body(title, color: AppColors.black),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText.body(
+                    title,
+                    color: isDestructive ? Colors.red : AppColors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  if (subtitle != null) ...[
+                    Gap.h4,
+                    AppText.caption(
+                      subtitle!,
+                      color: Colors.grey.shade600,
+                      fontSize: 12.sp,
+                    ),
+                  ],
+                ],
+              ),
             ),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18.w),
+            Icon(Icons.arrow_forward_ios,
+                color: isDestructive
+                    ? Colors.red.withOpacity(0.6)
+                    : Colors.grey.withOpacity(0.6),
+                size: 18.w),
           ],
         ),
       ),
