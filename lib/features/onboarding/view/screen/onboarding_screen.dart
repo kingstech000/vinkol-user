@@ -190,7 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _completeOnboarding() {
     // Navigate to dashboard after onboarding
     NavigationService.instance
-        .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+        .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
   }
 }
 

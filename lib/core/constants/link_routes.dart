@@ -7,7 +7,7 @@ class LinkRoutes {
   static const String emailSupport1 = 'mailto:Vinkollogistics@gmail.com';
   static const String emailSupport2 = 'mailto:vinkolltd@gmail.com';
   static const String whatsAppChat = 'https://wa.link/xuhpbs';
-  static const String whatsAppChat2 = 'https://wa.link/5l5uvs';
+  static const String whatsAppChat2 = 'https://wa.link/hf794t';
 
   // Official Website
 
