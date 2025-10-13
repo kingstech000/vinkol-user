@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:jwt_decoder/jwt_decoder.dart'; // Import the jwt_decoder package
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
@@ -15,72 +15,97 @@ class SplashViewModel extends BaseViewModel {
   final localCache = locator<LocalCache>();
   final AppLogger _logger = const AppLogger(SplashViewModel);
   final Ref _ref;
+
   SplashViewModel(this._ref);
 
   Future<void> initializeApp() async {
     try {
       changeState(const ViewModelState.busy());
 
+      // Get onboarding status
       bool isOnBoarded = await localCache.isOnBoarded();
+      _logger.i('=== SPLASH SCREEN DEBUG ===');
+      _logger.i('isOnBoarded: $isOnBoarded');
 
-      _logger.i('isOnboarded:$isOnBoarded');
+      // If not onboarded, go to onboarding
+      if (!isOnBoarded) {
+        _logger.i('User not onboarded. Redirecting to onboarding screen.');
+        changeState(const ViewModelState.idle());
+        _navigationService
+            .navigateToReplaceAll(NavigatorRoutes.onboardingScreen);
+        return;
+      }
 
-      if (isOnBoarded) {
-        // Check if user is in guest mode
-        bool isGuestMode = localCache.isGuestMode();
+      // User is onboarded - check authentication status
+      _logger.i('User is onboarded. Checking authentication...');
 
-        if (isGuestMode) {
-          _logger.i('User is in guest mode. Proceeding to dashboard.');
-          _navigationService
-              .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+      // Check if user is in guest mode
+      bool isGuestMode = localCache.isGuestMode();
+      _logger.i('isGuestMode: $isGuestMode');
+
+      if (isGuestMode) {
+        _logger.i('User is in guest mode. Proceeding to dashboard.');
+        changeState(const ViewModelState.idle());
+        _navigationService
+            .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+        return;
+      }
+
+      // Not guest mode - check for valid token
+      final token = localCache.getToken();
+      _logger.i('Token exists: ${token != null && token.isNotEmpty}');
+
+      if (token == null || token.isEmpty) {
+        _logger.i('No token found. Redirecting to auth choice.');
+        changeState(const ViewModelState.idle());
+        _navigationService
+            .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
+        return;
+      }
+
+      // Token exists - validate it
+      try {
+        bool hasExpired = JwtDecoder.isExpired(token);
+        _logger.i('Token expired: $hasExpired');
+
+        if (hasExpired) {
+          _logger
+              .i('JWT token expired. Clearing token and redirecting to auth.');
+          await localCache.saveToken('');
           changeState(const ViewModelState.idle());
+          _navigationService
+              .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
           return;
         }
 
-        final token = localCache.getToken(); // Retrieve the token
+        // Token is valid - send FCM token and go to dashboard
+        _logger.i(
+            'JWT token is valid. Sending FCM token and proceeding to dashboard.');
 
-        if (token != null && token.isNotEmpty) {
-          try {
-            // Check if the token is expired
-            bool hasExpired = JwtDecoder.isExpired(token);
-
-            if (hasExpired) {
-              _logger.i('JWT token expired. Redirecting to auth choice.');
-              // Clear expired token
-              await localCache.saveToken('');
-              _navigationService
-                  .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
-            } else {
-              _logger.i('JWT token is valid. Proceeding to dashboard.');
-              // Token is valid, send FCM token and redirect to dashboard
-              await _ref
-                  .read(authServiceProvider)
-                  .sendFcmTokenToBackend(); // Use .read for one-time operations
-              _navigationService.navigateToReplaceAll(NavigatorRoutes
-                  .dashboardScreen); // Redirect to your main dashboard
-            }
-          } catch (e) {
-            // Handle cases where the token is malformed or invalid
-            _logger
-                .e('Error decoding JWT token: $e. Redirecting to auth choice.');
-            _navigationService
-                .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
-          }
-        } else {
-          _logger.i('No token found. Redirecting to auth choice.');
-          _navigationService
-              .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
+        try {
+          await _ref.read(authServiceProvider).sendFcmTokenToBackend();
+        } catch (e) {
+          // Log FCM error but don't block navigation
+          _logger.w('Failed to send FCM token: $e (proceeding anyway)');
         }
-      } else {
-        _logger.i('Not onboarded. Redirecting to onboarding screen.');
+
+        changeState(const ViewModelState.idle());
         _navigationService
-            .navigateToReplaceAll(NavigatorRoutes.onboardingScreen);
+            .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+      } catch (e) {
+        _logger.e('Error decoding JWT token: $e. Redirecting to auth choice.');
+        await localCache.saveToken(''); // Clear invalid token
+        changeState(const ViewModelState.idle());
+        _navigationService
+            .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
       }
-      changeState(const ViewModelState.idle());
     } on Failure catch (e) {
       _logger.e('Initialization failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      // Optionally navigate to an error screen or auth choice
+      _navigationService.navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
+    } catch (e) {
+      _logger.e('Unexpected error during initialization: $e');
+      changeState(const ViewModelState.idle());
       _navigationService.navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
     }
   }

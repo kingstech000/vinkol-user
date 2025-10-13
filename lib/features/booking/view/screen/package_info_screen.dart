@@ -211,6 +211,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
       }
 
       final quoteRequest = GetQuoteRequest(
+        userId: user?.id,
         note: _noteController.text,
         name: _packageNameController.text,
         pickupTime: _pickupTime,

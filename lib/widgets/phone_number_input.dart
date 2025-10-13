@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/utils/phone_number_utils.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
 
 /// Custom phone number input widget that splits +234 prefix from the local number
@@ -111,6 +113,11 @@ class _PhoneNumberInputState extends State<PhoneNumberInput> {
           // Local number input field
           Expanded(
             child: TextField(
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+                NoLeadingZeroFormatter(),
+              ],
               controller: _localNumberController,
               enabled: widget.enabled,
               keyboardType: TextInputType.phone,

@@ -111,6 +111,8 @@ class GetQuoteRequest {
   final LocationData pickupLocation;
   // final String deliveryType; // "regular", "express"
   final String vehicleRequest; // "truck", "car", "bike"
+  final String? userId;
+
 final String? note;
 final String? pickupTime;
 final String? pickupDate;
@@ -124,6 +126,7 @@ final String? name;
     required this.orderType,
     required this.dropoffLocation,
     required this.pickupLocation,
+    required this.userId,
     // required this.deliveryType,
     required this.vehicleRequest,
   });
@@ -136,6 +139,7 @@ final String? name;
       'pickupLocation': pickupLocation.toJson(),
       // 'deliveryType': deliveryType,
       'vehicleRequest': vehicleRequest,
+      'userId': userId,
     };
   }
 
@@ -150,6 +154,7 @@ final String? name;
           LocationData.fromJson(json['pickupLocation'] as Map<String, dynamic>),
       // deliveryType: json['deliveryType'] as String,
       vehicleRequest: json['vehicleRequest'] as String,
+      userId: json['userId'] as String,
     );
   }
 
@@ -160,6 +165,7 @@ final String? name;
     LocationData? pickupLocation,
     String? deliveryType,
     String? vehicleRequest,
+    String? userId,
   }) {
     return GetQuoteRequest(
       state: state ?? this.state,
@@ -168,6 +174,7 @@ final String? name;
       pickupLocation: pickupLocation ?? this.pickupLocation,
       // deliveryType: deliveryType ?? this.deliveryType,
       vehicleRequest: vehicleRequest ?? this.vehicleRequest,
+      userId: userId ?? this.userId,
     );
   }
 }

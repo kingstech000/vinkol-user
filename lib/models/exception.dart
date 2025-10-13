@@ -99,6 +99,7 @@ class BadRequestException extends DioException with Failure {
       : super(requestOptions: request, response: serverResponse);
   final RequestOptions request;
   final Response? serverResponse;
+
   @override
   String toString() {
     return 'title: $title message: $message';
@@ -108,7 +109,7 @@ class BadRequestException extends DioException with Failure {
   String get message => serverResponse?.data?["message"] ?? "Invalid request";
 
   @override
-  String get title => "an error occured";
+  String get title => "An error occurred";
 }
 
 /// 500
@@ -133,6 +134,7 @@ class ConflictException extends DioException with Failure {
       : super(requestOptions: request, response: serverResponse);
   final RequestOptions request;
   final Response? serverResponse;
+
   @override
   String toString() {
     return 'title: $title message: $message';
@@ -140,7 +142,7 @@ class ConflictException extends DioException with Failure {
 
   @override
   String get message =>
-      serverResponse?.data?["message"] ?? "Conflict occurredd.";
+      serverResponse?.data?["message"] ?? "Conflict occurred.";
 
   @override
   String get title => "Network error";
@@ -152,6 +154,7 @@ class UnauthorizedException extends DioException with Failure {
       : super(requestOptions: request, response: serverResponse);
   final RequestOptions request;
   final Response? serverResponse;
+
   @override
   String toString() {
     return 'title: $title message: $message';
@@ -159,6 +162,7 @@ class UnauthorizedException extends DioException with Failure {
 
   @override
   String get message => serverResponse?.data?["message"] ?? "Invalid request";
+
   @override
   String get title => "Access denied";
 }
@@ -169,6 +173,7 @@ class NotFoundException extends DioException with Failure {
       : super(requestOptions: request, response: serverResponse);
   final RequestOptions request;
   final Response? serverResponse;
+
   @override
   String toString() {
     return 'title: $title message: $message';
@@ -176,10 +181,7 @@ class NotFoundException extends DioException with Failure {
 
   @override
   String get message =>
-      serverResponse?.data["message"] ?? "Not Found, please try again.";
-
-  // @override
-  // String get message => "Not Found, please try again.";
+      serverResponse?.data?["message"] ?? "Not found, please try again.";
 
   @override
   String get title => "Not Found";
@@ -217,17 +219,15 @@ class DeadlineExceededException extends DioException with Failure {
   String get title => "Network error";
 }
 
-@override
-String toString() {
-  return 'The connection has timed out, please try again.';
-}
-
-/// errors sent back by the server in json
+/// Errors sent back by the server in json
 class ServerCommunicationException extends DioException with Failure {
   ServerCommunicationException(this.r)
-      : super(requestOptions: r!.requestOptions);
+      : super(
+          requestOptions: r?.requestOptions ?? RequestOptions(path: ''),
+          response: r,
+        );
 
-  /// sustained so that the data sent by the server can be gotten to construct message
+  /// Sustained so that the data sent by the server can be gotten to construct message
   final Response? r;
 
   @override
@@ -238,14 +238,58 @@ class ServerCommunicationException extends DioException with Failure {
   @override
   String get message {
     try {
-      log(r?.data?.toString() ?? "");
-      return getMessagefromServer(r?.data ?? {"message": "Server Error"});
+      log(r?.data?.toString() ?? "No response data");
+
+      if (r?.data == null) {
+        return "Server communication error occurred";
+      }
+
+      return getMessagefromServer(r!.data);
     } catch (e) {
+      log("Error parsing server message: $e");
       return "Something went wrong";
     }
   }
-  // eddietonsagie@gmail.com
 
   @override
   String get title => "Network error";
+}
+
+/// 403 - Forbidden
+class ForbiddenException extends DioException with Failure {
+  ForbiddenException(this.request, [this.serverResponse])
+      : super(requestOptions: request, response: serverResponse);
+  final RequestOptions request;
+  final Response? serverResponse;
+
+  @override
+  String toString() {
+    return 'title: $title message: $message';
+  }
+
+  @override
+  String get message => serverResponse?.data?["message"] ?? "Access forbidden";
+
+  @override
+  String get title => "Forbidden";
+}
+
+/// 422 - Unprocessable Entity
+class UnprocessableEntityException extends DioException with Failure {
+  UnprocessableEntityException(this.request, [this.serverResponse])
+      : super(requestOptions: request, response: serverResponse);
+  final RequestOptions request;
+  final Response? serverResponse;
+
+  @override
+  String toString() {
+    return 'title: $title message: $message';
+  }
+
+  @override
+  String get message =>
+      serverResponse?.data?["message"] ?? "Unprocessable entity";
+
+  @override
+  String get title => "Validation Error";
 }

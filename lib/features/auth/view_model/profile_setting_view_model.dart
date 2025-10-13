@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -129,7 +130,7 @@ class ProfileSettingViewModel extends BaseViewModel {
       }
 
       logger.i('Sending formatted phone number: $formattedPhoneNumber');
-
+      log("{$_firstName, $_surname, $_selectedState, $formattedPhoneNumber, Avatar: ${avatarFile != null}}");
       await _authService.updateProfile(
         firstname: _firstName,
         lastName: _surname,

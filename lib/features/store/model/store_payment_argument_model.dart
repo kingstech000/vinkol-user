@@ -1,4 +1,3 @@
-
 import 'package:starter_codes/features/store/model/cart_item_model.dart';
 import 'package:starter_codes/models/location_model.dart';
 

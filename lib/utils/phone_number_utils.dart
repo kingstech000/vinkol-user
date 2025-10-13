@@ -1,3 +1,7 @@
+
+
+import 'package:flutter/services.dart';
+
 /// Utility class for phone number validation and formatting
 class PhoneNumberUtils {
   static const String defaultCountryCode = '+234';
@@ -88,3 +92,29 @@ class PhoneNumberUtils {
     return false;
   }
 }
+
+class NoLeadingZeroFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    String newText = newValue.text;
+
+    // Remove leading zeros
+    while (newText.startsWith('0') && newText.length > 1) {
+      newText = newText.substring(1);
+    }
+
+    // If user types only zero, clear it
+    if (newText == '0') {
+      newText = '';
+    }
+
+    return TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+  }
+}
+

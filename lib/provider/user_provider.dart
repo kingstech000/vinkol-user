@@ -47,7 +47,7 @@ class UserNotifier extends StateNotifier<User?> {
 /// Provider for the UserNotifier.
 /// Widgets can listen to this provider to react to changes in the user's authentication state.
 final userProvider = StateNotifierProvider<UserNotifier, User?>(
-  (ref) => UserNotifier(),
+  (ref) => UserNotifier()
 );
 
 final resetEmailProvider = StateProvider<String>((ref) => '');

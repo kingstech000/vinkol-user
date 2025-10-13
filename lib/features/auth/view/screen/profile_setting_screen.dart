@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/data_utils.dart';
 import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/utils/phone_number_utils.dart';
 import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
@@ -23,7 +25,7 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
   // Controllers for text fields, now updated by ViewModel
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
-  final TextEditingController _countryController = TextEditingController();
+  // final TextEditingController _countryController = TextEditingController();
   final TextEditingController _stateController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _phoneNumberPrefixController =
@@ -33,12 +35,12 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
 
   final List<String> _states = nigerianStates; // Example states, expanded
 
-  final List<String> _countries = [
-    'Nigeria',
-    // 'Ghana',
-    // 'Kenya',
-    // 'South Africa'
-  ]; // Example countries
+  // final List<String> _countries = [
+  //   'Nigeria',
+  //   // 'Ghana',
+  //   // 'Kenya',
+  //   // 'South Africa'
+  // ]; // Example countries
 
   @override
   void initState() {
@@ -47,7 +49,7 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
     final viewModel = ref.read(profileSettingViewModelProvider);
     _firstNameController.text = viewModel.firstName;
     _surnameController.text = viewModel.surname;
-    _countryController.text = viewModel.country;
+    // _countryController.text = viewModel.country;
     _stateController.text = viewModel.selectedState;
     _phoneNumberPrefixController.text = viewModel.phoneNumberPrefix;
     _phoneNumberController.text = viewModel.phoneNumber;
@@ -57,8 +59,8 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
         .addListener(() => viewModel.setFirstName(_firstNameController.text));
     _surnameController
         .addListener(() => viewModel.setSurname(_surnameController.text));
-    _countryController
-        .addListener(() => viewModel.setCountry(_countryController.text));
+    // _countryController
+    //     .addListener(() => viewModel.setCountry(_countryController.text));
     _stateController
         .addListener(() => viewModel.setSelectedState(_stateController.text));
     _phoneNumberPrefixController.addListener(() =>
@@ -72,7 +74,7 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
     // Dispose controllers and remove listeners
     _firstNameController.dispose();
     _surnameController.dispose();
-    _countryController.dispose();
+    // _countryController.dispose();
     _stateController.dispose();
     _phoneNumberPrefixController.dispose();
     _phoneNumberController.dispose();
@@ -132,21 +134,21 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                       },
                     ),
                     Gap.h16,
-                    AppText.caption('Country'),
-                    Gap.h4,
-                    ModalFormField(
-                      title: viewModel.country.isEmpty
-                          ? 'Select Country'
-                          : viewModel.country,
-                      textColor: viewModel.country.isEmpty
-                          ? AppColors.darkgrey.withOpacity(0.5)
-                          : AppColors.black,
-                      options: _countries, // Get states from ViewModel
-                      controller: _countryController,
-                      onOptionSelected: (option) {
-                        viewModel.setCountry(option);
-                      }, // Control ModalFormField's text
-                    ),
+                    // AppText.caption('Country'),
+                    // Gap.h4,
+                    // ModalFormField(
+                    //   title: viewModel.country.isEmpty
+                    //       ? 'Select Country'
+                    //       : viewModel.country,
+                    //   textColor: viewModel.country.isEmpty
+                    //       ? AppColors.darkgrey.withOpacity(0.5)
+                    //       : AppColors.black,
+                    //   options: _countries, // Get states from ViewModel
+                    //   controller: _countryController,
+                    //   onOptionSelected: (option) {
+                    //     viewModel.setCountry(option);
+                    //   }, // Control ModalFormField's text
+                    // ),
                     Gap.h16,
                     AppText.caption('State'),
                     Gap.h4,
@@ -188,6 +190,11 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                         // Main phone number field
                         Expanded(
                           child: AppTextField(
+                            formatter: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(10),
+                              NoLeadingZeroFormatter(),
+                            ],
                             controller: _phoneNumberController,
                             hint: '901 234 5678',
                             keyboardType: TextInputType.phone,
@@ -196,7 +203,7 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                                 return 'Phone number cannot be empty';
                               }
                               // Basic phone number validation
-                              if (value.length < 7 || value.length > 15) {
+                              if (value.length < 10 || value.length > 15) {
                                 return 'Invalid phone number length';
                               }
                               return null;
@@ -205,7 +212,7 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                         ),
                       ],
                     ),
-                    Gap.h36,
+                    const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
                       child: AppButton.primary(

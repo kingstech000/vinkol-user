@@ -222,105 +222,83 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
         children: [
           Gap.h32, // Top padding
 
-          // --- Getting Started / Account Management ---
+          // --- About Vinkol ---
           const _FAQItem(
-            question: 'How do I sign up to become a rider?',
+            question: 'What is Vinkol Logistics?',
             answer:
-                'You can sign up directly through the app by navigating to the "Become a Rider" section or visit our official website for registration instructions. You\'ll need to provide necessary documents and undergo a verification process.',
+                'Vinkol Logistics is a digital platform that connects customers with professional delivery partners for fast, secure, and reliable logistics services across Nigeria.',
           ),
           const _FAQItem(
-            question: 'What are the requirements to be a rider?',
+            question: 'How does Vinkol work?',
             answer:
-                'Typical requirements include a valid driver\'s license/rider\'s permit, a reliable vehicle (motorcycle, car, bicycle), a smartphone, and the legal right to work in the country/region. Specific age and background check requirements may apply.',
-          ),
-          const _FAQItem(
-            question: 'How do I update my profile or vehicle information?',
-            answer:
-                'Go to the "document" section in your rider app. You can edit your personal details, vehicle type, license information, and bank details there. All changes may require verification.',
+                'Simply log into the Vinkol Customer App, book your delivery, provide pickup and drop-off details, and track your parcel in real time until it reaches the destination.',
           ),
 
-          // --- Accepting & Completing Orders ---
+          // --- Safety & Insurance ---
           const _FAQItem(
-            question: 'How do I accept a new delivery request?',
+            question: 'Is my parcel insured during delivery?',
             answer:
-                'When a new order is available, you will receive a notification. Tap "Accept" within the given time limit to take the order. The app will then guide you to the pickup location.',
+                'Yes. Vinkol provides a retention coverage policy of up to ₦50,000 for theft or damage to goods during delivery, provided the loss is verified and occurred without negligence by the rider or logistics company.',
           ),
           const _FAQItem(
-            question: 'What should I do if I can\'t find the pickup location?',
+            question: 'Who is responsible if my parcel gets damaged or lost?',
             answer:
-                'Use the in-app navigation. If you\'re still having trouble, contact the merchant/customer directly through the app\'s chat or call feature. If issues persist, contact rider support.',
+                'While Vinkol facilitates the booking and communication process, each delivery partner is directly responsible for the execution of deliveries. Claims should be directed to the delivery partner involved. Vinkol will assist with dispute mediation where necessary.',
           ),
           const _FAQItem(
-            question: 'How do I mark an order as picked up?',
+            question: 'How can I ensure my item is safe for delivery?',
             answer:
-                'Once you have collected all items from the merchant, verify them against the order details in the app, and then tap the "Picked Up" or "Confirm Pickup" button.',
-          ),
-          const _FAQItem(
-            question: 'What if a customer is not at the delivery location?',
-            answer:
-                'Attempt to contact the customer via the in-app call or chat. Wait for a predetermined time (e.g., 5-10 minutes). If no response, follow the app\'s instructions for undeliverable orders, which may involve returning to the merchant or contacting support.',
-          ),
-          const _FAQItem(
-            question: 'How do I confirm a successful delivery?',
-            answer:
-                'After handing over the order to the customer, tap "Delivered" or "Complete Order" in the app. You may also be required to collect payment (if cash on delivery) or capture proof of delivery (e.g., signature or photo).',
+                'Please ensure that your item is properly packaged to prevent damage. Fragile or high-value items should be wrapped and labeled clearly before pickup.',
           ),
 
-          // --- Earnings & Payments ---
+          // --- Tracking & Delivery ---
           const _FAQItem(
-            question: 'How do I view my earnings?',
+            question: 'How do I track my delivery?',
             answer:
-                'Your earnings dashboard is available in the "Earnings" or "Wallet" section of the app. It provides a breakdown of your completed deliveries, tips, and total income.',
+                'You can track your delivery in real time using the tracking feature in the Vinkol Customer App. The data shown is for informational purposes only and should not be relied upon for legal or financial claims.',
           ),
           const _FAQItem(
-            question: 'When and how do I get paid?',
+            question: 'What should I do if there is an issue with my delivery?',
             answer:
-                'Payments are typically processed weekly/bi-weekly directly to your linked bank account. You can set up or update your payment details in the "Payment Settings" section.',
+                'If you experience a problem, please report it through the app or contact Vinkol Customer Support within 48 hours of the delivery attempt. Vinkol will review and mediate your case where applicable.',
           ),
           const _FAQItem(
-            question: 'What is surge pricing/peak pay?',
+            question: 'Can I cancel or edit my delivery request?',
             answer:
-                'Surge pricing or peak pay is an additional incentive offered during high-demand periods or in specific zones, increasing your earnings per delivery. It will be indicated in the app.',
-          ),
-          const _FAQItem(
-            question: 'How are tips handled?',
-            answer:
-                'All tips from customers are 100% yours. They are added to your total earnings and paid out with your regular disbursements.',
+                'Yes, you may cancel or modify a delivery request before it is accepted by a rider. Once a delivery is in progress, cancellation policies may apply based on the stage of the delivery.',
           ),
 
-          // --- Support & Safety ---
+          // --- Communication ---
           const _FAQItem(
-            question: 'How do I contact rider support?',
+            question: 'Can I contact the rider directly?',
             answer:
-                'You can contact rider support via the "Help" or "Support" section in the app. We offer in-app chat, a dedicated phone line, and email support for urgent and non-urgent queries.',
+                'Yes, the Vinkol app allows direct communication with your assigned rider for clarification on delivery details or to confirm pickup/drop-off locations.',
           ),
           const _FAQItem(
-            question: 'What if I have an accident during a delivery?',
+            question: 'How will I be notified about my delivery updates?',
             answer:
-                'Prioritize your safety and call emergency services if necessary. Then, immediately contact rider support through the app to report the incident. Provide all relevant details.',
-          ),
-          const _FAQItem(
-            question: 'What are the community guidelines for riders?',
-            answer:
-                'Our community guidelines emphasize professionalism, courtesy, safe driving/riding practices, and timely deliveries. Adhering to these ensures a positive experience for everyone.',
+                'You will receive instant notifications through the app and your registered email regarding delivery status, rider updates, and successful completion of your order.',
           ),
 
-          // --- App Functionality / Technical ---
+          // --- Privacy & Terms ---
           const _FAQItem(
-            question: 'My app isn\'t showing new orders. What should I do?',
+            question: 'Does Vinkol store my personal data?',
             answer:
-                'First, check your internet connection. Then, ensure you are "Online" or "Available" in the app. If the issue persists, try restarting the app or your device. You can also contact support.',
+                'Vinkol only collects essential information required to complete your delivery and ensure customer satisfaction. All data is handled in compliance with data protection laws and our internal privacy policy.',
           ),
           const _FAQItem(
-            question: 'How does the in-app navigation work?',
+            question: 'How often are Vinkol\'s terms updated?',
             answer:
-                'The app uses your device\'s GPS to provide turn-by-turn directions to both pickup and delivery locations. You can often choose your preferred navigation app (e.g., Google Maps, Waze) within the settings.',
+                'Vinkol reserves the right to update its terms and conditions periodically. Continued use of the platform after updates means you accept the new terms.',
           ),
+
+          // --- Support ---
           const _FAQItem(
-            question: 'How can I improve my rider rating?',
+            question: 'How do I contact Vinkol support?',
             answer:
-                'Focus on providing excellent service: ensure timely deliveries, maintain good communication with customers and merchants, handle items with care, and always be polite and professional.',
+                'You can reach our customer support team through the \'Help\' section in the app or via email at Vinkollogistics@gmail.com. We\'re available to assist with inquiries, disputes, or feedback.',
           ),
+
           Gap.h32, // Bottom padding
         ],
       ),

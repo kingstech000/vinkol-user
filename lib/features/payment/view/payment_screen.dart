@@ -57,7 +57,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     try {
       final String? authUrl = await paystackService.initializePayment(
-        amount: _paymentDetails!.quoteResponseModel!.price,
+        amount: _paymentDetails!.quoteResponseModel!.discountedPrice ??
+            _paymentDetails!.quoteResponseModel!.price,
         email: currentUser.email,
         reference: _paymentDetails!.reference,
         currency: _paymentDetails!.currency ?? 'NGN',
@@ -238,7 +239,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        leading: const Icon(Icons.chevron_left, color: Colors.white),
+        leading: GestureDetector(
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+            child: const Icon(
+              Icons.chevron_left,
+              color: Colors.white,
+            )),
         automaticallyImplyLeading: false,
       ),
       body: Stack(

@@ -17,6 +17,9 @@ abstract class LocalCache {
   Future<void> onBoarded();
   Future<bool> isOnBoarded();
 
+  Future<void> authenticated();
+  Future<bool> isAuthenticated();
+
   Future<void> toggleBalanceVisibility();
   bool isBalanceVisible();
 

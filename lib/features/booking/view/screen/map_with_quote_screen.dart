@@ -209,6 +209,16 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     }
 
     try {
+      // Use discounted price if available, otherwise use regular price
+      final finalPrice =
+          _selectedQuote!.discountedPrice ?? _selectedQuote!.price;
+
+      debugPrint(
+          '[_proceedToPayment] Original price: ${_selectedQuote!.price}');
+      debugPrint(
+          '[_proceedToPayment] Discounted price: ${_selectedQuote!.discountedPrice}');
+      debugPrint('[_proceedToPayment] Final price to charge: $finalPrice');
+
       final paymentDetails = PaymentDetails(
         quoteResponseModel: _selectedQuote!,
         quoteRequest: quoteRequest,
@@ -246,6 +256,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     final quoteRequest = rideLocationState.quoteRequest;
     final pickupLocation = rideLocationState.pickUpLocation;
     final dropOffLocation = rideLocationState.dropOffLocation;
+    // final yourState = rideLocationState.
 
     if (_selectedQuote == null) {
       debugPrint('[_createOrderAfterPayment] Error: _selectedQuote is null.');
@@ -278,16 +289,28 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
       final priorityType = _selectedQuote!.deliveryType;
       final vehicleType = _selectedQuote!.vehicleRequest;
       const estimatedDeliveryTime = "30-60 min"; // Placeholder
-      final price = _selectedQuote!.price;
+
+      // Use discounted price if available, otherwise use regular price
+      final finalPrice =
+          _selectedQuote!.discountedPrice ?? _selectedQuote!.price;
+
+      debugPrint(
+          '[_createOrderAfterPayment] Original price: ${_selectedQuote!.price}');
+      debugPrint(
+          '[_createOrderAfterPayment] Discounted price: ${_selectedQuote!.discountedPrice}');
+      debugPrint(
+          '[_createOrderAfterPayment] Final price for order: $finalPrice');
+
       final pickupDate = quoteRequest.pickupDate ??
           DateTime.now().toIso8601String().split('T').first;
       final pickupTime = quoteRequest.pickupTime ?? 'Anytime';
-      final note = quoteRequest.note ?? '';
+      final note = quoteRequest.note ?? 'No Notes';
       final transRef = ref.watch(paymentDetailsProvider)!.reference;
       final state = ref.watch(userProvider)!.currentState!;
       final bookingService = ref.read(bookingServiceProvider);
+
       final createOrderRequest = CreateOrderRequest(
-        state: state,
+        state: pickupLocation.state ?? state,
         paystackReference: transRef,
         pickupLocation: pickupLocation,
         dropOffLocation: dropOffLocation,
@@ -296,7 +319,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
         priorityType: priorityType,
         vehicleType: vehicleType,
         estimatedDeliveryTime: estimatedDeliveryTime,
-        price: price,
+        price: finalPrice, // Use the final price here (discounted or regular)
         pickupDate: pickupDate,
         pickupTime: pickupTime,
         note: note,
@@ -467,6 +490,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                           quote.price,
                           'Bike Delivery\nNo mixing; just your direct stuff.', // Adjust description as needed
                           isExpress: isExpressQuote,
+                          discountedPrice: quote.discountedPrice,
                           isSelected: _selectedQuote == quote,
                         ),
                       );
@@ -493,7 +517,9 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
   /// Builds a single quote card widget.
   Widget _buildQuoteCard(
       String title, String time, double price, String description,
-      {required bool isExpress, required bool isSelected}) {
+      {required bool isExpress,
+      required bool isSelected,
+      double? discountedPrice}) {
     return Container(
       width: 250.w,
       margin: EdgeInsets.all(8.w),
@@ -564,17 +590,54 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (discountedPrice != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        discountedPrice.toMoney(),
+                        style: TextStyle(
+                          color: isExpress ? Colors.white : AppColors.black,
+                          fontSize: 22.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       price.toMoney(),
                       style: TextStyle(
+                        decoration: discountedPrice != null
+                            ? TextDecoration.lineThrough
+                            : TextDecoration.none,
+                        decorationColor:
+                            isExpress ? Colors.white : AppColors.black,
+                        decorationThickness: 3,
                         color: isExpress ? Colors.white : AppColors.black,
                         fontSize: 22.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    if (discountedPrice != null)
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                            color: Colors.deepOrange.withOpacity(.2),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                width: 1,
+                                color: Colors.deepOrange.withOpacity(.4))),
+                        child: Text(
+                          "20% off",
+                          style: TextStyle(
+                            color: Colors.deepOrange,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ],

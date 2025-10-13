@@ -8,7 +8,6 @@ import 'package:starter_codes/features/profile/view/screen/profile_screen.dart';
 import 'package:starter_codes/features/store/view/screen/store_screen.dart';
 import 'package:starter_codes/features/wallet/view/screen/wallet_screen.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
-import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
 
@@ -51,7 +50,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Use watch to react to user authentication state changes
-    final user = ref.watch(userProvider);
+    
     // Watch the navigationIndexProvider to rebuild when the index changes
     final navigationIndex = ref.watch(navigationIndexProvider);
 

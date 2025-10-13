@@ -164,6 +164,7 @@ class QuoteResponseModel {
   final String deliveryType;
   final String vehicleRequest;
   final double price;
+  final double? discountedPrice; // Optional field
 
   QuoteResponseModel({
     required this.state,
@@ -173,12 +174,12 @@ class QuoteResponseModel {
     required this.deliveryType,
     required this.vehicleRequest,
     required this.price,
+    this.discountedPrice, // Optional parameter
   });
 
   factory QuoteResponseModel.fromJson(Map<String, dynamic> json) {
     double parsedPrice;
     var priceValue = json['price'];
-
     if (priceValue is num) {
       parsedPrice = priceValue.toDouble();
     } else if (priceValue is String) {
@@ -187,14 +188,28 @@ class QuoteResponseModel {
       parsedPrice = 0.0;
     }
 
+    // Parse discountedPrice if present
+    double? parsedDiscountedPrice;
+    var discountedPriceValue = json['discountedPrice'];
+    if (discountedPriceValue != null) {
+      if (discountedPriceValue is num) {
+        parsedDiscountedPrice = discountedPriceValue.toDouble();
+      } else if (discountedPriceValue is String) {
+        parsedDiscountedPrice = double.tryParse(discountedPriceValue);
+      }
+    }
+
     return QuoteResponseModel(
       state: json['state'] as String,
       orderType: json['orderType'] as String,
-      dropoffLocation: LatLngLiteral.fromJson(json['dropoffLocation'] as Map<String, dynamic>),
-      pickupLocation: LatLngLiteral.fromJson(json['pickupLocation'] as Map<String, dynamic>),
+      dropoffLocation: LatLngLiteral.fromJson(
+          json['dropoffLocation'] as Map<String, dynamic>),
+      pickupLocation: LatLngLiteral.fromJson(
+          json['pickupLocation'] as Map<String, dynamic>),
       deliveryType: json['deliveryType'] as String,
       vehicleRequest: json['vehicleRequest'] as String,
       price: parsedPrice,
+      discountedPrice: parsedDiscountedPrice,
     );
   }
 
@@ -207,6 +222,8 @@ class QuoteResponseModel {
       'deliveryType': deliveryType,
       'vehicleRequest': vehicleRequest,
       'price': price,
+      if (discountedPrice != null)
+        'discountedPrice': discountedPrice, // Only include if not null
     };
   }
 }

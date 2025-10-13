@@ -14,9 +14,6 @@ class AppInterceptors extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // checkStatusCode(response.requestOptions, response);
-    // print(÷.realUri);
-
     _log.custom(
       "--------- Calling Api [${DateTime.now()}]----------",
       color: LoggerColor.darkGrey,
@@ -69,7 +66,6 @@ class AppInterceptors extends Interceptor {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        // reasign err variable
         err = DeadlineExceededException(err.requestOptions);
         break;
       case DioExceptionType.badCertificate:
@@ -78,10 +74,8 @@ class AppInterceptors extends Interceptor {
         try {
           checkStatusCode(err.requestOptions, err.response);
         } on DioException catch (failure) {
-          // reasign err variable
           err = failure;
         }
-
         break;
       case DioExceptionType.cancel:
         break;
@@ -89,13 +83,20 @@ class AppInterceptors extends Interceptor {
         _log.e(err.message, functionName: "onError[other]");
         err = NoInternetConnectionException(err.requestOptions);
     }
-    //continue
     return handler.next(err);
   }
 
   void checkStatusCode(RequestOptions requestOptions, Response? response) {
+    _log.e(response?.statusCode, functionName: "onError[checkStatusCode]");
+
+    // Handle null response
+    if (response == null) {
+      _log.e("Response is null", functionName: "onError[checkStatusCode]");
+      throw ServerCommunicationException(null);
+    }
+
     try {
-      switch (response?.statusCode) {
+      switch (response.statusCode) {
         case 200:
         case 204:
         case 201:
@@ -104,16 +105,21 @@ class AppInterceptors extends Interceptor {
           throw BadRequestException(requestOptions, response);
         case 401:
           throw UnauthorizedException(requestOptions, response);
+        case 403:
+          throw ForbiddenException(requestOptions, response);
         case 404:
-          throw NotFoundException(requestOptions);
+          throw NotFoundException(requestOptions, response);
         case 409:
           throw ConflictException(requestOptions, response);
+        case 422:
+          throw UnprocessableEntityException(requestOptions, response);
         case 500:
+        case 502:
+        case 503:
           throw InternalServerErrorException(requestOptions);
         default:
-          _log.e(response?.data, functionName: "onError[checkStatusCode]");
-          _log.e(response?.statusCode,
-              functionName: "onError[checkStatusCode]");
+          _log.e(response.data, functionName: "onError[checkStatusCode]");
+          _log.e(response.statusCode, functionName: "onError[checkStatusCode]");
           throw ServerCommunicationException(response);
       }
     } on Failure {

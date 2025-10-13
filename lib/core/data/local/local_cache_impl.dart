@@ -6,7 +6,8 @@ import 'package:starter_codes/core/utils/app_logger.dart';
 class LocalCacheImpl implements LocalCache {
   static const _tokenKey = 'userToken';
   static const _userDataKey = 'userData';
-  static const _onBoardedKey = 'true';
+  static const _onBoardedKey = 'isOnboarded';
+  static const _authenticatedKey = 'isAuthenticated';
   static const _balanceKey = 'balanceKey';
   static const _guestModeKey = 'guestModeKey';
   late final _log = appLogger(LocalCacheImpl);
@@ -34,6 +35,28 @@ class LocalCacheImpl implements LocalCache {
   Future<bool> isOnBoarded() async {
     try {
       final value = getFromLocalCache(_onBoardedKey) as bool?;
+      return value ?? false;
+    } catch (e) {
+      _log.e('Error fetching onboarding status: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<void> authenticated() async {
+    try {
+      // Saving that the user has completed onboarding
+      await saveToLocalCache(key: _authenticatedKey, value: true);
+      _log.i('Onboarding completed and saved');
+    } catch (e) {
+      _log.i('Error saving onboarding status: $e');
+    }
+  }
+
+  @override
+  Future<bool> isAuthenticated() async {
+    try {
+      final value = getFromLocalCache(_authenticatedKey) as bool?;
       return value ?? false;
     } catch (e) {
       _log.e('Error fetching onboarding status: $e');

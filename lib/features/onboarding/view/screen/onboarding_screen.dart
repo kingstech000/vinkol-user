@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
+import 'package:starter_codes/core/utils/locator.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -187,8 +189,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _completeOnboarding();
   }
 
-  void _completeOnboarding() {
-    // Navigate to dashboard after onboarding
+  Future<void> _completeOnboarding() async {
+    final localCache = locator<LocalCache>();
+    await localCache.onBoarded();
+    final isOnboarded = await localCache.isOnBoarded();
+    print('Onboarding saved. Verification: $isOnboarded');
     NavigationService.instance
         .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
   }
