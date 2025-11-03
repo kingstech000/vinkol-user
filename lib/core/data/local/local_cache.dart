@@ -20,9 +20,6 @@ abstract class LocalCache {
   Future<void> authenticated();
   Future<bool> isAuthenticated();
 
-  Future<void> toggleBalanceVisibility();
-  bool isBalanceVisible();
-
   // GUEST MODE
   Future<void> setGuestMode(bool isGuest);
   bool isGuestMode();

@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/base_view_model.dart'; // Your BaseViewModel
-import 'package:starter_codes/features/auth/data/auth_service.dart'; // Your AuthService
-import 'package:starter_codes/models/app_state/view_model_state.dart'; // Your ViewModelState
+import 'package:starter_codes/core/utils/base_view_model.dart';
+import 'package:starter_codes/features/auth/data/auth_service.dart';
+import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
-import 'package:starter_codes/widgets/text_action_modal.dart'; // Your text_action_modal
+import 'package:starter_codes/widgets/text_action_modal.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';

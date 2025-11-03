@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/core/utils/network_client.dart';
 import 'package:starter_codes/core/constants/api_routes.dart';
-import 'package:starter_codes/features/delivery/model/delivery_model.dart';
+import 'package:starter_codes/features/payment/model/order_initiation_response_model.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/features/store/model/store_request_model.dart';
 // REMOVED: import 'package:starter_codes/features/store/model/product_model.dart'; // This was not part of the singleStore edit request
@@ -213,39 +213,35 @@ class StoreService {
     }
   }
 
-  Future<DeliveryModel> createStoreOrder(
+  Future<OrderInitiationResponse> createStoreOrder(
       CreateStoreOrderPayload orderPayload) async {
-    logger.i(
-        'Attempting to create store order with payload: ${orderPayload.toJson()}');
+    logger.i('Creating store order with payload: ${orderPayload.toJson()}');
+
     try {
       final responseData = await _networkClient.post(
-        ApiRoute.storeOrders, // Use the new API route constant
+        ApiRoute.storeOrderNew,
         body: orderPayload.toJson(),
       );
 
       logger.i('Store order creation response: $responseData');
 
-      if (responseData['success'] == true) {
-        // Assuming your API returns { "status": true, ... } on success
-        logger.i('Store order created successfully.');
-        final delivery = DeliveryModel.fromJson(responseData['data']);
-        return delivery;
-      } else {
-        final String errorMessage =
-            responseData['message'] ?? 'Unknown error creating order.';
-        logger.e(
-            'Failed to create store order: $errorMessage. Response: $responseData');
-        throw Exception(errorMessage);
-      }
+      final orderInitiation = OrderInitiationResponse.fromJson(
+        responseData['data'] as Map<String, dynamic>,
+      );
+
+      logger.i(
+          'Store order created successfully. Order ID: ${orderInitiation.order.id}');
+      logger.i('Payment URL: ${orderInitiation.authorizationUrl}');
+
+      return orderInitiation;
     } on DioException catch (e) {
       logger.e(
           'DioException creating store order: ${e.response?.data ?? e.message}');
       throw Exception(
-          'Network error or API error creating order: ${e.response?.data?['message'] ?? e.message}');
+          'Network error creating order: ${e.response?.data?['message'] ?? e.message}');
     } catch (e, st) {
       logger.e('Error creating store order: $e\n$st');
-      throw Exception(
-          'An unexpected error occurred while creating order: ${e.toString()}');
+      throw Exception('Failed to create order: ${e.toString()}');
     }
   }
 }

@@ -1,28 +1,14 @@
-class ProductOrderPayload {
-  final String product; // This should be the product ID
-  final int quantity;
-
-  ProductOrderPayload({required this.product, required this.quantity});
-
-  Map<String, dynamic> toJson() => {
-        "product": product,
-        "quantity": quantity,
-      };
-}
-
 class CreateStoreOrderPayload {
-  final String? paystackReference;
-  final String state; // e.g., 'pending', 'processing', 'completed'
-  final String store; // Store ID
+  final String state;
+  final String store;
   final List<ProductOrderPayload> products;
-  final double amount; // Total product cost
-  final double deliveryFee;
-  final String dropoffLocation; // Formatted address string
-  final String deliveryType; // e.g., 'regular', 'express'
-  final String orderType; // e.g., 'delivery', 'pickup'
+  final int amount;
+  final int deliveryFee;
+  final String dropoffLocation;
+  final String deliveryType;
+  final String orderType;
 
   CreateStoreOrderPayload({
-    this.paystackReference,
     required this.state,
     required this.store,
     required this.products,
@@ -33,15 +19,33 @@ class CreateStoreOrderPayload {
     required this.orderType,
   });
 
-  Map<String, dynamic> toJson() => {
-        "paystackReference": paystackReference,
-        "state": state,
-        "store": store,
-        "products": products.map((p) => p.toJson()).toList(),
-        "amount": amount,
-        "deliveryFee": deliveryFee,
-        "dropoffLocation": dropoffLocation,
-        "deliveryType": deliveryType.toLowerCase(),
-        "orderType": 'Shopping',
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'state': state,
+      'store': store,
+      'products': products.map((p) => p.toJson()).toList(),
+      'amount': amount,
+      'deliveryFee': deliveryFee,
+      'dropoffLocation': dropoffLocation,
+      'deliveryType': deliveryType,
+      'orderType': orderType,
+    };
+  }
+}
+
+class ProductOrderPayload {
+  final String product;
+  final int quantity;
+
+  ProductOrderPayload({
+    required this.product,
+    required this.quantity,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'product': product,
+      'quantity': quantity,
+    };
+  }
 }

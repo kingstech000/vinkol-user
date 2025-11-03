@@ -14,9 +14,7 @@ class CreateOrderRequest {
   final String pickupTime; // Added based on usage in MapWithQuotesScreen
   final String note; // Added based on usage in MapWithQuotesScreen
   final String state;
-final String paystackReference;
   CreateOrderRequest({
-    required this.paystackReference, // Uncomment if needed for initial request
     required this.pickupLocation,
     required this.dropOffLocation,
     required this.packageType,
@@ -44,14 +42,12 @@ final String paystackReference;
      "orderType": "Delivery",
       'state':state,
       'deliveryFee':price,
-      'paystackReference':paystackReference,
     };
   }
 
   factory CreateOrderRequest.fromJson(Map<String, dynamic> json) {
     return CreateOrderRequest(
       state: json['state'] as String,
-       paystackReference: json['paystackReference'] as String, // Uncomment if needed for initial request
       pickupLocation: LocationModel.fromJson(
           json['pickupLocation'] as Map<String, dynamic>),
       dropOffLocation: LocationModel.fromJson(
@@ -86,7 +82,6 @@ final String paystackReference;
   }) {
     return CreateOrderRequest(
       state: state?? this.state,
-       paystackReference: paystackReference ?? this.paystackReference, 
       pickupLocation: pickupLocation ?? this.pickupLocation,
       dropOffLocation: dropOffLocation ?? this.dropOffLocation,
       packageType: packageType ?? this.packageType,

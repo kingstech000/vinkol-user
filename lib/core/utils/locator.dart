@@ -1,37 +1,28 @@
 import 'package:get_it/get_it.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/data/local/local_cache_impl.dart';
 import 'package:starter_codes/widgets/app_flushbar.dart';
 
 GetIt locator = GetIt.instance;
+
 Future<void> setupLocator() async {
   try {
-    // Initialize SharedPreferences with proper error handling for iOS
-    final sharedPreferences = await SharedPreferences.getInstance();
+    print('🚀 Setting up locator with Hive...');
 
-    // Verify that SharedPreferences is working by testing a simple operation
-    await sharedPreferences.setBool('_test_key', true);
-    final testResult = sharedPreferences.getBool('_test_key');
-    await sharedPreferences.remove('_test_key');
+    // Create and initialize LocalCache
+    final localCache = LocalCacheImpl();
+    await localCache.initialize(); // ✅ This initializes Hive
 
-    if (testResult != true) {
-      throw Exception('SharedPreferences initialization failed on iOS');
-    }
-
-    locator.registerSingleton(sharedPreferences);
-
-    locator.registerLazySingleton<LocalCache>(
-      () => LocalCacheImpl(
-        sharedPreferences: sharedPreferences,
-      ),
-    );
+    // Register as singleton
+    locator.registerSingleton<LocalCache>(localCache);
 
     locator.registerLazySingleton<AppFlushBar>(
       () => AppFlushBar(),
     );
+
+    print('✅ Locator setup complete');
   } catch (e) {
-    print('Error setting up locator: $e');
+    print('❌ Error setting up locator: $e');
     rethrow;
   }
 }

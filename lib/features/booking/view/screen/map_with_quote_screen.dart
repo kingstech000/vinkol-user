@@ -1,10 +1,12 @@
+// lib/features/booking/view/screen/map_with_quote_screen.dart
+// UPDATED VERSION - Works with backend payment flow
+
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/constants/assets.dart';
 import 'package:starter_codes/core/extensions/extensions.dart';
-import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
@@ -12,16 +14,12 @@ import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/booking/data/booking_service.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/features/booking/model/order_model.dart';
-import 'package:starter_codes/provider/delivery_provider.dart';
-import 'package:starter_codes/provider/navigation_provider.dart';
+import 'package:starter_codes/features/payment/view/payment_webview.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/features/booking/model/request.dart';
-import 'package:starter_codes/provider/payment_provider.dart';
-import 'package:starter_codes/features/payment/model/payment_detail_model.dart';
-// Import for debugPrint
 
 class MapWithQuotesScreen extends ConsumerStatefulWidget {
   const MapWithQuotesScreen({super.key});
@@ -36,7 +34,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
   bool _isLoading = false;
-  QuoteResponseModel? _selectedQuote; // Now holds the *selected* quote
+  QuoteResponseModel? _selectedQuote;
 
   @override
   void initState() {
@@ -44,31 +42,26 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     _initializeScreenData();
   }
 
-  /// Initializes screen data including selected quote and sets up the map.
   void _initializeScreenData() {
-    debugPrint('[_initializeScreenData] called.');
-    final quoteResponses = ref
-        .read(rideLocationProvider)
-        .quoteResponses; // Assuming this is now a list
+    debugPrint('[MapWithQuotesScreen] Initializing screen data...');
+    final quoteResponses = ref.read(rideLocationProvider).quoteResponses;
+
     if (quoteResponses != null && quoteResponses.isNotEmpty) {
-      _selectedQuote = quoteResponses.first; // Select the first one by default
+      _selectedQuote = quoteResponses.first;
       debugPrint(
-          '[_initializeScreenData] Selected quote initialized: $_selectedQuote');
+          '[MapWithQuotesScreen] Selected quote initialized: ${_selectedQuote?.deliveryType}');
     } else {
-      debugPrint(
-          '[_initializeScreenData] Warning: No quoteResponses found in rideLocationProvider.');
+      debugPrint('[MapWithQuotesScreen] WARNING: No quotes available!');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showSnackbar(
             'No delivery options available. Please go back and try again.');
-        // NavigationService.instance.goBack();
       });
     }
     _setMapAndMarkers();
   }
 
-  /// Sets up Google Map, adds pickup/drop-off markers, and draws polyline.
   void _setMapAndMarkers() async {
-    debugPrint('[_setMapAndMarkers] called.');
+    debugPrint('[MapWithQuotesScreen] Setting up map markers...');
     final rideLocationState = ref.read(rideLocationProvider);
     final pickupLocation = rideLocationState.pickUpLocation;
     final dropOffLocation = rideLocationState.dropOffLocation;
@@ -77,8 +70,6 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
         dropOffLocation?.coordinates != null) {
       final pickupLatLng = pickupLocation!.coordinates!;
       final dropOffLatLng = dropOffLocation!.coordinates!;
-      debugPrint(
-          '[_setMapAndMarkers] Pickup LatLng: $pickupLatLng, DropOff LatLng: $dropOffLatLng');
 
       if (mounted) {
         setState(() {
@@ -104,7 +95,6 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                       dropOffLocation.formattedAddress ?? 'Drop-off Location'),
             ),
           );
-          debugPrint('[_setMapAndMarkers] Markers added: ${_markers.length}');
         });
       }
 
@@ -124,8 +114,6 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                 color: AppColors.primary,
                 width: 5,
               );
-              debugPrint(
-                  '[_setMapAndMarkers] Polyline added with ${polylineCoordinates.length} points.');
             } else {
               _polylines.add(Polyline(
                 polylineId: const PolylineId('route'),
@@ -133,31 +121,25 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                 color: AppColors.primary,
                 width: 5,
               ));
-              debugPrint(
-                  '[_setMapAndMarkers] Polyline points empty, added fallback straight line.');
             }
 
             LatLngBounds bounds =
                 _boundsFromLatLngList([pickupLatLng, dropOffLatLng]);
             _mapController
                 ?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
-            debugPrint('[_setMapAndMarkers] Camera animated to bounds.');
           });
         }
       } catch (e, st) {
-        debugPrint(
-            '[_setMapAndMarkers] Error fetching polyline or setting map bounds: $e');
-        debugPrint('[_setMapAndMarkers] Stack trace: $st');
+        debugPrint('[MapWithQuotesScreen] Error setting up route: $e\n$st');
         _showSnackbar('Error displaying route on map.');
       }
     } else {
       debugPrint(
-          '[_setMapAndMarkers] Pickup or Drop-off coordinates are null. Cannot set map elements.');
+          '[MapWithQuotesScreen] Missing pickup or dropoff coordinates!');
       _showSnackbar('Missing location details for map display.');
     }
   }
 
-  /// Calculates LatLngBounds from a list of LatLng points.
   LatLngBounds _boundsFromLatLngList(List<LatLng> list) {
     double? x0, x1, y0, y1;
     for (LatLng latLng in list) {
@@ -167,8 +149,6 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
       if (y1 == null || y1 < latLng.longitude) y1 = latLng.longitude;
     }
     if (x0 == null || x1 == null || y0 == null || y1 == null) {
-      debugPrint(
-          '[_boundsFromLatLngList] Warning: Some coordinates were null, defaulting bounds.');
       return LatLngBounds(
           southwest: const LatLng(0, 0), northeast: const LatLng(0, 0));
     }
@@ -178,11 +158,12 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     );
   }
 
-  /// Prepares payment details and navigates to the PaymentScreen.
+  /// Creates order on backend and navigates to payment WebView
   Future<void> _proceedToPayment() async {
-    debugPrint('[_proceedToPayment] called.');
+    debugPrint('[MapWithQuotesScreen] ===== PROCEEDING TO PAYMENT =====');
+
     if (_selectedQuote == null) {
-      debugPrint('[_proceedToPayment] _selectedQuote is null.');
+      debugPrint('[MapWithQuotesScreen] ERROR: No quote selected!');
       _showSnackbar('Please select a delivery option.');
       return;
     }
@@ -195,18 +176,14 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     if (quoteRequest == null ||
         pickupLocation == null ||
         dropOffLocation == null) {
-      debugPrint(
-          '[_proceedToPayment] Missing quote request, pickup, or drop-off location.');
+      debugPrint('[MapWithQuotesScreen] ERROR: Missing required data!');
       _showSnackbar('Missing ride details. Please re-enter.');
       return;
     }
 
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-      });
-      debugPrint('[_proceedToPayment] _isLoading set to true.');
-    }
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       // Use discounted price if available, otherwise use regular price
@@ -214,198 +191,115 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
           _selectedQuote!.discountedPrice ?? _selectedQuote!.price;
 
       debugPrint(
-          '[_proceedToPayment] Original price: ${_selectedQuote!.price}');
+          '[MapWithQuotesScreen] Selected delivery type: ${_selectedQuote!.deliveryType}');
       debugPrint(
-          '[_proceedToPayment] Discounted price: ${_selectedQuote!.discountedPrice}');
-      debugPrint('[_proceedToPayment] Final price to charge: $finalPrice');
-
-      final paymentDetails = PaymentDetails(
-        quoteResponseModel: _selectedQuote!,
-        quoteRequest: quoteRequest,
-        reference: 'TRX-${DateTime.now().millisecondsSinceEpoch}',
-      );
-      debugPrint('[_proceedToPayment] PaymentDetails created: $paymentDetails');
-
-      ref.read(paymentDetailsProvider.notifier).state = paymentDetails;
-      debugPrint('[_proceedToPayment] PaymentDetails set in provider.');
-
-      if (mounted) {
-        NavigationService.instance
-            .navigateTo(NavigatorRoutes.deliveryPaymentScreen);
-        debugPrint('[_proceedToPayment] Navigated to deliveryPaymentScreen.');
-      }
-    } catch (e, st) {
-      debugPrint('[_proceedToPayment] Error preparing for payment: $e');
-      debugPrint('[_proceedToPayment] Stack trace: $st');
-      _showSnackbar('Failed to prepare for payment: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        debugPrint('[_proceedToPayment] _isLoading set to false.');
-      }
-    }
-  }
-
-  /// Creates the order after successful payment. Triggered by paymentStatusProvider listener.
-  Future<void> _createOrderAfterPayment() async {
-    debugPrint('[_createOrderAfterPayment] called.');
-
-    final rideLocationState = ref.read(rideLocationProvider);
-    final quoteRequest = rideLocationState.quoteRequest;
-    final pickupLocation = rideLocationState.pickUpLocation;
-    final dropOffLocation = rideLocationState.dropOffLocation;
-    // final yourState = rideLocationState.
-
-    if (_selectedQuote == null) {
-      debugPrint('[_createOrderAfterPayment] Error: _selectedQuote is null.');
-      _showSnackbar('Could not complete order. Please try again.');
-      return;
-    }
-    if (quoteRequest == null) {
-      debugPrint('[_createOrderAfterPayment] Error: quoteRequest is null.');
-      _showSnackbar('Missing ride request details for order creation.');
-      return;
-    }
-    if (pickupLocation == null || dropOffLocation == null) {
+          '[MapWithQuotesScreen] Original price: ${_selectedQuote!.price}');
       debugPrint(
-          '[_createOrderAfterPayment] Error: Pick-up or drop-off location is missing.');
-      _showSnackbar(
-          'Pick-up or drop-off location is missing for order creation.');
-      return;
-    }
+          '[MapWithQuotesScreen] Discounted price: ${_selectedQuote!.discountedPrice}');
+      debugPrint('[MapWithQuotesScreen] Final price: $finalPrice');
 
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-      });
-      debugPrint('[_createOrderAfterPayment] _isLoading set to true.');
-    }
-
-    try {
-      final packageType = _selectedQuote!.deliveryType;
-      final packageName = quoteRequest.name ?? 'Unknown Package';
-      final priorityType = _selectedQuote!.deliveryType;
-      final vehicleType = _selectedQuote!.vehicleRequest;
-      const estimatedDeliveryTime = "30-60 min"; // Placeholder
-
-      // Use discounted price if available, otherwise use regular price
-      final finalPrice =
-          _selectedQuote!.discountedPrice ?? _selectedQuote!.price;
-
-      debugPrint(
-          '[_createOrderAfterPayment] Original price: ${_selectedQuote!.price}');
-      debugPrint(
-          '[_createOrderAfterPayment] Discounted price: ${_selectedQuote!.discountedPrice}');
-      debugPrint(
-          '[_createOrderAfterPayment] Final price for order: $finalPrice');
-
-      final pickupDate = quoteRequest.pickupDate ??
-          DateTime.now().toIso8601String().split('T').first;
-      final pickupTime = quoteRequest.pickupTime ?? 'Anytime';
-      final note = quoteRequest.note ?? 'No Notes';
-      final transRef = ref.watch(paymentDetailsProvider)!.reference;
-      final state = ref.watch(userProvider)!.currentState!;
+      final user = ref.read(userProvider);
       final bookingService = ref.read(bookingServiceProvider);
 
+      // Prepare order request
       final createOrderRequest = CreateOrderRequest(
-        state: pickupLocation.state ?? state,
-        paystackReference: transRef,
+        state: pickupLocation.state ?? user!.currentState!,
         pickupLocation: pickupLocation,
         dropOffLocation: dropOffLocation,
-        packageType: packageType,
-        packageName: packageName,
-        priorityType: priorityType,
-        vehicleType: vehicleType,
-        estimatedDeliveryTime: estimatedDeliveryTime,
-        price: finalPrice, // Use the final price here (discounted or regular)
-        pickupDate: pickupDate,
-        pickupTime: pickupTime,
-        note: note,
+        packageType: _selectedQuote!.deliveryType,
+        packageName: quoteRequest.name ?? 'Package',
+        priorityType: _selectedQuote!.deliveryType,
+        vehicleType: _selectedQuote!.vehicleRequest,
+        estimatedDeliveryTime: "30-60 min",
+        price: finalPrice,
+        pickupDate: quoteRequest.pickupDate ??
+            DateTime.now().toIso8601String().split('T').first,
+        pickupTime: quoteRequest.pickupTime ?? 'Anytime',
+        note: quoteRequest.note ?? 'No notes',
       );
-      debugPrint(
-          '[_createOrderAfterPayment] Attempting to create order with details: $createOrderRequest');
 
-      final orderResponse =
-          await bookingService.createOrder(orderDetails: createOrderRequest);
+      debugPrint('[MapWithQuotesScreen] Creating order on backend...');
       debugPrint(
-          '[_createOrderAfterPayment] Order created successfully: $orderResponse');
+          '[MapWithQuotesScreen] Request: ${createOrderRequest.toJson()}');
+
+      // Call backend to create order and get payment URL
+      final orderInitiationResponse = await bookingService.createOrder(
+        orderDetails: createOrderRequest,
+      );
+
+      debugPrint(
+          '[MapWithQuotesScreen] ===== ORDER CREATED SUCCESSFULLY =====');
+      debugPrint(
+          '[MapWithQuotesScreen] Order ID: ${orderInitiationResponse.order.id}');
+      debugPrint(
+          '[MapWithQuotesScreen] Payment URL: ${orderInitiationResponse.authorizationUrl}');
+      debugPrint(
+          '[MapWithQuotesScreen] Reference: ${orderInitiationResponse.reference}');
 
       if (mounted) {
-        ref.read(selectedDeliveryProvider.notifier).state = orderResponse;
-        ref.read(comingFromBookingsScreenProvider.notifier).state = true;
-        NavigationService.instance
-            .navigateToReplaceAll(NavigatorRoutes.bookingOrderScreen);
-        debugPrint(
-            '[_createOrderAfterPayment] Navigated to bookingOrderScreen.');
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) => PaymentWebViewScreen(
+                  paymentUrl: orderInitiationResponse.authorizationUrl,
+                  orderId: orderInitiationResponse.order.id,
+                  reference: orderInitiationResponse.reference,
+                  isStoreOrder: false,
+                )));
+        debugPrint('[MapWithQuotesScreen] Navigated to payment WebView');
       }
     } catch (e, st) {
-      debugPrint(
-          '[_createOrderAfterPayment] Error creating order after payment: $e');
-      debugPrint('[_createOrderAfterPayment] Stack trace: $st');
-      _showSnackbar('Failed to create order: ${e.toString().split(':')[0]}');
+      debugPrint('[MapWithQuotesScreen] ===== ERROR CREATING ORDER =====');
+      debugPrint('[MapWithQuotesScreen] Error: $e');
+      debugPrint('[MapWithQuotesScreen] Stack trace: $st');
+
+      _showSnackbar('Failed to create order: ${e.toString().split(':').first}');
     } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-        debugPrint('[_createOrderAfterPayment] _isLoading set to false.');
       }
     }
   }
 
-  /// Helper function to show a snackbar safely.
   void _showSnackbar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
-    } else {
-      debugPrint(
-          'Attempted to show snackbar but widget was unmounted: $message');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<PaymentStatus>(paymentStatusProvider,
-        (previousStatus, newStatus) {
-      debugPrint(
-          '[MapWithQuotesScreen.build] Payment status changed: $previousStatus -> $newStatus');
-      if (newStatus == PaymentStatus.success) {
-        debugPrint(
-            '[MapWithQuotesScreen.build] Payment successful, attempting to create order...');
-        _createOrderAfterPayment();
-      } else if (newStatus == PaymentStatus.failed) {
-        debugPrint(
-            '[MapWithQuotesScreen.build] Payment failed, showing snackbar...');
-        _showSnackbar('Payment was not successful. Please try again.');
-      }
-      ref.read(paymentStatusProvider.notifier).state = PaymentStatus.initial;
-      debugPrint(
-          '[MapWithQuotesScreen.build] Payment status reset to initial.');
-    });
-
     final rideLocationState = ref.watch(rideLocationProvider);
     final List<QuoteResponseModel>? quoteResponses =
-        rideLocationState.quoteResponses; // Now a list
+        rideLocationState.quoteResponses;
 
     if (quoteResponses == null || quoteResponses.isEmpty) {
-      debugPrint(
-          '[MapWithQuotesScreen.build] quoteResponses is null or empty, showing error message.');
       return const Scaffold(
         body: Center(
-          child: Text('No delivery options available.'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.no_luggage,
+                size: 60,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text('No delivery options available.'),
+            ],
+          ),
         ),
       );
     }
 
-    // Ensure _selectedQuote is set if it's null (e.g., on first build)
     _selectedQuote ??= quoteResponses.first;
 
     final pickupLatLng = rideLocationState.pickUpLocation?.coordinates;
     final dropOffLatLng = rideLocationState.dropOffLocation?.coordinates;
+    final user = ref.watch(userProvider);
 
     CameraPosition initialCameraPosition;
     if (pickupLatLng != null && dropOffLatLng != null) {
@@ -415,15 +309,11 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
         target: bounds.northeast,
         zoom: 14,
       );
-      debugPrint(
-          '[MapWithQuotesScreen.build] Initial camera position set based on pickup/dropoff bounds.');
     } else {
       initialCameraPosition = const CameraPosition(
         target: LatLng(6.3364, 5.6171), // Default to Benin City, Nigeria
         zoom: 14.0,
       );
-      debugPrint(
-          '[MapWithQuotesScreen.build] Initial camera position defaulted to Benin City.');
     }
 
     return Scaffold(
@@ -434,7 +324,6 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
         leading: GestureDetector(
           onTap: () {
             NavigationService.instance.goBack();
-            debugPrint('[MapWithQuotesScreen.AppBar] Back button tapped.');
           },
           child: Container(
             padding: EdgeInsets.all(8.w),
@@ -456,7 +345,6 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
               onMapCreated: (controller) {
                 _mapController = controller;
                 _setMapAndMarkers();
-                debugPrint('[MapWithQuotesScreen.GoogleMap] Map created.');
               },
               markers: _markers,
               polylines: _polylines,
@@ -482,16 +370,17 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                             _selectedQuote = quote;
                           });
                           debugPrint(
-                              '[MapWithQuotesScreen.QuoteCard] Quote card tapped. Selected: $_selectedQuote');
+                              '[MapWithQuotesScreen] Quote selected: ${quote.deliveryType}');
                         },
                         child: _buildQuoteCard(
                           quote.deliveryType,
-                          "30-60 min", // Assuming estimated time is consistent or fetched per quote
+                          "30-60 min",
                           quote.price,
-                          'Bike Delivery\nNo mixing; just your direct stuff.', // Adjust description as needed
+                          'Bike Delivery\nNo mixing; just your direct stuff.',
                           isExpress: isExpressQuote,
                           discountedPrice: quote.discountedPrice,
                           isSelected: _selectedQuote == quote,
+                          hasDiscount: user?.hasCoupon ?? false,
                         ),
                       );
                     }).toList(),
@@ -514,12 +403,12 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     );
   }
 
-  /// Builds a single quote card widget.
   Widget _buildQuoteCard(
       String title, String time, double price, String description,
       {required bool isExpress,
       required bool isSelected,
-      double? discountedPrice}) {
+      double? discountedPrice,
+      bool? hasDiscount}) {
     return Container(
       width: 250.w,
       margin: EdgeInsets.all(8.w),
@@ -568,11 +457,12 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle,
-                          color: isSelected
-                              ? AppColors.primary
-                              : Colors.transparent,
-                          size: 18.w),
+                      Icon(
+                        Icons.check_circle,
+                        color:
+                            isSelected ? AppColors.primary : Colors.transparent,
+                        size: 18.w,
+                      ),
                       Gap.w4,
                       AppText.button(
                         title,
@@ -590,7 +480,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (discountedPrice != null)
+                if (hasDiscount == true && discountedPrice != null)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -610,9 +500,10 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                     Text(
                       price.toMoney(),
                       style: TextStyle(
-                        decoration: discountedPrice != null
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
+                        decoration:
+                            discountedPrice != null && hasDiscount == true
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
                         decorationColor:
                             isExpress ? Colors.white : AppColors.black,
                         decorationThickness: 3,
@@ -621,15 +512,17 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (discountedPrice != null)
+                    if (discountedPrice != null && hasDiscount == true)
                       Container(
                         padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
-                            color: Colors.deepOrange.withOpacity(.2),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                width: 1,
-                                color: Colors.deepOrange.withOpacity(.4))),
+                          color: Colors.deepOrange.withOpacity(.2),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            width: 1,
+                            color: Colors.deepOrange.withOpacity(.4),
+                          ),
+                        ),
                         child: Text(
                           "20% off",
                           style: TextStyle(

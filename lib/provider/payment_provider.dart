@@ -6,6 +6,6 @@ import 'package:starter_codes/features/payment/model/payment_detail_model.dart';
 final paymentDetailsProvider = StateProvider<PaymentDetails?>((ref) => null);
 
 // Optional: You could also have a provider to track payment status
-enum PaymentStatus { initial, processing, success, failed }
+enum PaymentStatus { Successful, Pending, Failed}
 
-final paymentStatusProvider = StateProvider<PaymentStatus>((ref) => PaymentStatus.initial);
+final paymentStatusProvider = StateProvider<PaymentStatus>((ref) => PaymentStatus.Pending);

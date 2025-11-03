@@ -1,8 +1,12 @@
 class ApiRoute {
   /// Base Url
-  static const String baseUrl = "https://vinkol-server.onrender.com/api/v1";
-  // "https://vinkol-server-staging.vercel.app/api/v1";
-  // "https://vinkol-web.vercel.app/api/v1"; //
+  // static const String baseUrl = "https://vinkol-server.onrender.com/api/v1";
+  static const String baseUrl =
+      "https://vinkol-server-staging.vercel.app/api/v1";
+  // "";
+  // "https://vinkol-web.vercel.app/api/v1";
+  //
+  ////
 
   // Auth Url
   static const String login = "$baseUrl/users/login";
@@ -29,12 +33,15 @@ class ApiRoute {
   static const String getSingleOrder = "$baseUrl/orders";
   static const String getQuote = "$baseUrl/orders/get-quote";
 
+  static const String createOrderNew = "$baseUrl/orders/create-new";
+
   // STORE
   static const String stores = '$baseUrl/stores';
   static const String products = '$baseUrl/products';
   static const String shoppingDeliveryFee =
       '$baseUrl/orders/shopping-delivery-fee';
   static const String storeOrders = '$baseUrl/orders/store-order';
+  static const String storeOrderNew = '$baseUrl/orders/store-order-new';
   // PAYSTACK
   static const String paystackBaseUrl = 'https://api.paystack.co';
   static const String paystackGenerateLink =

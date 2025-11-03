@@ -14,7 +14,8 @@ import 'package:starter_codes/features/booking/view/screen/map_with_quote_screen
 import 'package:starter_codes/features/booking/view/screen/package_info_screen.dart';
 import 'package:starter_codes/features/dashboard/view/screen/dashboard_screen.dart';
 import 'package:starter_codes/features/onboarding/view/screen/onboarding_screen.dart';
-import 'package:starter_codes/features/payment/view/payment_screen.dart';
+import 'package:starter_codes/features/payment/view/payment_veification_screen.dart';
+import 'package:starter_codes/features/payment/view/payment_webview.dart';
 import 'package:starter_codes/features/profile/view/screen/SupportAndHelpScreen.dart';
 import 'package:starter_codes/features/profile/view/screen/delete_account_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/notification_settings_screen.dart';
@@ -193,23 +194,42 @@ class AppRouter {
             settings: settings,
             viewToShow: const BookingOrderScreen(),
             transition: transition);
-
-      //PAYMENT SCREEN
-      case NavigatorRoutes.deliveryPaymentScreen:
-        return _getPageRoute(
-            settings: settings,
-            viewToShow: const PaymentScreen(),
-            transition: transition);
       // STORE
       case NavigatorRoutes.productListScreen:
         return _getPageRoute(
             settings: settings,
             viewToShow: const ProductListScreen(),
             transition: transition);
+
+      case NavigatorRoutes.paymentWebViewScreen:
+        final args = settings.arguments as Map<String, dynamic>;
+        return _getPageRoute(
+          settings: settings,
+          viewToShow: PaymentWebViewScreen(
+            paymentUrl: args['paymentUrl'] as String,
+            orderId: args['orderId'] as String,
+            reference: args['reference'] as String,
+          ),
+          transition: TransitionType.SlideUp,
+        );
+
+      case NavigatorRoutes.paymentVerificationScreen:
+        final args = settings.arguments as Map<String, dynamic>;
+        return _getPageRoute(
+          settings: settings,
+          viewToShow: PaymentVerificationScreen(
+            orderId: args['orderId'] as String,
+            reference: args['reference'] as String,
+          ),
+          transition: TransitionType.Breeze,
+        );
       case NavigatorRoutes.cartScreen:
+        final args = settings.arguments as Map<String, dynamic>;
         return _getPageRoute(
             settings: settings,
-            viewToShow: const CartScreen(),
+            viewToShow: CartScreen(
+              isFromWebviewClosing: args['isFromWebviewClosing'] as bool,
+            ),
             transition: transition);
       case NavigatorRoutes.storeOrderScreen:
         return _getPageRoute(

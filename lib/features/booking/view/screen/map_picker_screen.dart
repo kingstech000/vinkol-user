@@ -287,9 +287,9 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
+              content: const Text(
                 'Location adjusted to nearest land area (avoided water)',
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.white),
               ),
               backgroundColor: Colors.blue[600],
               behavior: SnackBarBehavior.floating,

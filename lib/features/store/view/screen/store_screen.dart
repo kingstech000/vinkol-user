@@ -98,14 +98,14 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: const EmptyAppBar(),
       body: SafeArea(
         child: Column(
           children: [
             // Header Section with Search
             Container(
               color: Colors.white,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.only(
+                  left: 20, right: 20, bottom: 20, top: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -118,8 +118,8 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(
-                          Icons.location_on,
+                        child: const Icon(
+                          Icons.store,
                           color: AppColors.primary,
                           size: 20,
                         ),
@@ -175,7 +175,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                           fontSize: 14,
                         ),
                         prefixIcon: Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.only(top: 12, bottom: 12),
                           child: Icon(
                             Icons.search,
                             color: Colors.grey[400],
@@ -195,13 +195,19 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                               )
                             : null,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                              width: .5, color: AppColors.black),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                              width: .5, color: AppColors.black),
                         ),
                         filled: true,
                         fillColor: Colors.grey[50],
                         contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16,
+                          vertical: 10,
                           horizontal: 20,
                         ),
                       ),

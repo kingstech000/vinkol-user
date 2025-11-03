@@ -1,5 +1,7 @@
 // lib/services/orders_service.dart
 
+// ignore_for_file: unused_field
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/core/utils/network_client.dart';
@@ -8,7 +10,7 @@ import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/features/booking/model/order_model.dart'; // Contains OrderModel and QuoteResponseModel
 import 'package:starter_codes/features/booking/model/request.dart';
-import 'package:starter_codes/features/delivery/model/delivery_model.dart'; // Contains CreateOrderRequest and GetQuoteRequest
+import 'package:starter_codes/features/payment/model/order_initiation_response_model.dart'; // Contains CreateOrderRequest and GetQuoteRequest
 
 class BookingService {
   final NetworkClient _networkClient;
@@ -17,18 +19,18 @@ class BookingService {
 
   BookingService(this._networkClient, this._localCache, this.logger);
 
-  Future<DeliveryModel> createOrder({
+  Future<OrderInitiationResponse> createOrder({
     required CreateOrderRequest orderDetails,
   }) async {
     try {
       logger.i('Order Request: ${orderDetails.toJson()}');
       final responseData = await _networkClient.post(
-        ApiRoute.createOrder,
+        ApiRoute.createOrderNew,
         body: orderDetails.toJson(), // Convert the request model to JSON
       );
       logger.i('Order created successfully: $responseData');
-      final delivery= DeliveryModel.fromJson(responseData['data']);
-      return delivery; // Return the 'data' part of the response
+      final paymentInitiationDetails = OrderInitiationResponse.fromJson(responseData['data']);
+      return paymentInitiationDetails; // Return the 'data' part of the response
     } catch (e) {
       logger.e('Failed to create order: $e');
       rethrow;

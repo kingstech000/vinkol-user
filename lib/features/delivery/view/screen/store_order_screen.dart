@@ -13,8 +13,6 @@ import 'package:starter_codes/features/delivery/view/screen/product_order_modal.
 import 'package:starter_codes/features/delivery/view_model/delivery_detail_view_model.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
 import 'package:starter_codes/provider/navigation_provider.dart';
-import 'package:starter_codes/widgets/app_bar/HorizontalDottedLine.dart';
-import 'package:starter_codes/widgets/border_icon_button.dart';
 import 'package:starter_codes/widgets/circular_network_image.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
@@ -54,7 +52,6 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
         if (didPop) return;
         if (isFromBookingScreen) {
           ref.read(comingFromBookingsScreenProvider.notifier).state = false;
-
           NavigationService.instance
               .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
         } else {
@@ -82,10 +79,17 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
               margin: EdgeInsets.only(left: 20.w, top: 10.h),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: Icon(Icons.arrow_back_ios,
-                  color: AppColors.black, size: 20.w),
+              child: Icon(Icons.arrow_back_ios_new,
+                  color: AppColors.black, size: 18.w),
             ),
           ),
         ),
@@ -95,121 +99,173 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
               child: deliveryDetailsAsync.when(
                 data: (delivery) {
                   if (delivery == null) {
-                    return Container(color: Colors.grey.shade400);
+                    return Container(color: Colors.grey.shade300);
                   }
                   return ReverseLocationStringMap(
                     pickupLocationString: delivery.store!.address!,
                     dropoffLocationString: delivery.dropoffLocation,
                   );
                 },
-                loading: () => Container(color: Colors.grey.shade400),
+                loading: () => Container(color: Colors.grey.shade300),
                 error: (err, stack) => Container(color: Colors.red.shade100),
               ),
             ),
             DraggableScrollableSheet(
-              initialChildSize: 0.5,
-              minChildSize: 0.3,
-              maxChildSize: 0.8,
+              initialChildSize: 0.55,
+              minChildSize: 0.35,
+              maxChildSize: 0.9,
               builder:
                   (BuildContext context, ScrollController scrollController) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20.r),
-                    topRight: Radius.circular(20.r),
-                  ),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24.r),
+                      topRight: Radius.circular(24.r),
                     ),
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Gap.h8,
-                          Center(
-                            child: Container(
-                              width: 40.w,
-                              height: 5.h,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade300,
-                                borderRadius: BorderRadius.circular(5.r),
-                              ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Drag Handle
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        child: Center(
+                          child: Container(
+                            width: 40.w,
+                            height: 4.h,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2.r),
                             ),
                           ),
-                          Gap.h8,
-                          deliveryDetailsAsync.when(
+                        ),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          child: deliveryDetailsAsync.when(
                             data: (delivery) {
                               if (delivery == null) {
-                                return const Center(
-                                    child: Text('No delivery details found.',
-                                        style: TextStyle(color: Colors.white)));
+                                return Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(40.w),
+                                    child: Column(
+                                      children: [
+                                        Icon(Icons.shopping_bag_outlined,
+                                            size: 64.w,
+                                            color: Colors.grey.shade400),
+                                        Gap.h16,
+                                        Text(
+                                          'No store order details found',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 16.sp,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
                               }
 
                               return Column(
                                 children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(15.r),
-                                      topRight: Radius.circular(15.r),
+                                  // Status Banner with gradient
+                                  Container(
+                                    margin:
+                                        EdgeInsets.symmetric(horizontal: 20.w),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 20.w,
+                                      vertical: 16.h,
                                     ),
-                                    child: Container(
-                                      color: AppColors.black,
-                                      // margin: EdgeInsets.symmetric(
-                                      //     horizontal: 10.h, vertical: 5.w),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 16.w, vertical: 15.h),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding: EdgeInsets.all(5.r),
-                                                decoration: const BoxDecoration(
-                                                    color: AppColors.primary,
-                                                    shape: BoxShape.circle),
-                                                child: Icon(
-                                                    Icons.timelapse_outlined,
-                                                    color: AppColors.white,
-                                                    size: 20.w),
-                                              ),
-                                              Gap.w8,
-                                              AppText.button(
-                                                  delivery.status ?? 'Pending',
-                                                  color: AppColors.white,
-                                                  fontSize: 14.sp),
-                                            ],
-                                          ),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          AppColors.primary,
+                                          Color(0xFF6C63FF),
                                         ],
                                       ),
+                                      borderRadius: BorderRadius.circular(16.r),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.primary
+                                              .withOpacity(0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.all(8.r),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.shopify_outlined,
+                                            color: AppColors.white,
+                                            size: 24.w,
+                                          ),
+                                        ),
+                                        Gap.w12,
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              AppText.caption(
+                                                'Order Status',
+                                                color: Colors.white
+                                                    .withOpacity(0.9),
+                                                fontSize: 11.sp,
+                                              ),
+                                              AppText.h5(
+                                                delivery.status ?? 'Pending',
+                                                color: AppColors.white,
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  Gap.h4,
-                                  Container(
-                                    padding: const EdgeInsets.all(24),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.white,
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(20.r),
-                                        topRight: Radius.circular(20.r),
-                                      ),
-                                    ),
+                                  Gap.h24,
+                                  Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 20.w),
                                     child: Column(
                                       children: [
-                                        _WhiteContainer(
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Column(
+                                        // Tracking Card
+                                        _EnhancedCard(
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
+                                                    AppText.caption(
+                                                      'Tracking ID',
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontSize: 11.sp,
+                                                    ),
+                                                    Gap.h4,
                                                     GestureDetector(
                                                       onTap: () {
                                                         final trackingId =
@@ -219,17 +275,11 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                             trackingId
                                                                 .isNotEmpty) {
                                                           copyToClipboard(
-                                                              context,
-                                                              trackingId,
-                                                              successMessage:
-                                                                  'Tracking ID copied!');
-                                                        } else {
-                                                          ScaffoldMessenger.of(
-                                                                  context)
-                                                              .showSnackBar(
-                                                                  const SnackBar(
-                                                                      content: Text(
-                                                                          'No tracking ID to copy.')));
+                                                            context,
+                                                            trackingId,
+                                                            successMessage:
+                                                                'Tracking ID copied!',
+                                                          );
                                                         }
                                                       },
                                                       child: Row(
@@ -243,123 +293,147 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                                 FontWeight.bold,
                                                             fontSize: 18.sp,
                                                           ),
-                                                          Gap.w4,
+                                                          Gap.w8,
                                                           Icon(
                                                             Icons
                                                                 .copy_all_rounded,
-                                                            size: 16.w,
-                                                            color: Colors
-                                                                .grey.shade600,
+                                                            size: 18.w,
+                                                            color: AppColors
+                                                                .primary,
                                                           ),
                                                         ],
                                                       ),
                                                     ),
+                                                    Gap.h4,
                                                     AppText.caption(
-                                                        delivery.vehicleRequest ??
-                                                            'N/A',
-                                                        color: Colors
-                                                            .grey.shade600,
-                                                        fontSize: 12.sp),
+                                                      delivery.vehicleRequest ??
+                                                          'N/A',
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontSize: 12.sp,
+                                                    ),
                                                   ],
                                                 ),
-                                                Column(
-                                                  children: [
-                                                    Image.asset(
-                                                      ImageAsset.riderBike,
-                                                      height: 40.h,
-                                                      width: 70.w,
-                                                    ),
-                                                    Container(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 10,
-                                                          vertical: 4),
-                                                      decoration: BoxDecoration(
-                                                          color:
-                                                              AppColors.white,
-                                                          boxShadow: const [
-                                                            BoxShadow(
-                                                                color: Colors
-                                                                    .black,
-                                                                blurRadius: 2)
-                                                          ],
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      10)),
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                              Icons
-                                                                  .check_circle_outline,
-                                                              color:
-                                                                  Colors.blue,
-                                                              size: 16.w),
-                                                          Gap.w4,
-                                                          AppText.button(
-                                                              delivery.deliveryType ??
-                                                                  'N/A',
-                                                              fontSize: 12.sp),
-                                                        ],
-                                                      ),
-                                                    )
-                                                  ],
-                                                )
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        Gap.h16,
-                                        // Conditionally display rider details
-                                        if (delivery.status!.toLowerCase() ==
-                                            'picked') ...[
-                                          _WhiteContainer(
-                                            children: [
-                                              Row(
+                                              ),
+                                              Column(
                                                 children: [
-                                                  // Agent's image and details
-                                                  CircularNetworkImage(
-                                                    imageUrl: delivery
-                                                            .deliveryAgent
-                                                            ?.imageUrl ??
-                                                        'https://via.placeholder.com/150/FF0000/FFFFFF?Text=User',
+                                                  Image.asset(
+                                                    ImageAsset.riderBike,
+                                                    height: 45.h,
+                                                    width: 70.w,
                                                   ),
-                                                  Gap.w16,
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                  Gap.h8,
+                                                  Container(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                      horizontal: 12.w,
+                                                      vertical: 6.h,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.primary
+                                                          .withOpacity(0.1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12.r),
+                                                    ),
+                                                    child: Row(
                                                       children: [
-                                                        AppText.body(
-                                                          delivery.deliveryAgent
-                                                                  ?.fullName ??
-                                                              'N/A',
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16.sp,
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
+                                                        Icon(
+                                                          Icons.check_circle,
+                                                          color:
+                                                              AppColors.primary,
+                                                          size: 16.w,
                                                         ),
-                                                        AppText.caption(
-                                                          delivery.deliveryAgent
-                                                                  ?.phone ??
+                                                        Gap.w6,
+                                                        AppText.button(
+                                                          delivery.deliveryType ??
                                                               'N/A',
-                                                          color: Colors
-                                                              .grey.shade600,
                                                           fontSize: 12.sp,
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
+                                                          fontWeight:
+                                                              FontWeight.w600,
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                  Gap.w8,
-                                                  // Call and Chat Buttons
-                                                  BorderedIconButton(
-                                                    icon: Icons.call_outlined,
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Gap.h16,
+
+                                        // Delivery Agent Card (only if picked)
+                                        if (delivery.status!.toLowerCase() ==
+                                            'picked') ...[
+                                          _EnhancedCard(
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(
+                                                      color: AppColors.primary,
+                                                      width: 2.w,
+                                                    ),
+                                                  ),
+                                                  child: CircularNetworkImage(
+                                                    imageUrl: delivery
+                                                            .deliveryAgent
+                                                            ?.imageUrl ??
+                                                        'https://via.placeholder.com/150',
+                                                    width: 50.w,
+                                                    height: 50.w,
+                                                  ),
+                                                ),
+                                                Gap.w16,
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      AppText.caption(
+                                                        'Your Delivery Agent',
+                                                        color: Colors
+                                                            .grey.shade600,
+                                                        fontSize: 11.sp,
+                                                      ),
+                                                      Gap.h4,
+                                                      AppText.body(
+                                                        delivery.deliveryAgent
+                                                                ?.fullName ??
+                                                            'N/A',
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16.sp,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                      AppText.caption(
+                                                        delivery.deliveryAgent
+                                                                ?.phone ??
+                                                            'N/A',
+                                                        color: Colors
+                                                            .grey.shade600,
+                                                        fontSize: 12.sp,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.primary,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.r),
+                                                  ),
+                                                  child: IconButton(
+                                                    icon: Icon(
+                                                      Icons.call,
+                                                      color: Colors.white,
+                                                      size: 20.w,
+                                                    ),
                                                     onPressed: () {
                                                       LaunchLink.launchPhone(
                                                           delivery.deliveryAgent
@@ -368,13 +442,14 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                               '');
                                                     },
                                                   ),
-                                                ],
-                                              ),
-                                            ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                           Gap.h16,
                                         ],
-                                        // Wrap this GestureDetector around the _WhiteContainer
+
+                                        // Order Summary Card (clickable)
                                         GestureDetector(
                                           onTap: () {
                                             if (delivery.products != null &&
@@ -396,116 +471,212 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                           'No products available for this order.')));
                                             }
                                           },
-                                          child: _WhiteContainer(
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  AppText.button(
-                                                      '${delivery.totalItemsOrdered} Items'),
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    child: AppText.button(
+                                          child: _EnhancedCard(
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding: EdgeInsets.all(12.w),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.primary
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.r),
+                                                  ),
+                                                  child: Icon(
+                                                    Icons
+                                                        .shopping_cart_outlined,
+                                                    color: AppColors.primary,
+                                                    size: 24.w,
+                                                  ),
+                                                ),
+                                                Gap.w16,
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      AppText.caption(
+                                                        'Order Summary',
+                                                        color: Colors
+                                                            .grey.shade600,
+                                                        fontSize: 11.sp,
+                                                      ),
+                                                      Gap.h4,
+                                                      AppText.body(
+                                                        '${delivery.totalItemsOrdered} Items',
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16.sp,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.end,
+                                                  children: [
+                                                    AppText.caption(
+                                                      'Total Amount',
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontSize: 11.sp,
+                                                    ),
+                                                    Gap.h4,
+                                                    AppText.h5(
                                                       delivery.totalAmount!
                                                           .toMoney(),
                                                       color: AppColors.primary,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 18.sp,
                                                     ),
-                                                  )
-                                                ],
+                                                  ],
+                                                ),
+                                                Gap.w8,
+                                                Icon(
+                                                  Icons.chevron_right,
+                                                  color: Colors.grey.shade400,
+                                                  size: 24.w,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Gap.h16,
+
+                                        // Location Card
+                                        _EnhancedCard(
+                                          child: Column(
+                                            children: [
+                                              _EnhancedLocationInfo(
+                                                icon: Icons.store_outlined,
+                                                iconColor: Colors.green,
+                                                title:
+                                                    'Pick-up Location (Store)',
+                                                address:
+                                                    delivery.store?.address ??
+                                                        'N/A',
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                    vertical: 16.h),
+                                                child: Row(
+                                                  children: [
+                                                    SizedBox(
+                                                        width: 8.w +
+                                                            8.w), // Half of container padding + half of icon container size (8.w padding + ~17w for half the container)
+                                                    Container(
+                                                      width: 2.w,
+                                                      height: 40.h,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                        gradient:
+                                                            LinearGradient(
+                                                          colors: [
+                                                            Colors.green,
+                                                            AppColors.primary
+                                                          ],
+                                                          begin: Alignment
+                                                              .topCenter,
+                                                          end: Alignment
+                                                              .bottomCenter,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              _EnhancedLocationInfo(
+                                                icon: Icons.location_on,
+                                                iconColor: AppColors.primary,
+                                                title: 'Drop-off Location',
+                                                address:
+                                                    delivery.dropoffLocation ??
+                                                        'N/A',
                                               ),
                                             ],
                                           ),
                                         ),
-                                        Gap.h8,
-                                        _WhiteContainer(
-                                          children: [
-                                            _LocationInfo(
-                                              icon: Icons.location_on,
-                                              iconColor: Colors.green,
-                                              title: 'Pick-up Location',
-                                              address:
-                                                  delivery.store?.address ??
-                                                      'N/A',
+                                        Gap.h16,
+
+                                        // Delivery Code Card
+                                        _EnhancedCard(
+                                          child: Container(
+                                            padding: EdgeInsets.all(16.w),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12.r),
                                             ),
-                                            Row(
+                                            child: Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment
                                                       .spaceBetween,
                                               children: [
-                                                Padding(
-                                                  padding: EdgeInsets.only(
-                                                      left: 5.w),
-                                                  child: SizedBox(
-                                                    height: 60.h,
-                                                    child: HorizontalDottedLine(
-                                                      direction: Axis.vertical,
-                                                      dotSize: 2,
-                                                      dotSpace: 5,
-                                                      color:
-                                                          Colors.grey.shade500,
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.lock_outline,
+                                                      color: AppColors.primary,
+                                                      size: 20.w,
                                                     ),
-                                                  ),
+                                                    Gap.w8,
+                                                    AppText.body(
+                                                      'Delivery Code',
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ],
+                                                ),
+                                                AppText.h4(
+                                                  delivery.orderOtp.toString(),
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.primary,
+                                                  fontSize: 20.sp,
                                                 ),
                                               ],
                                             ),
-                                            Gap.h8,
-                                            _LocationInfo(
-                                              icon: Icons.location_on,
-                                              iconColor: AppColors.primary,
-                                              title: 'Drop-off Location',
-                                              address:
-                                                  delivery.dropoffLocation ??
-                                                      'N/A',
-                                            ),
-                                          ],
+                                          ),
                                         ),
-                                        Gap.h8,
-                                        _WhiteContainer(
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                AppText.caption(
-                                                    'Delivery Code'),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: AppText.button(
-                                                      delivery.orderOtp
-                                                          .toString(),
-                                                      fontSize: 18),
-                                                )
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                        Gap.h24,
                                       ],
                                     ),
                                   ),
                                 ],
                               );
                             },
-                            loading: () => const Padding(
-                              padding: EdgeInsets.all(20.0),
-                              child: Center(child: DotSpinningIndicator()),
+                            loading: () => Padding(
+                              padding: EdgeInsets.all(40.w),
+                              child:
+                                  const Center(child: DotSpinningIndicator()),
                             ),
                             error: (err, stack) => Padding(
-                              padding: const EdgeInsets.all(20.0),
+                              padding: EdgeInsets.all(40.w),
                               child: Center(
-                                  child: Text('Error: ${err.toString()}',
-                                      style:
-                                          const TextStyle(color: Colors.red))),
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.error_outline,
+                                        size: 48.w, color: Colors.red),
+                                    Gap.h16,
+                                    Text(
+                                      'Unable to load order details',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 14.sp,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 );
               },
@@ -517,37 +688,41 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
   }
 }
 
-class _WhiteContainer extends StatelessWidget {
-  const _WhiteContainer({
-    this.children = const [],
-  });
-  final List<Widget> children;
+class _EnhancedCard extends StatelessWidget {
+  const _EnhancedCard({required this.child});
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: Colors.grey.shade300,
+          color: Colors.grey.shade200,
           width: 1.w,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Column(
-        children: children,
-      ),
+      child: child,
     );
   }
 }
 
-class _LocationInfo extends StatelessWidget {
+class _EnhancedLocationInfo extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String title;
   final String address;
 
-  const _LocationInfo({
+  const _EnhancedLocationInfo({
     required this.icon,
     required this.iconColor,
     required this.title,
@@ -559,20 +734,29 @@ class _LocationInfo extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.only(top: 4.h),
-          child: Icon(icon, color: Colors.grey.shade500, size: 15.w),
+        Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 18.w),
         ),
-        Gap.w8,
+        Gap.w12,
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.body(title, fontWeight: FontWeight.bold, fontSize: 16.sp),
               AppText.caption(
-                address,
+                title,
                 color: Colors.grey.shade600,
-                fontSize: 12.sp,
+                fontSize: 11.sp,
+              ),
+              Gap.h4,
+              AppText.body(
+                address,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
               ),
             ],
           ),

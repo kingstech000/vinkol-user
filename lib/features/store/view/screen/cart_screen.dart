@@ -7,12 +7,13 @@ import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/features/booking/view/screen/location_search_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/map_picker_screen.dart';
-import 'package:starter_codes/features/payment/view/store_payment_screen.dart';
+import 'package:starter_codes/features/payment/view/payment_webview.dart';
+import 'package:starter_codes/features/profile/view_model/personal_info_view_model.dart';
 import 'package:starter_codes/features/store/data/store_service.dart';
-import 'package:starter_codes/features/store/model/cart_item_model.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
-import 'package:starter_codes/features/store/model/store_payment_argument_model.dart';
+import 'package:starter_codes/features/store/model/store_request_model.dart';
 import 'package:starter_codes/features/store/view/widget/cart_item_card.dart';
+import 'package:starter_codes/features/store/view_model/order_view_model.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
@@ -25,7 +26,9 @@ import 'package:starter_codes/utils/guest_mode_utils.dart';
 final appLoggerProvider = Provider((ref) => const AppLogger(CartScreen));
 
 class CartScreen extends ConsumerStatefulWidget {
-  const CartScreen({super.key});
+  const CartScreen({super.key, this.isFromWebviewClosing = false});
+
+  final bool isFromWebviewClosing;
 
   @override
   ConsumerState<CartScreen> createState() => _CartScreenState();
@@ -92,21 +95,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   }
 
   Future<void> _handleProceedToPayment() async {
-    final appLogger = ref.read(appLoggerProvider);
-    final cartState =
-        ref.read(cartProvider); // Use read as we are performing an action
+    ref.read(appLoggerProvider);
+    final cartState = ref.read(cartProvider);
 
-    final cartProducts = cartState.products; // This is List<StoreProduct>
+    final cartProducts = cartState.products;
     final dropOffLocation = cartState.dropOffLocation;
     final selectedDeliveryType = cartState.deliveryType;
     final currentUser = ref.read(userProvider);
+    final initialPersonalInfo = ref.read(personalInfoViewModelProvider);
 
-    // Check if user is guest and trying to make a purchase
-    if (!GuestModeUtils.requireAuthForBuying(context)) {
-      return; // Auth prompt will be shown by the utility method
-    }
-
-    // Basic validation
+    // Validations
+    if (!GuestModeUtils.requireAuthForBuying(context)) return;
     if (cartProducts.isEmpty) {
       _showSnackbar('Your cart is empty.');
       return;
@@ -141,76 +140,69 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       return;
     } else if (deliveryFeeAsync.hasError) {
       _showSnackbar('Error calculating delivery fee. Please try again.');
-      appLogger.e(
-          'Error getting delivery fee for payment: ${deliveryFeeAsync.error}',
-          error: deliveryFeeAsync.error,
-          stackTrace: deliveryFeeAsync.stackTrace);
       return;
     } else {
       deliveryFee = deliveryFeeAsync.value!;
     }
 
-    // Determine the store ID and Name
     final String? storeId =
         cartProducts.isNotEmpty ? cartProducts.first.store : '';
-    final String storeName = ref.watch(currentStoreProvider)!.name ?? '';
-
     if (storeId == null || storeId.isEmpty) {
       _showSnackbar('Unable to determine store for the order.');
-      appLogger.e('No store ID found for products in cart.');
       return;
     }
 
-    // Create CartItem list for StorePaymentArguments
-    final List<CartItem> cartItemsForPayment = cartProducts
-        .map((p) => CartItem(product: p, quantity: p.quantity ?? 1))
-        .toList();
+    // Prepare payload
+    final productPayloads = cartProducts.map((item) {
+      return ProductOrderPayload(
+        product: item.id,
+        quantity: item.quantity ?? 1,
+      );
+    }).toList();
 
-    appLogger.d(
-        'Navigating to StorePaymentScreen with total amount: ${subtotal + deliveryFee}');
-
-    // Navigate to StorePaymentScreen and wait for result
-    final bool? paymentSuccess = await Navigator.push<bool?>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StorePaymentScreen(
-          arguments: StorePaymentArguments(
-            state: "",
-            storeId: storeId,
-            storeName: storeName,
-            cartItems: cartItemsForPayment, // Pass the mapped list
-            totalProductAmount: subtotal,
-            deliveryFee: deliveryFee,
-            selectedDropoffLocation: dropOffLocation,
-            formattedDropoffAddress: dropOffLocation.formattedAddress!,
-            deliveryType: selectedDeliveryType,
-            orderType:
-                'delivery', // Adjust as per your actual order type logic ('delivery' or 'pickup')
-          ),
-        ),
-      ),
+    final orderPayload = CreateStoreOrderPayload(
+      state: initialPersonalInfo.address,
+      store: storeId,
+      products: productPayloads,
+      amount: subtotal.toInt(),
+      deliveryFee: deliveryFee.toInt(),
+      dropoffLocation: dropOffLocation.formattedAddress!,
+      deliveryType: selectedDeliveryType,
+      orderType: 'Shopping',
     );
 
-    // This part will now be handled inside StorePaymentScreen
-    // StorePaymentScreen will handle order creation and navigation to success screen
-    // based on the result of the WebView payment.
-    // The pop(true/false) from StorePaymentScreen will control this part.
-    if (paymentSuccess == true) {
-      appLogger.i(
-          'Payment successful and order process completed on StorePaymentScreen.');
-      // The StorePaymentScreen already navigates to OrderSuccessScreen and clears stack.
-      // So no further action needed here on success.
+    ref.read(appLoggerProvider).d('Payload to send: ${orderPayload.toJson()}');
+    // Call ViewModel and handle response
+    final orderResponse = await ref
+        .read(storeOrderViewModelProvider.notifier)
+        .createOrder(orderPayload);
+
+    if (orderResponse != null) {
+      // Success - navigate to payment
+      if (mounted) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) => PaymentWebViewScreen(
+                  paymentUrl: orderResponse.authorizationUrl,
+                  orderId: orderResponse.order.id,
+                  reference: orderResponse.reference,
+                  isStoreOrder: true,
+                )));
+      }
     } else {
-      appLogger.w('Payment failed or cancelled on StorePaymentScreen.');
-      // Keep user on cart screen or pop to a more appropriate screen
-      // _showSnackbar('Payment process was not completed.'); // Already shown by StorePaymentScreen
+      final errorMessage = ref.read(storeOrderViewModelProvider).error;
+      if (errorMessage != null) {
+        _showSnackbar('Failed to create order: $errorMessage');
+      }
     }
   }
 
   void _showSnackbar(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text(message),
+        ),
       );
     }
   }
@@ -223,6 +215,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final cartItems = cartState.products;
     final dropOffLocation = cartState.dropOffLocation;
     final selectedDeliveryType = cartState.deliveryType;
+    final storeOrderState = ref.watch(storeOrderViewModelProvider);
 
     appLogger.d('CartScreen: Build method called.');
     appLogger.d('   Cart Items Count: ${cartItems.length}');
@@ -263,6 +256,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
+                behavior: SnackBarBehavior.floating,
                 content: Text('Error calculating delivery fee. Check logs.')),
           );
         });
@@ -388,10 +382,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               child: ElevatedButton(
                 onPressed: cartItems.isEmpty ||
                         dropOffLocation == null ||
-                        deliveryFeeAsync
-                            .isLoading // Disable if delivery fee is loading
+                        deliveryFeeAsync.isLoading ||
+                        storeOrderState.isLoading
                     ? null
-                    : _handleProceedToPayment, // Call the new method
+                    : _handleProceedToPayment,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
@@ -400,13 +394,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: deliveryFeeAsync.isLoading
+                child: storeOrderState.isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Proceed to Payment',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
+                    : deliveryFeeAsync.isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            'Proceed to Payment',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
               ),
             ),
           ),

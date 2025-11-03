@@ -578,7 +578,12 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            NavigationService.instance.navigateTo(NavigatorRoutes.cartScreen);
+            NavigationService.instance.navigateTo(
+              NavigatorRoutes.cartScreen,
+              argument: {
+                'isFromWebviewClosing': false,
+              },
+            );
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

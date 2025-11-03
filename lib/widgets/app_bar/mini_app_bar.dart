@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
+import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/gap.dart';
 
@@ -29,11 +30,12 @@ class MiniAppBar extends StatelessWidget implements PreferredSizeWidget {
       shadowColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       leading: leading
-          ? GestureDetector(
+          ? InkWell(
+              splashColor: AppColors.white,
+              highlightColor: AppColors.white,
               onTap: () {
                 _navigationService.goBack();
               },
-              behavior: HitTestBehavior.opaque,
               child: SizedBox(
                 child: Row(
                   children: [
