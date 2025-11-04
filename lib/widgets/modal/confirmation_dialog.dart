@@ -37,7 +37,7 @@ class PaymentConfirmationDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Align(
-              alignment: AlignmentGeometry.topRight,
+              alignment: Alignment.topRight,
               child: InkWell(
                 child: const Icon(Icons.close),
                 onTap: () {
