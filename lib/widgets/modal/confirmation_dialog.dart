@@ -75,7 +75,7 @@ class PaymentConfirmationDialog extends StatelessWidget {
 
             // Description
             Text(
-              'Your payment is being processed. What would you like to do?',
+              'Have you completed your payment? If yes, verify to see your order. If not, you can cancel and try again later.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14.sp,
@@ -162,13 +162,13 @@ class PaymentConfirmationDialog extends StatelessWidget {
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
               width: 300,
               child: Text(
-                'Note that you cannot cancel payment after you have sent money to Paystack',
+                'Note: If you\'ve already paid, the order will be processed even if you cancel verification. Check your Deliveries section later.',
                 textAlign: TextAlign.start,
                 style: TextStyle(
                   fontFamily: 'Roboto',
                   fontWeight: FontWeight.w400,
                   fontSize: 12.sp,
-                  color: Colors.red.withOpacity(.7),
+                  color: Colors.orange.withOpacity(.8),
                   height: 1.5,
                 ),
               ),

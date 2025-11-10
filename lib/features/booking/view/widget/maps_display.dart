@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/models/location_model.dart';
-import 'package:starter_codes/provider/location_provider.dart'; // Ensure this path is correct
+import 'package:starter_codes/provider/location_provider.dart';
 
 class MapDisplay extends ConsumerStatefulWidget {
   const MapDisplay({
@@ -28,7 +28,6 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
 
   @override
   void dispose() {
-    // Clean up any resources if needed
     super.dispose();
   }
 
@@ -36,14 +35,11 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
     if (!mounted) return;
 
     setState(() {
-      _isLoading = true; // Show loading indicator
+      _isLoading = true; 
       _currentAddress = "Fetching location...";
     });
 
     LatLng? position = ref.read(locationControllerProvider).currentLatLng;
-
-    // If currentLatLng is null (e.g., first load, permission not granted yet),
-    // try to refresh it.
     position ??=
         await ref.read(locationControllerProvider).refreshCurrentLocation();
 
@@ -59,7 +55,6 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
         ),
       };
 
-      // Get address from coordinates
       LocationModel? locationModel = await ref
           .read(locationControllerProvider)
           .getAddressFromLatLng(_currentPosition!);
@@ -72,8 +67,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
         _currentAddress = "Address not found";
       }
     } else {
-      // Handle cases where location is not available
-      _currentPosition = const LatLng(6.3361, 5.6125); // Default to Benin City
+      _currentPosition = const LatLng(6.3361, 5.6125);
       _currentAddress =
           "Location not available. Please enable location services.";
       _markers = {
@@ -88,24 +82,23 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
     if (!mounted) return;
 
     setState(() {
-      _isLoading = false; // Hide loading indicator
+      _isLoading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determine the camera position based on whether current location is available
     final CameraPosition initialCameraPosition = CameraPosition(
       target: _currentPosition ??
-          const LatLng(6.3361, 5.6125), // Default to Benin City if null
+          const LatLng(6.3361, 5.6125),
       zoom: 14,
     );
 
     return Container(
-      height: 200, // Fixed height for the map section
+      height: 200, 
       margin: const EdgeInsets.symmetric(horizontal: 16.0),
       decoration: BoxDecoration(
-        color: Colors.grey[300], // Placeholder color for the map
+        color: Colors.grey[300],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Stack(
@@ -115,10 +108,9 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
               : GoogleMap(
                   initialCameraPosition: initialCameraPosition,
                   zoomControlsEnabled: false,
-                  markers: _markers, // Display the current location marker
+                  markers: _markers,
                 ),
 
-          // Location name card overlay
           Positioned(
             bottom: 16,
             left: 16,
@@ -137,7 +129,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                     Text(
                       _currentAddress
                           .split(',')
-                          .first, // Get the first part of the address
+                          .first,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -149,7 +141,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                           ? _currentAddress
                               .substring(_currentAddress.indexOf(',') + 1)
                               .trim()
-                          : _currentAddress, // Rest of the address or full if no comma
+                          : _currentAddress,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 12,
@@ -161,7 +153,6 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
               ),
             ),
           ),
-          // Optionally, a refresh button if location is not available
           if (!_isLoading && _currentPosition == null)
             Positioned.fill(
               child: Center(
@@ -188,7 +179,6 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
   }
 }
 
-// You'd create a separate widget for this
 class MapShimmerPlaceholder extends StatelessWidget {
   const MapShimmerPlaceholder({super.key});
 
@@ -196,16 +186,14 @@ class MapShimmerPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[200], // Background for the map area
+        color: Colors.grey[200],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Stack(
         children: [
-          // Simulated map background
           Center(
             child: Icon(Icons.map, size: 80, color: Colors.grey[400]),
           ),
-          // Shimmer effect for the address card
           Positioned(
             bottom: 16,
             left: 16,

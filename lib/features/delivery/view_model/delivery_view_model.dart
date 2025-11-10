@@ -33,7 +33,7 @@ class DeliveryViewModel extends ChangeNotifier {
   List<DeliveryModel> get storeDeliveries => _storeDeliveries;
 
   bool get isLoadingPackageDeliveries => _isLoadingPackageDeliveries;
-  bool get isLoadingStoreDeliveries => _isLoadingPackageDeliveries; // Fixed typo here (was isLoadingStoreDeliveries)
+  bool get isLoadingStoreDeliveries => _isLoadingStoreDeliveries;
 
   String? get packageDeliveryError => _packageDeliveryError;
   String? get storeDeliveryError => _storeDeliveryError;

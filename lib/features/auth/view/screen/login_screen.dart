@@ -20,9 +20,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  // We no longer need these TextEditingControllers to hold state directly,
-  // as the ViewModel will manage the email and password.
-  // However, we still need them to connect to the AppTextField widgets.
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -30,30 +27,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Listen to changes in the view model and update controllers accordingly
-    // This is useful if the view model clears fields or prefills them.
     _emailController.addListener(_onEmailChanged);
     _passwordController.addListener(_onPasswordChanged);
 
-    // Initial sync from view model to controllers (e.g., if fields are pre-filled)
     final loginViewModel = ref.read(loginViewModelProvider);
     _emailController.text = loginViewModel.email;
     _passwordController.text = loginViewModel.password;
   }
 
-  // Update view model when email changes in the text field
   void _onEmailChanged() {
     ref.read(loginViewModelProvider).setEmail(_emailController.text);
   }
 
-  // Update view model when password changes in the text field
   void _onPasswordChanged() {
     ref.read(loginViewModelProvider).setPassword(_passwordController.text);
   }
 
   @override
   void dispose() {
-    // Dispose the controllers to prevent memory leaks
     _emailController.removeListener(_onEmailChanged);
     _passwordController.removeListener(_onPasswordChanged);
     _emailController.dispose();
@@ -63,7 +54,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the loginViewModelProvider to rebuild UI on state changes
     final loginViewModel = ref.watch(loginViewModelProvider);
 
     return Scaffold(
@@ -77,7 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
-          key: _formKey, // Assign the form key
+          key: _formKey, 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -107,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   padding: EdgeInsets.all(8.0),
                   child: Icon(
                     Icons.email,
-                    size: 20, // Adjusted size for better visibility
+                    size: 20, 
                     color: AppColors.greyLight,
                   ),
                 ),
@@ -123,7 +113,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 controller: _passwordController,
                 hint: '********',
                 isPassword: true,
-                // No need for onChanged here as listener handles it
                 validator: (value) => Validator.password(value),
               ),
               Gap.h36,

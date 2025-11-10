@@ -15,7 +15,6 @@ class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   final List<NavItem> _navItems = const [
-    // Make NavItem constructor const
     NavItem(
       label: 'Home',
       icon: Icons.home,
@@ -39,7 +38,6 @@ class DashboardScreen extends ConsumerWidget {
   ];
 
   final List<Widget> _screens = const [
-    // Make the screen list const
     BookingsScreen(),
     StoresScreen(),
     DeliveryScreen(),
@@ -49,15 +47,12 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use watch to react to user authentication state changes
-    
-    // Watch the navigationIndexProvider to rebuild when the index changes
     final navigationIndex = ref.watch(navigationIndexProvider);
 
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: _screens[navigationIndex], // Use the watched index
+        body: _screens[navigationIndex],
         bottomNavigationBar: BottomAppBar(
           color: Colors.transparent,
           surfaceTintColor: Colors.transparent,
@@ -76,8 +71,8 @@ class DashboardScreen extends ConsumerWidget {
               children: List.generate(
                 _navItems.length,
                 (index) => _buildNavItem(
-                  context, // Pass context to access ref in helper method
-                  ref, // Pass ref to access notifier
+                  context,
+                  ref,
                   _navItems[index].icon,
                   index,
                   _navItems[index].label,
@@ -90,35 +85,23 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  // Make _buildNavItem a regular method or a static helper,
-  // passing `BuildContext` and `WidgetRef`
   Widget _buildNavItem(BuildContext context, WidgetRef ref, IconData icon,
       int index, String label) {
     final double iconSize = 24.w;
     final double labelFontSize = 10.sp;
 
-    // Watch the provider directly inside the build method of the item,
-    // or pass the value if you prefer. Passing the value is cleaner here.
     final currentIndex =
-        ref.watch(navigationIndexProvider); // Watch here to update icon color
+        ref.watch(navigationIndexProvider);
 
     return Expanded(
       child: InkWell(
         onTap: () {
-          // Check if user is guest and trying to access authenticated features
           if (index == 2 && !GuestModeUtils.requireAuthForDelivery(context)) {
-            // Delivery tab - auth required
             return;
           }
           if (index == 3 && !GuestModeUtils.requireAuthForWallet(context)) {
-            // Wallet tab - auth required
             return;
           }
-
-          // Store tab (index 1) is accessible to guests for viewing
-          // Auth check will be done when they try to buy
-
-          // If auth check passes or no auth required, proceed with navigation
           ref.read(navigationIndexProvider.notifier).state = index;
         },
         borderRadius: BorderRadius.circular(30.r),
@@ -133,16 +116,7 @@ class DashboardScreen extends ConsumerWidget {
                 size: iconSize,
               ),
               Gap.h4,
-              // Uncomment and use AppText if available
-              // AppText.free(
-              //   label,
-              //   color: currentIndex == index ? AppColors.primary : Colors.white,
-              //   fontSize: labelFontSize,
-              //   maxLines: 1,
-              //   overflow: TextOverflow.ellipsis,
-              // ),
               Text(
-                // Using Text for now, replace with AppText if you uncomment
                 label,
                 style: TextStyle(
                   color:
@@ -165,7 +139,6 @@ class NavItem {
   final IconData icon;
 
   const NavItem({
-    // Make constructor const
     required this.label,
     required this.icon,
   });

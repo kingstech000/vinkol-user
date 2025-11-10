@@ -22,6 +22,12 @@ class DeliveryScreen extends ConsumerStatefulWidget {
 class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  static const Set<String> _successfulPaymentStatuses = {
+    'success',
+    'successful',
+    'paid',
+    'completed',
+  };
 
   @override
   void initState() {
@@ -92,6 +98,12 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
     }
   }
 
+  bool _hasSuccessfulPayment(DeliveryModel delivery) {
+    final status = delivery.paymentStatus?.toLowerCase().trim();
+    if (status == null) return false;
+    return _successfulPaymentStatuses.contains(status);
+  }
+
   @override
   Widget build(BuildContext context) {
     final deliveryViewModel = ref.watch(deliveryViewModelProvider);
@@ -101,11 +113,17 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
     final List<DeliveryModel> rawStoreDeliveries =
         deliveryViewModel.storeDeliveries;
 
-    final List<DeliveryItem> displayPackageDeliveries = rawPackageDeliveries
-        .map((delivery) => DeliveryItem.fromDeliveryModel(delivery))
-        .toList();
+    final List<DeliveryModel> successfulPackageDeliveries =
+        rawPackageDeliveries.where(_hasSuccessfulPayment).toList();
+    final List<DeliveryModel> successfulStoreDeliveries =
+        rawStoreDeliveries.where(_hasSuccessfulPayment).toList();
 
-    final List<DeliveryItem> displayStoreDeliveries = rawStoreDeliveries
+    final List<DeliveryItem> displayPackageDeliveries =
+        successfulPackageDeliveries
+            .map((delivery) => DeliveryItem.fromDeliveryModel(delivery))
+            .toList();
+
+    final List<DeliveryItem> displayStoreDeliveries = successfulStoreDeliveries
         .map((delivery) => DeliveryItem.fromDeliveryModel(delivery))
         .toList();
 
@@ -139,7 +157,8 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                                 ))
                               : DeliveryListView(
                                   deliveries: displayPackageDeliveries,
-                                  originalDeliveries: rawPackageDeliveries,
+                                  originalDeliveries:
+                                      successfulPackageDeliveries,
                                 ),
                 ),
 
@@ -158,12 +177,13 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                           : displayStoreDeliveries.isEmpty
                               ? const Center(
                                   child: EmptyContent(
-                                  contentText: 'No store deliveries found.',
+                                  contentText:
+                                      'No successful store deliveries found.',
                                   icon: Icons.store,
                                 ))
                               : DeliveryListView(
                                   deliveries: displayStoreDeliveries,
-                                  originalDeliveries: rawStoreDeliveries,
+                                  originalDeliveries: successfulStoreDeliveries,
                                 ),
                 ),
               ],

@@ -60,6 +60,7 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
             setState(() {
               _isLoading = false;
             });
+            _injectPaymentDetectionScript();
           },
           onWebResourceError: (WebResourceError error) {
             debugPrint('[PaymentWebView] Error: ${error.description}');
@@ -77,14 +78,81 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
   }
 
   void _checkForPaymentCompletion(String url) {
+    // Check for Paystack success indicators
     if (url.contains('success') ||
         url.contains('callback') ||
         url.contains('verify') ||
         url.contains('complete') ||
-        url.contains('close')) {
+        url.contains('close') ||
+        url.contains('trxref') ||
+        url.contains('reference')) {
       debugPrint('[PaymentWebView] Payment completion detected from URL: $url');
       _navigateToVerification();
     }
+    
+    // Also check for Paystack's typical success page patterns
+    if (url.contains('paystack.com') && 
+        (url.contains('charge/success') || url.contains('pay/success'))) {
+      debugPrint('[PaymentWebView] Paystack success page detected: $url');
+      _navigateToVerification();
+    }
+    
+    // Check for custom payment success scheme
+    if (url.startsWith('payment-success://')) {
+      debugPrint('[PaymentWebView] Payment success detected via JavaScript: $url');
+      _navigateToVerification();
+    }
+  }
+
+  void _injectPaymentDetectionScript() {
+    // Inject JavaScript to detect payment completion on Paystack pages
+    _controller.runJavaScript('''
+      (function() {
+        // Check for success messages or buttons
+        var checkSuccess = function() {
+          var bodyText = document.body.innerText.toLowerCase();
+          if (bodyText.includes('successful') || 
+              bodyText.includes('payment successful') ||
+              bodyText.includes('transaction successful')) {
+            console.log('Payment success detected in page content');
+            return true;
+          }
+          
+          // Check for close/done buttons that typically appear after success
+          var buttons = document.querySelectorAll('button');
+          for (var i = 0; i < buttons.length; i++) {
+            var btnText = buttons[i].innerText.toLowerCase();
+            if (btnText.includes('done') || btnText.includes('close') || btnText.includes('finish')) {
+              console.log('Success button detected');
+              return true;
+            }
+          }
+          return false;
+        };
+        
+        if (checkSuccess()) {
+          // Payment appears successful - trigger navigation
+          setTimeout(function() {
+            window.location.href = 'payment-success://complete';
+          }, 1000);
+        }
+        
+        // Monitor for dynamic content changes
+        var observer = new MutationObserver(function() {
+          if (checkSuccess()) {
+            setTimeout(function() {
+              window.location.href = 'payment-success://complete';
+            }, 1000);
+            observer.disconnect();
+          }
+        });
+        
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+      })();
+    ''');
   }
 
   void _navigateToVerification() {
