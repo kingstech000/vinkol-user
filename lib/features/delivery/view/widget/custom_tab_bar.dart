@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/utils/colors.dart';
 
 class CustomTabBar extends StatelessWidget {
   final TabController tabController;
@@ -8,28 +11,52 @@ class CustomTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.transparent, // Background for the tab bar itself
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      color: Colors.transparent,
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
       child: Container(
-        height: 48, // Fixed height for the tab bar container
+        height: 52.h,
         decoration: BoxDecoration(
-          color: Colors.grey[300], // Background for the unselected tab area
-          borderRadius: BorderRadius.circular(
-              16), // Rounded corners for the entire tab container
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: TabBar(
-          controller: tabController, dividerHeight: 0,
+          controller: tabController,
+          dividerHeight: 0,
           dividerColor: Colors.transparent,
           indicatorSize: TabBarIndicatorSize.tab,
           indicator: BoxDecoration(
-            color:
-                Colors.blue[700], // Darker blue for the selected tab indicator
-            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary,
+                AppColors.primary.withOpacity(0.8),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          labelColor: Colors.white, // Text color for selected tab
-          unselectedLabelColor: Colors.black, // Text color for unselected tabs
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.grey[700],
+          labelStyle: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            fontSize: 14.sp,
+          ),
+          unselectedLabelStyle: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w500,
+            fontSize: 14.sp,
+          ),
           tabs: const [
             Tab(text: 'Package Delivery'),
             Tab(text: 'Store Delivery'),
@@ -39,3 +66,4 @@ class CustomTabBar extends StatelessWidget {
     );
   }
 }
+

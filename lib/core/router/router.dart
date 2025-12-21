@@ -25,6 +25,9 @@ import 'package:starter_codes/features/profile/view/screen/settings_screen.dart'
 import 'package:starter_codes/features/splash/view/screen/splash_screen.dart';
 import 'package:starter_codes/features/store/view/screen/cart_screen.dart';
 import 'package:starter_codes/features/store/view/screen/product_list_screen.dart';
+import 'package:starter_codes/features/store/view/screen/product_detail_screen.dart';
+import 'package:starter_codes/features/store/view/screen/store_screen.dart';
+import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/features/delivery/view/screen/store_order_screen.dart';
 
 enum TransitionType { SlideUp, Side, Breeze }
@@ -195,10 +198,24 @@ class AppRouter {
             viewToShow: const BookingOrderScreen(),
             transition: transition);
       // STORE
+      case NavigatorRoutes.storesScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const StoresScreen(),
+            transition: transition);
       case NavigatorRoutes.productListScreen:
         return _getPageRoute(
             settings: settings,
             viewToShow: const ProductListScreen(),
+            transition: transition);
+
+      case NavigatorRoutes.productDetailScreen:
+        final args = settings.arguments as Map<String, dynamic>;
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: ProductDetailScreen(
+              product: args['product'] as StoreProduct,
+            ),
             transition: transition);
 
       case NavigatorRoutes.paymentWebViewScreen:

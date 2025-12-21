@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart'; // Import for DateFormat
 
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/booking/data/booking_service.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
-import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
-import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal_form_field.dart';
 import 'package:starter_codes/features/booking/model/request.dart';
 import 'package:starter_codes/features/booking/model/order_model.dart';
@@ -257,146 +255,321 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
       appBar: MiniAppBar(
         title: 'Package Info',
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildInputField('Package Name', _packageNameController,
-                        hintText: 'Enter package name'),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTimeDatePicker(
-                            context,
-                            label: 'Pickup Time',
-                            value: _pickupTime,
-                            onTap: () => _selectTime(context),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.primary.withOpacity(0.05),
+              Colors.white,
+              Colors.white,
+            ],
+            stops: const [0.0, 0.2, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Section
+                      _buildHeader(),
+                      SizedBox(height: 32.h),
+
+                      // Package Name Field
+                      _buildInputField(
+                        'Package Name',
+                        _packageNameController,
+                        hintText: 'Enter package name',
+                        icon: Icons.inventory_2_outlined,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Date and Time Pickers
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTimeDatePicker(
+                              context,
+                              label: 'Pickup Date',
+                              value: _pickupDate,
+                              icon: Icons.calendar_today_rounded,
+                              onTap: () => _selectDate(context),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTimeDatePicker(
-                            context,
-                            label: 'Pickup Date',
-                            value: _pickupDate,
-                            onTap: () => _selectDate(context),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: _buildTimeDatePicker(
+                              context,
+                              label: 'Pickup Time',
+                              value: _pickupTime,
+                              icon: Icons.access_time_rounded,
+                              onTap: () => _selectTime(context),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Gap.h16,
-                    // AppText.caption(
-                    //   'Priority Type',
-                    //   color: AppColors.black,
-                    // ),
-                    // Gap.h8,
-                    // ModalFormField(
-                    //   title: 'Priority Type',
-                    //   options: _priorityTypes,
-                    //   controller: _priorityController,
-                    //   onOptionSelected: (value) {
-                    //     _priorityController.text = value;
-                    //   },
-                    // ),
-                    // Gap.h16,
-                    AppText.caption(
-                      'Vehicle Type',
-                      color: AppColors.black,
-                    ),
-                    Gap.h8,
-                    ModalFormField(
-                      title: 'Vehicle Type',
-                      options: _vehicleTypes,
-                      controller: _vehicleController,
-                      onOptionSelected: (value) {
-                        _vehicleController.text = value;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    _buildInputField(
-                      'Note',
-                      _noteController,
-                      hintText: 'Add any special instructions',
-                      maxLines: 4,
+                        ],
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Vehicle Type Field
+                      _buildFieldLabel('Vehicle Type'),
+                      SizedBox(height: 8.h),
+                      ModalFormField(
+                        title: _vehicleController.text.isEmpty
+                            ? 'Select vehicle type'
+                            : _vehicleController.text,
+                        textColor: _vehicleController.text.isEmpty
+                            ? AppColors.darkgrey.withOpacity(0.5)
+                            : AppColors.black,
+                        options: _vehicleTypes,
+                        controller: _vehicleController,
+                        onOptionSelected: (value) {
+                          _vehicleController.text = value;
+                        },
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Note Field
+                      _buildInputField(
+                        'Special Instructions',
+                        _noteController,
+                        hintText: 'Add any special instructions or notes...',
+                        maxLines: 4,
+                      ),
+                      SizedBox(height: 32.h),
+                    ],
+                  ),
+                ),
+              ),
+              // Submit Button
+              Container(
+                padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 24.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
                     ),
                   ],
                 ),
+                child: _buildSubmitButton(),
               ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: AppButton.primary(
-                title: 'Get Quote',
-                loading: _isLoading,
-                onTap: _isLoading ? null : _getQuote,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInputField(String label, TextEditingController controller,
-      {String? hintText, int? maxLines}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildHeader() {
+    return Row(
       children: [
-        AppText.caption(
-          label,
-          color: AppColors.black,
+        Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Icon(
+            Icons.local_shipping_rounded,
+            color: AppColors.primary,
+            size: 28.w,
+          ),
         ),
-        Gap.h8,
-        AppTextField(
-          controller: controller,
-          maxLines: maxLines,
-          hint: hintText,
+        SizedBox(width: 16.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Package Details',
+                style: TextStyle(
+                  fontSize: 22.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                'Tell us about your package',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildTimeDatePicker(BuildContext context,
-      {required String label,
-      required String value,
-      required VoidCallback onTap}) {
+  Widget _buildFieldLabel(String label) {
+    return Text(
+      label,
+      style: TextStyle(
+        fontSize: 15.sp,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildInputField(
+    String label,
+    TextEditingController controller, {
+    String? hintText,
+    int? maxLines,
+    IconData? icon,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.caption(
-          label,
-          color: AppColors.black,
+        _buildFieldLabel(label),
+        SizedBox(height: 8.h),
+        AppTextField(
+          controller: controller,
+          maxLines: maxLines,
+          hint: hintText,
+          prefixIcon: icon != null
+              ? Padding(
+                  padding: EdgeInsets.all(12.w),
+                  child: Icon(
+                    icon,
+                    size: 20.w,
+                    color: AppColors.greyLight,
+                  ),
+                )
+              : null,
         ),
-        Gap.h8,
+      ],
+    );
+  }
+
+  Widget _buildTimeDatePicker(
+    BuildContext context, {
+    required String label,
+    required String value,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldLabel(label),
+        SizedBox(height: 8.h),
         GestureDetector(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 16.h),
             decoration: BoxDecoration(
-              color: AppColors.formFillColor,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey[300]!, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  value,
-                  style: const TextStyle(color: Colors.black, fontSize: 16),
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 15.w,
+                    color: AppColors.primary,
+                  ),
                 ),
-                Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _getQuote,
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.symmetric(vertical: 18.h),
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+        ),
+        child: _isLoading
+            ? SizedBox(
+                height: 24.h,
+                width: 24.w,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Get Quote',
+                    style: TextStyle(
+                      fontSize: 17.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }

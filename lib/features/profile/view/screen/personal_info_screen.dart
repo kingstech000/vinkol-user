@@ -33,7 +33,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with the current state from the view model
     final initialPersonalInfo = ref.read(personalInfoViewModelProvider);
     _firstNameController =
         TextEditingController(text: initialPersonalInfo.firstname);
@@ -43,7 +42,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     _addressController =
         TextEditingController(text: initialPersonalInfo.address);
 
-    // Add listeners to update the view model state as text changes
     _firstNameController.addListener(() {
       ref
           .read(personalInfoViewModelProvider.notifier)
@@ -68,7 +66,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
 
   @override
   void dispose() {
-    // Dispose all TextEditingControllers to prevent memory leaks
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -90,7 +87,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Take a picture'),
                 onTap: () {
-                  Navigator.pop(context); // Close the bottom sheet
+                  Navigator.pop(context);
                   ref
                       .read(personalInfoViewModelProvider.notifier)
                       .pickImage(ImageSource.camera);
@@ -100,7 +97,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 leading: const Icon(Icons.photo_library),
                 title: AppText.body('Choose from gallery'),
                 onTap: () {
-                  Navigator.pop(context); // Close the bottom sheet
+                  Navigator.pop(context);
                   ref
                       .read(personalInfoViewModelProvider.notifier)
                       .pickImage(ImageSource.gallery);
@@ -114,23 +111,20 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   }
 
   void _onAddressSelected(String selectedState) {
-    _addressController.text = selectedState; // Update the TextEditingController
+    _addressController.text = selectedState;
     ref
         .read(personalInfoViewModelProvider.notifier)
-        .updateAddress(selectedState); // Update the view model
+        .updateAddress(selectedState);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Watch the personalInfoViewModelProvider for state changes.
     final personalInfoState = ref.watch(personalInfoViewModelProvider);
-    // Watch the userProvider to get the current user's general info (e.g., existing avatar URL)
     final currentUser = ref.watch(userProvider);
 
     ImageProvider<Object>? displayImageProvider;
     Widget? avatarPlaceholder;
 
-    // Logic to determine which image to display for the avatar
     if (personalInfoState.profileImage != null) {
       displayImageProvider = FileImage(personalInfoState.profileImage!);
     } else if (currentUser?.avatar?.imageUrl != null &&
@@ -142,22 +136,23 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
       avatarPlaceholder = Icon(Icons.person, size: 40.w, color: Colors.white);
     }
 
-    // Use ref.listen to react to one-off state changes like success/error messages.
     ref.listen<PersonalInfoState>(personalInfoViewModelProvider,
         (previous, next) {
-      // Show SnackBar for success message
       if (next.successMessage != null &&
           next.successMessage != previous?.successMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.successMessage!)),
+          SnackBar(
+              behavior: SnackBarBehavior.floating,
+              content: Text(next.successMessage!)),
         );
       }
-      // Show error SnackBar if errorMessage is set
       else if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(next.errorMessage!), backgroundColor: Colors.red),
+              behavior: SnackBarBehavior.floating,
+              content: Text(next.errorMessage!),
+              backgroundColor: Colors.red),
         );
       }
     });
@@ -204,7 +199,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
               controller: _emailController,
               hint: 'Email',
               keyboardType: TextInputType.emailAddress,
-              enabled: false, // Email is typically not editable
+              enabled: false,
             ),
             Gap.h16,
             AppText.caption('Phone Number'),
@@ -216,7 +211,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                     .read(personalInfoViewModelProvider.notifier)
                     .updatePhoneNumber(fullPhoneNumber);
               },
-              enabled: true, // Allow editing of phone number
+              enabled: true,
               hint: 'Enter phone number',
             ),
             Gap.h16,
@@ -237,18 +232,16 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 title: 'Update',
                 loading: personalInfoState.isLoading,
                 onTap: personalInfoState.isLoading
-                    ? null // Disable button when loading
+                        ? null
                     : () async {
-                        FocusScope.of(context).unfocus(); // Dismiss keyboard
-                        // Trigger the updateProfile method and await its completion.
+                        FocusScope.of(context).unfocus();
                         final success = await ref
                             .read(personalInfoViewModelProvider.notifier)
                             .updateProfile();
 
-                        // Only navigate back if the update was successful AND
-                        // the widget is still mounted (i.e., screen hasn't been popped already).
                         if (success && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            behavior: SnackBarBehavior.floating,
                             content: AppText.button(
                               'Updated Successfully',
                               color: AppColors.white,

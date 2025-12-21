@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 ThemeData lightMode = ThemeData(
   colorScheme: const ColorScheme.dark(
@@ -9,4 +10,5 @@ ThemeData lightMode = ThemeData(
     inversePrimary: Color(0xFF000001),
   ),
   scaffoldBackgroundColor: const Color(0xFFEFEFF1),
+  textTheme: GoogleFonts.montserratTextTheme(),
 );

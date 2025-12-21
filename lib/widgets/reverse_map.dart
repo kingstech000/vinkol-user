@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
+import 'package:starter_codes/core/utils/colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ReverseLocationStringMap extends ConsumerStatefulWidget {
@@ -47,28 +48,24 @@ class _ReverseLocationStringMapState
   }
 
   Future<void> _parseAndDrawRoute() async {
-    _polylines.clear(); // Clear existing polylines
+    _polylines.clear();
     LatLng? newPickupCoordinates;
     LatLng? newDropoffCoordinates;
 
-    // Fetch pickup coordinates if available
     if (widget.pickupLocationString != null &&
         widget.pickupLocationString!.isNotEmpty) {
       newPickupCoordinates =
           await _getCoordinatesFromAddress(widget.pickupLocationString!);
     }
 
-    // Fetch dropoff coordinates if available
     if (widget.dropoffLocationString != null &&
         widget.dropoffLocationString!.isNotEmpty) {
       newDropoffCoordinates =
           await _getCoordinatesFromAddress(widget.dropoffLocationString!);
     }
 
-    // Check if the widget is still mounted before calling setState
     if (!mounted) return;
 
-    // Only update state if coordinates have changed to avoid unnecessary rebuilds
     if (newPickupCoordinates != _pickupCoordinates ||
         newDropoffCoordinates != _dropoffCoordinates) {
       setState(() {
@@ -77,7 +74,6 @@ class _ReverseLocationStringMapState
       });
     }
 
-    // Determine the target for camera animation
     LatLng? cameraTarget;
     if (_pickupCoordinates != null) {
       cameraTarget = _pickupCoordinates;
@@ -85,14 +81,12 @@ class _ReverseLocationStringMapState
       cameraTarget = _dropoffCoordinates;
     }
 
-    // Animate camera to the available location (pickup or dropoff)
     if (_mapController != null && cameraTarget != null) {
       if (!mounted) return;
-      _mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-          cameraTarget, 14)); // Zoom in a bit more for single marker
+      _mapController!
+          .animateCamera(CameraUpdate.newLatLngZoom(cameraTarget, 14));
     }
 
-    // --- Core Logic Change: Only draw polyline if BOTH coordinates are present ---
     if (_pickupCoordinates != null && _dropoffCoordinates != null) {
       final pickupPoint = PointLatLng(
           _pickupCoordinates!.latitude, _pickupCoordinates!.longitude);
@@ -104,7 +98,6 @@ class _ReverseLocationStringMapState
         dropOff: dropoffPoint,
       );
 
-      // Check if the widget is still mounted before calling setState again
       if (!mounted) return;
 
       if (polylineCoordinates.isNotEmpty) {
@@ -117,7 +110,6 @@ class _ReverseLocationStringMapState
         _zoomToFitRoute(polylineCoordinates);
       }
     } else {
-      // If only one or no locations, ensure polylines are cleared
       if (_polylines.isNotEmpty) {
         if (!mounted) return;
         setState(() {
@@ -167,52 +159,51 @@ class _ReverseLocationStringMapState
     }
   }
 
+
+
   @override
   Widget build(BuildContext context) {
-    // Determine the initial camera target based on available coordinates
-    // If only one, target that one. If none, default to Lagos.
     final LatLng initialTarget = _pickupCoordinates ??
         _dropoffCoordinates ??
-        const LatLng(6.5244, 3.3792); // Default to Lagos, Nigeria
-
-    // Determine the zoom level. Higher zoom for single marker, lower for route.
+        const LatLng(6.5244, 3.3792);
     final double initialZoom =
         (_pickupCoordinates != null && _dropoffCoordinates != null) ? 12 : 14;
 
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        target: initialTarget,
-        zoom: initialZoom,
-      ),
-      onMapCreated: (controller) {
-        _mapController = controller;
-        // Call _parseAndDrawRoute again here to ensure camera animation and polylines are
-        // set up correctly after the map controller is fully initialized.
-        // It's safe because _parseAndDrawRoute has robust mounted checks.
-        _parseAndDrawRoute();
-      },
-      // Polylines will only be displayed if both locations are available and fetched
-      polylines: _polylines,
-      markers: {
-        // Only add pickup marker if coordinates are available
-        if (_pickupCoordinates != null)
-          Marker(
-            markerId: const MarkerId('pickupLocation'),
-            position: _pickupCoordinates!,
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueGreen),
-            infoWindow: InfoWindow(title: widget.pickupLocationString),
+
+    return Stack(
+      children: [
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: initialTarget,
+            zoom: initialZoom,
           ),
-        // Only add dropoff marker if coordinates are available
-        if (_dropoffCoordinates != null)
-          Marker(
-            markerId: const MarkerId('dropoffLocation'),
-            position: _dropoffCoordinates!,
-            icon:
-                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-            infoWindow: InfoWindow(title: widget.dropoffLocationString),
-          ),
-      },
+          onMapCreated: (controller) {
+            _mapController = controller;
+            _parseAndDrawRoute();
+          },
+          polylines: _polylines,
+          markers: {
+            if (_pickupCoordinates != null)
+              Marker(
+                markerId: const MarkerId('pickupLocation'),
+                position: _pickupCoordinates!,
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueGreen),
+                infoWindow: InfoWindow(title: widget.pickupLocationString),
+              ),
+            if (_dropoffCoordinates != null)
+              Marker(
+                markerId: const MarkerId('dropoffLocation'),
+                position: _dropoffCoordinates!,
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueRed),
+                infoWindow: InfoWindow(title: widget.dropoffLocationString),
+              ),
+          },
+        ),
+        // Google Maps Directions Button
+      
+      ],
     );
   }
 

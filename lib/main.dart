@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:starter_codes/core/router/router.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
@@ -56,8 +57,10 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: ThemeData.light()
-            .copyWith(scaffoldBackgroundColor: Colors.grey.shade100),
+        theme: ThemeData.light().copyWith(
+          scaffoldBackgroundColor: Colors.grey.shade100,
+          textTheme: GoogleFonts.montserratTextTheme(),
+        ),
         builder: (context, widget) => Navigator(
           key: AppFlushBar.navigatorKey,
           onGenerateRoute: (settings) => MaterialPageRoute(

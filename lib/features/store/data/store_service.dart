@@ -8,6 +8,7 @@ import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/features/store/model/store_request_model.dart';
 // REMOVED: import 'package:starter_codes/features/store/model/product_model.dart'; // This was not part of the singleStore edit request
 import 'package:starter_codes/features/store/model/store_response_model.dart';
+import 'package:starter_codes/features/store/model/store_tag_model.dart';
 import 'package:starter_codes/models/location_model.dart';
 
 class StoreService {
@@ -20,11 +21,13 @@ class StoreService {
   ///
   /// [state]: Filters stores by state (e.g., 'lagos').
   /// [search]: Searches for stores by name or description.
+  /// [tags]: Filters stores by tag (e.g., 'supermarket', 'beauty').
   /// [page]: The page number to retrieve.
   /// [limit]: The number of stores per page.
   Future<StoreResponse> getStores({
     String? state,
     String? search,
+    String? tags,
     int page = 1,
     int limit = 10,
   }) async {
@@ -37,6 +40,10 @@ class StoreService {
 
       if (search != null && search.isNotEmpty) {
         queryParameters['search'] = search;
+      }
+
+      if (tags != null && tags.isNotEmpty) {
+        queryParameters['tags'] = tags;
       }
 
       final responseData = await _networkClient.get(
@@ -242,6 +249,24 @@ class StoreService {
     } catch (e, st) {
       logger.e('Error creating store order: $e\n$st');
       throw Exception('Failed to create order: ${e.toString()}');
+    }
+  }
+
+  /// Fetches all store tags from the API.
+  Future<List<StoreTag>> getStoreTags() async {
+    try {
+      final responseData = await _networkClient.get(ApiRoute.storeTags);
+
+      logger.i('Store tags API response: $responseData');
+
+      final tagsResponse = StoreTagsResponse.fromJson(responseData);
+      return tagsResponse.data;
+    } on DioException catch (e) {
+      logger.e('Failed to fetch store tags: ${e.response?.data ?? e.message}');
+      rethrow;
+    } catch (e) {
+      logger.e('Failed to fetch store tags: $e');
+      rethrow;
     }
   }
 }

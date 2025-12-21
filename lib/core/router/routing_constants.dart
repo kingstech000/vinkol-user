@@ -43,7 +43,9 @@ class NavigatorRoutes {
   static const deliveryPaymentScreen = 'delivery-payment-screen';
   static const storePaymentScreen = 'store-payment-screen';
   // STORE
+  static const String storesScreen = 'stores-screen';
   static const String productListScreen = 'product-list-screen';
+  static const String productDetailScreen = 'product-detail-screen';
   static const String cartScreen = 'cart-screen';
   static const String storeOrderScreen = 'store-order-screen';
 

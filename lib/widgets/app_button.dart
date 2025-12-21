@@ -81,7 +81,7 @@ class AppButton extends StatelessWidget {
       required this.title,
       this.onTap,
       this.outlineColor = AppColors.primary,
-      this.textColor = AppColors.black,
+      this.textColor = AppColors.primary,
       this.icon,
       this.iconColor,
       this.disable = false,
@@ -95,7 +95,9 @@ class AppButton extends StatelessWidget {
       child: TextButton(
         onPressed: disable || loading ? () {} : onTap,
         style: TextButton.styleFrom(
-          backgroundColor: disable || loading ? color!.withOpacity(0.3) : color,
+          backgroundColor: disable || loading
+              ? (color ?? AppColors.primary).withOpacity(0.3)
+              : color,
           iconColor: iconColor,
           side: BorderSide(color: outlineColor ?? AppColors.black, width: 1),
           shape: const RoundedRectangleBorder(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/wallet/view/widget/withdrawal_item.dart';
@@ -31,15 +32,36 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
+        toolbarHeight: 80.h,
         scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: AppText.h4(
-          'Payment History',
-          color: Colors.black87,
-          fontWeight: FontWeight.w600,
+        title: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Gap.h12,
+                    AppText.h1(
+                      'Payment History',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    Gap.h8,
+                    AppText.caption(
+                      'View your payment history',
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        // centerTitle: true,
       ),
       body: Column(
         children: [

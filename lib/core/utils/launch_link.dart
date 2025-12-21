@@ -22,13 +22,29 @@ class LaunchLink {
 void makePhoneCall(
   String phoneNumber,
 ) async {
-  final Uri launchUri = Uri(
-    scheme: 'tel',
-    path: phoneNumber,
-  );
-  if (await canLaunchUrl(launchUri)) {
-    await launchUrl(launchUri);
-  } else {}
+  try {
+    // Clean the phone number - remove any extra whitespace
+    final cleanedNumber = phoneNumber.trim();
+    
+    // For international format with +, use it directly in the tel: scheme
+    // The + character is valid in tel: URIs
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: cleanedNumber,
+    );
+    
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      // If canLaunchUrl returns false, the phone call cannot be made
+      // This might happen if there's no phone app or the format is invalid
+      // We'll let the calling code handle the error
+      throw Exception('Cannot launch phone call');
+    }
+  } catch (e) {
+    // Re-throw to let calling code handle the error
+    rethrow;
+  }
 }
 
 // Helper function to validate and format phone number

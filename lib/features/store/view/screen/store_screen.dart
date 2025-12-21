@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
+import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/features/store/view/widget/store_card.dart';
 import 'package:starter_codes/features/store/view_model/store_view_model.dart';
-import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
+import 'package:starter_codes/provider/store_provider.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'dart:async'; // For Timer
@@ -21,6 +23,7 @@ class StoresScreen extends ConsumerStatefulWidget {
 class _StoresScreenState extends ConsumerState<StoresScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
+  String? _previousTag;
 
   @override
   void initState() {
@@ -28,7 +31,17 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
     // Initial fetch of stores when the screen is first loaded.
     // The ViewModel's stale time logic will determine if a network call is needed.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(storesViewModelProvider.notifier).fetchStoresIfStale();
+      // Check if a tag is selected
+      final selectedTag = ref.read(selectedTagProvider);
+      if (selectedTag != null) {
+        ref
+            .read(storesViewModelProvider.notifier)
+            .filterStoresByTag(selectedTag);
+        // Clear the selected tag after using it
+        ref.read(selectedTagProvider.notifier).state = null;
+      } else {
+        ref.read(storesViewModelProvider.notifier).fetchStoresIfStale();
+      }
     });
     _searchController.addListener(_onSearchChanged);
   }
@@ -95,13 +108,23 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
   @override
   Widget build(BuildContext context) {
     final storesAsyncValue = ref.watch(storesViewModelProvider);
+    final selectedTag = ref.watch(selectedTagProvider);
+
+    if (selectedTag != null && selectedTag != _previousTag) {
+      _previousTag = selectedTag;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref
+            .read(storesViewModelProvider.notifier)
+            .filterStoresByTag(selectedTag);
+        ref.read(selectedTagProvider.notifier).state = null;
+      });
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: Column(
           children: [
-            // Header Section with Search
             Container(
               color: Colors.white,
               padding: const EdgeInsets.only(
@@ -109,19 +132,38 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title with location icon
+                  InkWell(
+                    onTap: () {
+                      NavigationService.instance.goBack();
+                    },
+                    child: Icon(Icons.arrow_back_ios_new,
+                        color: AppColors.primary, size: 20.w),
+                  ),
+                  Gap.h16,
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(12.w),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary,
+                              AppColors.primary.withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.store,
-                          color: AppColors.primary,
-                          size: 20,
+                          color: Colors.white,
+                          size: 20.w,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -129,19 +171,16 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            AppText.h1(
                               'Stores Around You',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                                letterSpacing: -0.5,
-                              ),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black87,
                             ),
                             Text(
                               'Find nearby stores and shops',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Colors.grey[600],
                                 fontWeight: FontWeight.w400,
                               ),
@@ -221,6 +260,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
             Expanded(
               child: storesAsyncValue.when(
                 data: (storeResponse) {
+                  _previousTag = null;
                   final List<Store> stores = storeResponse.stores;
                   if (stores.isEmpty) {
                     return RefreshIndicator(
@@ -291,7 +331,9 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                   );
                 },
                 loading: () {
-                  // If there's already data, display it while a refresh happens in the background.
+                  if (_previousTag != null) {
+                    return _buildLoadingState();
+                  }
                   if (storesAsyncValue.hasValue &&
                       storesAsyncValue.value!.stores.isNotEmpty) {
                     return RefreshIndicator(
@@ -325,7 +367,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                       ),
                     );
                   }
-                  // Initial loading state
                   return _buildLoadingState();
                 },
                 error: (error, stack) {

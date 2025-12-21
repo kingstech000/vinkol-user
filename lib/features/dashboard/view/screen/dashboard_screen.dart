@@ -6,6 +6,7 @@ import 'package:starter_codes/features/booking/view/screen/booking_screen.dart';
 import 'package:starter_codes/features/delivery/view/screen/delivery_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/profile_screen.dart';
 import 'package:starter_codes/features/store/view/screen/store_screen.dart';
+import 'package:starter_codes/features/store/view/screen/tags_screen.dart';
 import 'package:starter_codes/features/wallet/view/screen/wallet_screen.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
 import 'package:starter_codes/widgets/gap.dart';
@@ -39,7 +40,7 @@ class DashboardScreen extends ConsumerWidget {
 
   final List<Widget> _screens = const [
     BookingsScreen(),
-    StoresScreen(),
+    TagsScreen(),
     DeliveryScreen(),
     WalletHistoryScreen(),
     ProfileScreen(),

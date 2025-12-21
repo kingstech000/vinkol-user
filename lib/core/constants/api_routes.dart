@@ -3,10 +3,9 @@ class ApiRoute {
   static const String baseUrl = "https://vinkol-server.onrender.com/api/v1";
   // static const String baseUrl =
   //     "https://vinkol-server-staging.vercel.app/api/v1";
-  // "";
+//   "";
   // "https://vinkol-web.vercel.app/api/v1";
-  //
-  ////
+
 
   // Auth Url
   static const String login = "$baseUrl/users/login";
@@ -37,6 +36,7 @@ class ApiRoute {
 
   // STORE
   static const String stores = '$baseUrl/stores';
+  static const String storeTags = '$baseUrl/stores/tags';
   static const String products = '$baseUrl/products';
   static const String shoppingDeliveryFee =
       '$baseUrl/orders/shopping-delivery-fee';
@@ -57,4 +57,11 @@ class ApiRoute {
 
   // WALLET
   static const String wallet = '$baseUrl/users/payments';
+
+  // RATINGS
+  static const String riderAverageRating = '$baseUrl/ratings/rider-average';
+  static const String submitRiderRating = '$baseUrl/ratings/rider';
+
+  // APP DETAILS
+  static const String appDetails = '$baseUrl/others/app-details';
 }

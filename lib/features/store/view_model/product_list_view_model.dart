@@ -1,14 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/features/store/data/store_service.dart';
-import 'package:starter_codes/features/store/model/store_model.dart'; // Ensure Store model is imported
+import 'package:starter_codes/features/store/model/store_model.dart';
 
-// Define the state for the product list
 class ProductListState {
-  final List<StoreProduct> products; // Changed to StoreProduct
+  final List<StoreProduct> products;
   final int currentPage;
   final int totalPages;
   final int totalProducts;
-  final bool isLoadingMore; // To indicate if more items are being loaded at the bottom
+  final bool isLoadingMore;
 
   ProductListState({
     this.products = const [],
@@ -19,7 +18,7 @@ class ProductListState {
   });
 
   ProductListState copyWith({
-    List<StoreProduct>? products, // Changed to StoreProduct
+    List<StoreProduct>? products,
     int? currentPage,
     int? totalPages,
     int? totalProducts,
@@ -35,7 +34,6 @@ class ProductListState {
   }
 }
 
-// 2. ProductListViewModel (AsyncNotifier)
 class ProductListViewModel extends AsyncNotifier<ProductListState> {
   @override
   Future<ProductListState> build() async {
@@ -48,7 +46,6 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
     return _fetchSingleStoreAndProducts(store.id);
   }
 
-  // Private helper to fetch store and its products from the API using getSingleStore
   Future<ProductListState> _fetchSingleStoreAndProducts(String storeId) async {
     final storeService = ref.read(storeServiceProvider);
     try {
@@ -56,7 +53,6 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
 
       final Store store = responseData.store;
 
-      // Products are directly StoreProduct objects now
       final List<StoreProduct> newProducts = responseData.storeProducts ?? [];
 
       return ProductListState(
@@ -71,7 +67,6 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
     }
   }
 
-  // Method to refresh products (e.g., for pull-to-refresh)
   Future<void> refreshProducts() async {
     final store = ref.read(currentStoreProvider);
     if (store == null) return;
@@ -80,7 +75,6 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
     state = await AsyncValue.guard(() => _fetchSingleStoreAndProducts(store.id));
   }
 
-  // If getSingleStore fetches ALL products, loadMoreProducts will simply re-fetch.
   Future<void> loadMoreProducts() async {
     final currentState = state.value;
     if (currentState == null || currentState.isLoadingMore || currentState.currentPage >= currentState.totalPages) {
@@ -99,7 +93,6 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
   }
 }
 
-// Provider for ProductListViewModel
 final productListViewModelProvider =
     AsyncNotifierProvider<ProductListViewModel, ProductListState>(
   ProductListViewModel.new,

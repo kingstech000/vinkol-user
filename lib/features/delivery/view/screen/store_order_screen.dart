@@ -8,6 +8,7 @@ import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/copy_to_clipboard_util.dart';
 import 'package:starter_codes/core/utils/launch_link.dart';
+import 'package:starter_codes/core/utils/map_utils.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/delivery/view/screen/product_order_modal.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_detail_view_model.dart';
@@ -17,6 +18,8 @@ import 'package:starter_codes/widgets/circular_network_image.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/reverse_map.dart';
+import 'package:starter_codes/widgets/rider_rating_bottom_sheet.dart';
+import 'package:starter_codes/widgets/app_button.dart';
 
 class StoreOrderScreen extends ConsumerStatefulWidget {
   const StoreOrderScreen({super.key});
@@ -39,6 +42,19 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
         debugPrint('Error: No delivery selected or ID is null.');
       }
     });
+  }
+
+  void _openGoogleMapsDirections() {
+    final deliveryDetailsAsync = ref.watch(deliveryDetailsViewModelProvider);
+    deliveryDetailsAsync.when(
+      data: (delivery) {
+        if (delivery == null) return;
+        openGoogleMapsDirections(
+            delivery.pickupLocation, delivery.dropoffLocation);
+      },
+      loading: () {},
+      error: (error, stack) {},
+    );
   }
 
   @override
@@ -92,6 +108,31 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                   color: AppColors.black, size: 18.w),
             ),
           ),
+          actions: [
+            IconButton(
+              onPressed: () {
+                _openGoogleMapsDirections();
+              },
+              icon: Container(
+                width: 60.w,
+                height: 80.w,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withOpacity(0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(18.r),
+                ),
+                child: Icon(
+                  Icons.directions_rounded,
+                  color: Colors.white,
+                  size: 32.w,
+                ),
+              ),
+            ),
+          ],
         ),
         body: Stack(
           children: [
@@ -307,7 +348,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                     Gap.h4,
                                                     AppText.caption(
                                                       delivery.vehicleRequest ??
-                                                          'N/A',
+                                                          '',
                                                       color:
                                                           Colors.grey.shade600,
                                                       fontSize: 12.sp,
@@ -362,9 +403,8 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                         ),
                                         Gap.h16,
 
-                                        // Delivery Agent Card (only if picked)
-                                        if (delivery.status!.toLowerCase() ==
-                                            'picked') ...[
+                                        // Delivery Agent Card (show if agent is assigned)
+                                        if (delivery.deliveryAgent != null) ...[
                                           _EnhancedCard(
                                             child: Row(
                                               children: [
@@ -418,6 +458,91 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                             .grey.shade600,
                                                         fontSize: 12.sp,
                                                       ),
+                                                      if (delivery.deliveryAgent
+                                                              ?.id !=
+                                                          null) ...[
+                                                        Gap.h4,
+                                                        ref
+                                                            .watch(
+                                                              riderRatingProvider(
+                                                                delivery
+                                                                    .deliveryAgent!
+                                                                    .id!,
+                                                              ),
+                                                            )
+                                                            .when(
+                                                              data: (rating) =>
+                                                                  Row(
+                                                                children: [
+                                                                  ...List
+                                                                      .generate(
+                                                                    5,
+                                                                    (index) =>
+                                                                        Icon(
+                                                                      index < rating.avgRating.floor()
+                                                                          ? Icons.star
+                                                                          : (index == rating.avgRating.floor() && rating.avgRating % 1 >= 0.5)
+                                                                              ? Icons.star_half
+                                                                              : Icons.star_border,
+                                                                      color: Colors
+                                                                          .amber,
+                                                                      size:
+                                                                          14.w,
+                                                                    ),
+                                                                  ),
+                                                                  Gap.w4,
+                                                                  AppText
+                                                                      .caption(
+                                                                    rating
+                                                                        .avgRating
+                                                                        .toStringAsFixed(
+                                                                            1),
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade700,
+                                                                    fontSize:
+                                                                        12.sp,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                  if (rating
+                                                                          .ratingsCount >
+                                                                      0) ...[
+                                                                    Gap.w4,
+                                                                    AppText
+                                                                        .caption(
+                                                                      '(${rating.ratingsCount})',
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade600,
+                                                                      fontSize:
+                                                                          11.sp,
+                                                                    ),
+                                                                  ],
+                                                                ],
+                                                              ),
+                                                              loading: () =>
+                                                                  SizedBox(
+                                                                width: 14.w,
+                                                                height: 14.w,
+                                                                child:
+                                                                    CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  valueColor:
+                                                                      AlwaysStoppedAnimation<
+                                                                          Color>(
+                                                                    AppColors
+                                                                        .primary,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              error: (_, __) =>
+                                                                  const SizedBox
+                                                                      .shrink(),
+                                                            ),
+                                                      ],
                                                     ],
                                                   ),
                                                 ),
@@ -435,17 +560,93 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                       size: 20.w,
                                                     ),
                                                     onPressed: () {
-                                                      LaunchLink.launchPhone(
-                                                          delivery.deliveryAgent
-                                                                  ?.phone
-                                                                  .toString() ??
-                                                              '');
+                                                      if (delivery.deliveryAgent
+                                                              ?.phone !=
+                                                          null) {
+                                                        final phoneNumber =
+                                                            delivery
+                                                                .deliveryAgent!
+                                                                .phone!
+                                                                .toString()
+                                                                .trim();
+
+                                                        try {
+                                                          // Handle international format (+234...)
+                                                          // Use makePhoneCall directly for international format
+                                                          if (phoneNumber
+                                                              .startsWith(
+                                                                  '+')) {
+                                                            makePhoneCall(
+                                                                phoneNumber);
+                                                          } else {
+                                                            // Handle local format, validate and format
+                                                            final validatedPhone =
+                                                                validateAndFormatPhoneNumber(
+                                                                    phoneNumber);
+                                                            if (validatedPhone !=
+                                                                null) {
+                                                              makePhoneCall(
+                                                                  validatedPhone);
+                                                            } else {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                      'Invalid phone number format.'),
+                                                                ),
+                                                              );
+                                                            }
+                                                          }
+                                                        } catch (e) {
+                                                          ScaffoldMessenger.of(
+                                                                  context)
+                                                              .showSnackBar(
+                                                            const SnackBar(
+                                                              content: Text(
+                                                                  'Unable to make phone call. Please try again.'),
+                                                            ),
+                                                          );
+                                                        }
+                                                      } else {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                'Phone number not available.'),
+                                                          ),
+                                                        );
+                                                      }
                                                     },
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
+                                          // Rate Rider Button (only when delivered)
+                                          if (delivery.status?.toLowerCase() ==
+                                                  'delivered' &&
+                                              delivery.deliveryAgent?.id !=
+                                                  null) ...[
+                                            Gap.h16,
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: AppButton.outline(
+                                                title: 'Rate Rider',
+                                                onTap: () {
+                                                  RiderRatingBottomSheet.show(
+                                                    context,
+                                                    riderId: delivery
+                                                        .deliveryAgent!.id!,
+                                                    riderName: delivery
+                                                        .deliveryAgent!
+                                                        .fullName,
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ],
                                           Gap.h16,
                                         ],
 
@@ -472,58 +673,129 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                             }
                                           },
                                           child: _EnhancedCard(
-                                            child: Row(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                Container(
-                                                  padding: EdgeInsets.all(12.w),
-                                                  decoration: BoxDecoration(
-                                                    color: AppColors.primary
-                                                        .withOpacity(0.1),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            12.r),
-                                                  ),
-                                                  child: Icon(
-                                                    Icons
-                                                        .shopping_cart_outlined,
-                                                    color: AppColors.primary,
-                                                    size: 24.w,
-                                                  ),
-                                                ),
-                                                Gap.w16,
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      AppText.caption(
-                                                        'Order Summary',
-                                                        color: Colors
-                                                            .grey.shade600,
-                                                        fontSize: 11.sp,
-                                                      ),
-                                                      Gap.h4,
-                                                      AppText.body(
-                                                        '${delivery.totalItemsOrdered} Items',
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 16.sp,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.end,
+                                                Row(
                                                   children: [
-                                                    AppText.caption(
-                                                      'Total Amount',
+                                                    Container(
+                                                      padding:
+                                                          EdgeInsets.all(12.w),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors.primary
+                                                            .withOpacity(0.1),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12.r),
+                                                      ),
+                                                      child: Icon(
+                                                        Icons
+                                                            .shopping_cart_outlined,
+                                                        color:
+                                                            AppColors.primary,
+                                                        size: 24.w,
+                                                      ),
+                                                    ),
+                                                    Gap.w16,
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          AppText.caption(
+                                                            'Order Summary',
+                                                            color: Colors
+                                                                .grey.shade600,
+                                                            fontSize: 11.sp,
+                                                          ),
+                                                          Gap.h4,
+                                                          AppText.body(
+                                                            '${delivery.totalItemsOrdered} Items',
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 16.sp,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    Icon(
+                                                      Icons.chevron_right,
+                                                      color:
+                                                          Colors.grey.shade400,
+                                                      size: 24.w,
+                                                    ),
+                                                  ],
+                                                ),
+                                                Gap.h16,
+                                                Divider(
+                                                  height: 1,
+                                                  color: Colors.grey.shade200,
+                                                ),
+                                                Gap.h12,
+                                                // Item Amount
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    AppText.body(
+                                                      'Item Amount',
                                                       color:
                                                           Colors.grey.shade600,
-                                                      fontSize: 11.sp,
+                                                      fontSize: 14.sp,
                                                     ),
-                                                    Gap.h4,
+                                                    AppText.body(
+                                                      (delivery.amount ?? 0.0)
+                                                          .toMoney(),
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 14.sp,
+                                                    ),
+                                                  ],
+                                                ),
+                                                Gap.h8,
+                                                // Delivery Fee
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    AppText.body(
+                                                      'Delivery Fee',
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                      fontSize: 14.sp,
+                                                    ),
+                                                    AppText.body(
+                                                      (delivery.deliveryFee ??
+                                                              0.0)
+                                                          .toMoney(),
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 14.sp,
+                                                    ),
+                                                  ],
+                                                ),
+                                                Gap.h12,
+                                                Divider(
+                                                  height: 1,
+                                                  color: Colors.grey.shade200,
+                                                ),
+                                                Gap.h12,
+                                                // Total Amount
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    AppText.body(
+                                                      'Total Amount',
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16.sp,
+                                                    ),
                                                     AppText.h5(
                                                       delivery.totalAmount!
                                                           .toMoney(),
@@ -533,12 +805,6 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                       fontSize: 18.sp,
                                                     ),
                                                   ],
-                                                ),
-                                                Gap.w8,
-                                                Icon(
-                                                  Icons.chevron_right,
-                                                  color: Colors.grey.shade400,
-                                                  size: 24.w,
                                                 ),
                                               ],
                                             ),

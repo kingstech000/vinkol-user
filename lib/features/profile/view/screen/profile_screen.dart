@@ -1,5 +1,4 @@
-// lib/features/profile/view/screens/profile_screen.dart
-// Required for FileImage
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
@@ -11,48 +10,38 @@ import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/logout_modal.dart';
-import 'package:starter_codes/features/auth/model/user_model.dart'; // Ensure User model is imported if not already via provider
+import 'package:starter_codes/features/auth/model/user_model.dart';
 
-// Change StatelessWidget to ConsumerStatefulWidget
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  // Change State to ConsumerState
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-// Change State to ConsumerState
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  // _profileImage will now be derived from the provider's user avatar
-  // Remove the local _profileImage, userName, userRole as they will come from provider
 
   @override
   Widget build(BuildContext context) {
-    // Watch the userProvider to get the current user state
     final User? user = ref.watch(userProvider);
 
-    // Determine the profile image based on the user data
     ImageProvider<Object>? profileImageProvider;
 
     if (user?.avatar?.imageUrl != null && user!.avatar!.imageUrl.isNotEmpty) {
-      // Use NetworkImage if avatar URL is available
       profileImageProvider = NetworkImage(user.avatar!.imageUrl);
     } else {
-      // No image available
       profileImageProvider = null;
     }
-
-    // Determine user name and role
+    
     final String displayUserName = user != null
         ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim().isNotEmpty
             ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim()
-            : user.email ?? '' // Fallback to email if first/last name are empty
-        : 'Guest User'; // Default if no user is logged in
+            : user.email
+        : 'Guest User';
 
     final String displayUserRole = user != null
-        ? '${user.state ?? ''} | ${user.role ?? ''}' // Handle null values
-        : 'Not Logged In'; // Default if no user is logged in
+        ? '${user.state ?? ''} | ${user.role}'
+            : 'Not Logged In';
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -62,7 +51,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              // Profile Header Section
               Container(
                 padding: EdgeInsets.all(24.r),
                 decoration: BoxDecoration(
@@ -85,7 +73,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Centered Avatar with Border
                     Center(
                       child: Container(
                         width: 100.r,
@@ -138,7 +125,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ),
                     Gap.h20,
-                    // Centered User Info
                     Center(
                       child: Column(
                         children: [
@@ -174,9 +160,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
               Gap.h32,
-              // Profile Options Section
               Container(
-                padding: EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),

@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/extensions/extensions.dart';
+import 'package:starter_codes/core/router/routing_constants.dart';
+import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 class ProductCard extends ConsumerWidget {
   final StoreProduct product;
@@ -29,107 +30,121 @@ class ProductCard extends ConsumerWidget {
       elevation: 3,
       shadowColor: Colors.black.withOpacity(0.1),
       color: AppColors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Image section - takes 50% of the card height
-          Expanded(
-            flex: 4,
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              child: CachedNetworkImage(
-                imageUrl: product.image.imageUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[50],
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.primary),
-                      strokeWidth: 2,
+      child: InkWell(
+        onTap: () {
+          NavigationService.instance.navigateTo(
+            NavigatorRoutes.productDetailScreen,
+            argument: {'product': product},
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image section - takes 50% of the card height
+            Expanded(
+              flex: 4,
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: CachedNetworkImage(
+                  imageUrl: product.image.imageUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[50],
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        strokeWidth: 2,
+                      ),
                     ),
                   ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[100],
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    color: Colors.grey,
-                    size: 32,
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[100],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
+                      size: 32,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          // Content section - takes 50% of the card height
-          Expanded(
-            flex: 6,
-            child: Container(
-              padding: const EdgeInsets.all(
-                  12.0), // Increased padding for better spacing
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Product title - give it more space
-                  Flexible(
-                    flex: 3, // More space for title
-                    child: Container(
-                      width: double.infinity,
-                      child: AppText.free(
-                        product.title,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16, // Larger font for better readability
-                        color: Colors.black87,
-                        maxLines: 3, // Allow up to 3 lines for longer titles
-                        overflow: TextOverflow.ellipsis,
-                        height: 1.3, // Better line height for readability
+            // Content section - takes 50% of the card height
+            Expanded(
+              flex: 6,
+              child: Container(
+                padding: const EdgeInsets.all(
+                    12.0), // Increased padding for better spacing
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product title - give it more space
+                    Flexible(
+                      flex: 3, // More space for title
+                      child: Container(
+                        width: double.infinity,
+                        child: AppText.free(
+                          product.title,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16, // Larger font for better readability
+                          color: Colors.black87,
+                          maxLines: 3, // Allow up to 3 lines for longer titles
+                          overflow: TextOverflow.ellipsis,
+                          height: 1.3, // Better line height for readability
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10), // More spacing
-                  // Price section
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      product.price.toString().toMoney(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14, // Larger font
-                        color: AppColors.primary,
+                    const SizedBox(height: 10), // More spacing
+                    // Price section
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        product.price.toString().toMoney(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14, // Larger font
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10), // More spacing
-                  // Button section - fixed height
-                  SizedBox(
-                    height: 40, // Larger button for better touch target
-                    child: currentQuantity == 0
-                        ? AppButton.primary(
-                            onTap: () {
-                              // Allow adding to cart - auth check will be done at payment
-                              ref
-                                  .read(cartProvider.notifier)
-                                  .addProduct(product);
-                            },
-                            title: 'Add To Cart',
-                          )
-                        : _buildQuantityControls(context, ref, currentQuantity),
-                  ),
-                ],
+                    const SizedBox(height: 10), // More spacing
+                    // Button section - fixed height (wrapped to prevent navigation)
+                    GestureDetector(
+                      onTap: () {
+                        // Stop event propagation - this prevents the parent InkWell from firing
+                      },
+                      child: SizedBox(
+                        height: 40, // Larger button for better touch target
+                        child: currentQuantity == 0
+                            ? AppButton.primary(
+                                onTap: () {
+                                  // Allow adding to cart - auth check will be done at payment
+                                  ref
+                                      .read(cartProvider.notifier)
+                                      .addProduct(product);
+                                },
+                                title: 'Add To Cart',
+                              )
+                            : _buildQuantityControls(context, ref, currentQuantity),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

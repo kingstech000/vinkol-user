@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/delivery/model/delivery_item.dart';
 import 'package:starter_codes/features/delivery/model/delivery_model.dart';
-import 'package:starter_codes/provider/delivery_provider.dart'; // Import DeliveryModel to set the provider
+import 'package:starter_codes/provider/delivery_provider.dart';
+import 'package:starter_codes/widgets/gap.dart';
 
-class DeliveryListItem extends ConsumerWidget { // Changed to ConsumerWidget
+class DeliveryListItem extends ConsumerWidget {
+  // Changed to ConsumerWidget
   final DeliveryItem item;
   final DeliveryModel originalDeliveryModel; // Add original DeliveryModel
 
@@ -19,108 +22,229 @@ class DeliveryListItem extends ConsumerWidget { // Changed to ConsumerWidget
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) { // Add WidgetRef
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPackageDelivery =
+        originalDeliveryModel.orderType?.toLowerCase() == 'delivery';
+    final orderIcon =
+        isPackageDelivery ? Icons.inventory_2_rounded : Icons.store_rounded;
+
     return GestureDetector(
       onTap: () {
-        // 1. Store the selected delivery model
-        ref.read(selectedDeliveryProvider.notifier).state = originalDeliveryModel;
+        ref.read(selectedDeliveryProvider.notifier).state =
+            originalDeliveryModel;
 
-        // 2. Determine which screen to navigate to based on orderType
-        // Assuming 'Delivery' for package and 'StoreDelivery' for store orders
         if (originalDeliveryModel.orderType?.toLowerCase() == 'delivery') {
-          NavigationService.instance.navigateTo(NavigatorRoutes.bookingOrderScreen); // Assuming you have this route
-        } else if (originalDeliveryModel.orderType?.toLowerCase() == 'storedelivery') {
-          NavigationService.instance.navigateTo(NavigatorRoutes.storeOrderScreen);
+          NavigationService.instance
+              .navigateTo(NavigatorRoutes.bookingOrderScreen);
+        } else if (originalDeliveryModel.orderType?.toLowerCase() ==
+            'storedelivery') {
+          NavigationService.instance
+              .navigateTo(NavigatorRoutes.storeOrderScreen);
         } else {
-          // Fallback or error handling for unknown order types
           debugPrint('Unknown order type: ${originalDeliveryModel.orderType}');
-          // You might want to show a general detail screen or an error message
-          NavigationService.instance.navigateTo(NavigatorRoutes.storeOrderScreen); // A generic detail screen
+          NavigationService.instance
+              .navigateTo(NavigatorRoutes.storeOrderScreen);
         }
       },
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 16.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        elevation: 1,
-        color: AppColors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              ref.read(selectedDeliveryProvider.notifier).state =
+                  originalDeliveryModel;
+
+              if (originalDeliveryModel.orderType?.toLowerCase() ==
+                  'delivery') {
+                NavigationService.instance
+                    .navigateTo(NavigatorRoutes.bookingOrderScreen);
+              } else if (originalDeliveryModel.orderType?.toLowerCase() ==
+                  'storedelivery') {
+                NavigationService.instance
+                    .navigateTo(NavigatorRoutes.storeOrderScreen);
+              } else {
+                debugPrint(
+                    'Unknown order type: ${originalDeliveryModel.orderType}');
+                NavigationService.instance
+                    .navigateTo(NavigatorRoutes.storeOrderScreen);
+              }
+            },
+            borderRadius: BorderRadius.circular(16.r),
+            child: Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      item.customerName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black,
+                  // Header Row: Order Type Icon + Name + Status Badge
+                  Row(
+                    children: [
+                      // Order Type Icon
+                      Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                          color: isPackageDelivery
+                              ? AppColors.primary.withOpacity(0.1)
+                              : Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Icon(
+                          orderIcon,
+                          color: isPackageDelivery
+                              ? AppColors.primary
+                              : Colors.orange,
+                          size: 24.w,
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                      Gap.w12,
+                      // Order Type Name
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppText.h3(
+                              item.customerName,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            if (item.orderId.isNotEmpty) ...[
+                              Gap.h(2),
+                              AppText.caption(
+                                'ID: ${item.orderId.substring(0, item.orderId.length > 8 ? 8 : item.orderId.length)}',
+                                fontSize: 11,
+                                color: Colors.grey[500],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      // Status Badge
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: item.statusColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20.r),
+                          border: Border.all(
+                            color: item.statusColor.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: AppText.caption(
+                          item.status,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: item.statusColor,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
+                  Gap.h16,
+                  // Amount Section
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
-                      color: item.statusColor
-                          .withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      item.status,
-                      style: TextStyle(
-                        color: item.statusColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary.withOpacity(0.05),
+                          AppColors.primary.withOpacity(0.02),
+                        ],
                       ),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Row(
+                      children: [
+                        AppText.caption(
+                          'Amount:',
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.w500,
+                        ),
+                        Gap.w8,
+                        AppText.h2(
+                          item.amount,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                
-                  AppText.button(
-                    item.amount,
-                
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.location_on_outlined,
-                      size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      item.address,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+                  Gap.h16,
+                  // Address Section
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(6.w),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Icon(
+                          Icons.location_on_rounded,
+                          size: 18.w,
+                          color: Colors.grey[700],
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                      Gap.w10,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppText.caption(
+                              'Delivery Address',
+                              fontSize: 11,
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w500,
+                            ),
+                            Gap.h(4),
+                            AppText.body(
+                              item.address,
+                              fontSize: 13,
+                              color: Colors.grey[800],
+                              maxLines: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    item.timestamp,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
+                  if (item.timestamp.isNotEmpty) ...[
+                    Gap.h12,
+                    // Timestamp Section
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 16.w,
+                          color: Colors.grey[500],
+                        ),
+                        Gap.w6,
+                        AppText.caption(
+                          item.timestamp,
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ],
                     ),
-                  ),
+                  ],
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

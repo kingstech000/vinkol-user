@@ -8,6 +8,7 @@ import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/copy_to_clipboard_util.dart';
 import 'package:starter_codes/core/utils/launch_link.dart';
+import 'package:starter_codes/core/utils/map_utils.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_detail_view_model.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
@@ -16,6 +17,8 @@ import 'package:starter_codes/widgets/circular_network_image.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/reverse_map.dart';
+import 'package:starter_codes/widgets/rider_rating_bottom_sheet.dart';
+import 'package:starter_codes/widgets/app_button.dart';
 
 class BookingOrderScreen extends ConsumerStatefulWidget {
   const BookingOrderScreen({super.key});
@@ -38,6 +41,19 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
         debugPrint('Error: No delivery selected or ID is null.');
       }
     });
+  }
+
+  void _openGoogleMapsDirections() {
+    final deliveryDetailsAsync = ref.watch(deliveryDetailsViewModelProvider);
+    deliveryDetailsAsync.when(
+      data: (delivery) {
+        if (delivery == null) return;
+        openGoogleMapsDirections(
+            delivery.pickupLocation, delivery.dropoffLocation);
+      },
+      loading: () {},
+      error: (error, stack) {},
+    );
   }
 
   @override
@@ -89,6 +105,31 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                   color: AppColors.black, size: 18.w),
             ),
           ),
+          actions: [
+            IconButton(
+              onPressed: () {
+                _openGoogleMapsDirections();
+              },
+              icon: Container(
+                width: 60.w,
+                height: 80.w,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withOpacity(0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(18.r),
+                ),
+                child: Icon(
+                  Icons.directions_rounded,
+                  color: Colors.white,
+                  size: 32.w,
+                ),
+              ),
+            ),
+          ],
         ),
         body: Stack(
           children: [
@@ -414,6 +455,91 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                             .grey.shade600,
                                                         fontSize: 12.sp,
                                                       ),
+                                                      if (delivery.deliveryAgent
+                                                              ?.id !=
+                                                          null) ...[
+                                                        Gap.h4,
+                                                        ref
+                                                            .watch(
+                                                              riderRatingProvider(
+                                                                delivery
+                                                                    .deliveryAgent!
+                                                                    .id!,
+                                                              ),
+                                                            )
+                                                            .when(
+                                                              data: (rating) =>
+                                                                  Row(
+                                                                children: [
+                                                                  ...List
+                                                                      .generate(
+                                                                    5,
+                                                                    (index) =>
+                                                                        Icon(
+                                                                      index < rating.avgRating.floor()
+                                                                          ? Icons.star
+                                                                          : (index == rating.avgRating.floor() && rating.avgRating % 1 >= 0.5)
+                                                                              ? Icons.star_half
+                                                                              : Icons.star_border,
+                                                                      color: Colors
+                                                                          .amber,
+                                                                      size:
+                                                                          14.w,
+                                                                    ),
+                                                                  ),
+                                                                  Gap.w4,
+                                                                  AppText
+                                                                      .caption(
+                                                                    rating
+                                                                        .avgRating
+                                                                        .toStringAsFixed(
+                                                                            1),
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade700,
+                                                                    fontSize:
+                                                                        12.sp,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                  if (rating
+                                                                          .ratingsCount >
+                                                                      0) ...[
+                                                                    Gap.w4,
+                                                                    AppText
+                                                                        .caption(
+                                                                      '(${rating.ratingsCount})',
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade600,
+                                                                      fontSize:
+                                                                          11.sp,
+                                                                    ),
+                                                                  ],
+                                                                ],
+                                                              ),
+                                                              loading: () =>
+                                                                  SizedBox(
+                                                                width: 14.w,
+                                                                height: 14.w,
+                                                                child:
+                                                                    CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  valueColor:
+                                                                      AlwaysStoppedAnimation<
+                                                                          Color>(
+                                                                    AppColors
+                                                                        .primary,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              error: (_, __) =>
+                                                                  const SizedBox
+                                                                      .shrink(),
+                                                            ),
+                                                      ],
                                                     ],
                                                   ),
                                                 ),
@@ -434,25 +560,60 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                       if (delivery.deliveryAgent
                                                               ?.phone !=
                                                           null) {
-                                                        final validatedPhone =
-                                                            validateAndFormatPhoneNumber(
-                                                                delivery
-                                                                    .deliveryAgent!
-                                                                    .phone!);
-                                                        if (validatedPhone !=
-                                                            null) {
-                                                          makePhoneCall(
-                                                              validatedPhone);
-                                                        } else {
+                                                        final phoneNumber =
+                                                            delivery
+                                                                .deliveryAgent!
+                                                                .phone!
+                                                                .toString()
+                                                                .trim();
+
+                                                        try {
+                                                          // Handle international format (+234...)
+                                                          // Use makePhoneCall directly for international format
+                                                          if (phoneNumber
+                                                              .startsWith(
+                                                                  '+')) {
+                                                            makePhoneCall(
+                                                                phoneNumber);
+                                                          } else {
+                                                            // Handle local format, validate and format
+                                                            final validatedPhone =
+                                                                validateAndFormatPhoneNumber(
+                                                                    phoneNumber);
+                                                            if (validatedPhone !=
+                                                                null) {
+                                                              makePhoneCall(
+                                                                  validatedPhone);
+                                                            } else {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                      'Invalid phone number format.'),
+                                                                ),
+                                                              );
+                                                            }
+                                                          }
+                                                        } catch (e) {
                                                           ScaffoldMessenger.of(
                                                                   context)
                                                               .showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  'Invalid phone number format.'),
+                                                                  'Unable to make phone call. Please try again.'),
                                                             ),
                                                           );
                                                         }
+                                                      } else {
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text(
+                                                                'Phone number not available.'),
+                                                          ),
+                                                        );
                                                       }
                                                     },
                                                   ),
@@ -460,6 +621,29 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                               ],
                                             ),
                                           ),
+                                          // Rate Rider Button (only when delivered)
+                                          if (delivery.status?.toLowerCase() ==
+                                                  'delivered' &&
+                                              delivery.deliveryAgent?.id !=
+                                                  null) ...[
+                                            Gap.h16,
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: AppButton.outline(
+                                                title: 'Rate Rider',
+                                                onTap: () {
+                                                  RiderRatingBottomSheet.show(
+                                                    context,
+                                                    riderId: delivery
+                                                        .deliveryAgent!.id!,
+                                                    riderName: delivery
+                                                        .deliveryAgent!
+                                                        .fullName,
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ],
                                           Gap.h16,
                                         ],
 
