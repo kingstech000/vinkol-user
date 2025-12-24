@@ -36,7 +36,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: CustomScrollView(
-          slivers: [  
+          slivers: [
             SliverAppBar(
               expandedHeight: 350.h,
               pinned: true,
@@ -357,53 +357,51 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             ),
           ],
         ),
-        child: SafeArea(
-          child: currentQuantity == 0
-              ? AppButton.primary(
-                  onTap: () {
-                    // Haptic feedback
-                    HapticFeedback.lightImpact();
-                    // Add to cart
-                    ref.read(cartProvider.notifier).addProduct(widget.product);
-                    // Show success feedback
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle,
-                                color: Colors.white,
-                                size: 20.w,
-                              ),
-                              Gap.w12,
-                              Expanded(
-                                child: AppText.body(
-                                  '${widget.product.title} added to cart',
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          backgroundColor: Colors.green[600],
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(12.r),
-                              topRight: Radius.circular(12.r),
+        child: currentQuantity == 0
+            ? AppButton.primary(
+                onTap: () {
+                  // Haptic feedback
+                  HapticFeedback.lightImpact();
+                  // Add to cart
+                  ref.read(cartProvider.notifier).addProduct(widget.product);
+                  // Show success feedback
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: Colors.white,
+                              size: 20.w,
                             ),
-                          ),
-                          duration: const Duration(seconds: 2),
+                            Gap.w12,
+                            Expanded(
+                              child: AppText.body(
+                                '${widget.product.title} added to cart',
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    }
-                  },
-                  title: 'Add To Cart',
-                )
-              : _buildQuantityControls(currentQuantity),
-        ),
+                        backgroundColor: Colors.green[600],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(12.r),
+                            topRight: Radius.circular(12.r),
+                          ),
+                        ),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+                title: 'Add To Cart',
+              )
+            : _buildQuantityControls(currentQuantity),
       ),
     );
   }

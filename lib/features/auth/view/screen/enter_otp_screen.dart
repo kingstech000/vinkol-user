@@ -32,9 +32,11 @@ class _EnterOTPCodeScreenState extends ConsumerState<EnterOTPCodeScreen> {
     final email = ref.read(resetEmailProvider);
     _displayedEmail = email ;
 
-    // Read the ViewModel to call methods that don't trigger a rebuild of the widget itself
-    final otpViewModel = ref.read(otpViewModelProvider);
-    otpViewModel.setEmail(_displayedEmail);
+    // Delay provider modification until after the build phase is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final otpViewModel = ref.read(otpViewModelProvider);
+      otpViewModel.setEmail(_displayedEmail);
+    });
 
     _startResendTimer();
   }

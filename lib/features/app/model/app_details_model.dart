@@ -10,9 +10,10 @@ class AppDetailsModel {
   });
 
   factory AppDetailsModel.fromJson(Map<String, dynamic> json) {
+    final buildNumberValue = json['BUILD_NUMBER'];
     return AppDetailsModel(
       versionNumber: json['VERSION_NUMBER'] as String? ?? '',
-      buildNumber: json['BUILD_NUMBER'] as String? ?? '',
+      buildNumber: buildNumberValue?.toString() ?? '',
       appName: json['APP_NAME'] as String? ?? '',
     );
   }
@@ -48,25 +49,50 @@ class AppDetailsResponse {
   }
 }
 
-class AppDetailsData {
+class PlatformAppDetails {
   final AppDetailsModel customerApp;
   final AppDetailsModel riderApp;
 
-  const AppDetailsData({
+  const PlatformAppDetails({
     required this.customerApp,
     required this.riderApp,
+  });
+
+  factory PlatformAppDetails.fromJson(Map<String, dynamic> json) {
+    return PlatformAppDetails(
+      customerApp: AppDetailsModel.fromJson(
+        json['CUSTOMER_APP'] as Map<String, dynamic>? ?? {},
+      ),
+      riderApp: AppDetailsModel.fromJson(
+        json['RIDER_APP'] as Map<String, dynamic>? ?? {},
+      ),
+    );
+  }
+}
+
+class AppDetailsData {
+  final PlatformAppDetails android;
+  final PlatformAppDetails ios;
+
+  const AppDetailsData({
+    required this.android,
+    required this.ios,
   });
 
   factory AppDetailsData.fromJson(Map<String, dynamic> json) {
     final appDetails = json['APP_DETAILS'] as Map<String, dynamic>? ?? {};
     return AppDetailsData(
-      customerApp: AppDetailsModel.fromJson(
-        appDetails['CUSTOMER_APP'] as Map<String, dynamic>? ?? {},
+      android: PlatformAppDetails.fromJson(
+        appDetails['ANDROID'] as Map<String, dynamic>? ?? {},
       ),
-      riderApp: AppDetailsModel.fromJson(
-        appDetails['RIDER_APP'] as Map<String, dynamic>? ?? {},
+      ios: PlatformAppDetails.fromJson(
+        appDetails['IOS'] as Map<String, dynamic>? ?? {},
       ),
     );
+  }
+
+  PlatformAppDetails getPlatformDetails(bool isAndroid) {
+    return isAndroid ? android : ios;
   }
 }
 

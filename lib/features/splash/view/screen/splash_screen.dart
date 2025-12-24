@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/constants/assets.dart';
@@ -23,7 +24,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _checkAppVersion() async {
     try {
       final appDetailsAsync = await ref.read(appDetailsProvider.future);
-      final customerApp = appDetailsAsync.data.customerApp;
+      final isAndroid = Platform.isAndroid;
+      final platformDetails =
+          appDetailsAsync.data.getPlatformDetails(isAndroid);
+      final customerApp = platformDetails.customerApp;
       final currentVersion = await AppVersionChecker.getCurrentVersion();
       final currentBuildNumber =
           await AppVersionChecker.getCurrentBuildNumber();

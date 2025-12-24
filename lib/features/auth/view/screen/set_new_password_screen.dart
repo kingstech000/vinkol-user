@@ -19,68 +19,70 @@ class SetNewPasswordScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: MiniAppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Form( // Wrap with Form for validation
-          key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.h2('Set New Password'),
-              Gap.h8,
-              AppText.free('Let\'s reset your password quickly'),
-              Gap.h32,
-              AppText.caption(
-                'Create New Password',
-                fontSize: 14,
-              ),
-              Gap.h4,
-              AppTextField(
-                controller: setNewPasswordViewModel.newPasswordController, // Use ViewModel's controller (or make them public in VM)
-                hint: '********',
-                isPassword: true,
-                validator: (value) => Validator.password(value),
-              ),
-              Gap.h16,
-              AppText.caption(
-                'Confirm Password',
-                fontSize: 14,
-              ),
-              Gap.h4,
-              AppTextField(
-                controller: setNewPasswordViewModel.confirmPasswordController, // Use ViewModel's controller (or make them public in VM)
-                hint: '********',
-                isPassword: true,
-                // Add a validator to check if passwords match.
-                // This validator needs access to _newPasswordController's text.
-                // A better way is to pass new password text to this validator.
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
-                  }
-                  if (value != setNewPasswordViewModel.newPasswordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
-              Gap.h32,
-              SizedBox(
-                width: double.infinity,
-                child: AppButton.primary(
-                  title: 'Reset',
-                  loading: setNewPasswordViewModel.isBusy, // Show loading state
-                  onTap: () {
-                    // Validate form before calling ViewModel method
-                    if (formKey.currentState?.validate() ?? false) {
-                      setNewPasswordViewModel.setNewPassword(
-                           context: context,
-                      );
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Form( // Wrap with Form for validation
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText.h2('Set New Password'),
+                Gap.h8,
+                AppText.free('Let\'s reset your password quickly'),
+                Gap.h32,
+                AppText.caption(
+                  'Create New Password',
+                  fontSize: 14,
+                ),
+                Gap.h4,
+                AppTextField(
+                  controller: setNewPasswordViewModel.newPasswordController, // Use ViewModel's controller (or make them public in VM)
+                  hint: '********',
+                  isPassword: true,
+                  validator: (value) => Validator.password(value),
+                ),
+                Gap.h16,
+                AppText.caption(
+                  'Confirm Password',
+                  fontSize: 14,
+                ),
+                Gap.h4,
+                AppTextField(
+                  controller: setNewPasswordViewModel.confirmPasswordController, // Use ViewModel's controller (or make them public in VM)
+                  hint: '********',
+                  isPassword: true,
+                  // Add a validator to check if passwords match.
+                  // This validator needs access to _newPasswordController's text.
+                  // A better way is to pass new password text to this validator.
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
                     }
+                    if (value != setNewPasswordViewModel.newPasswordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
                   },
                 ),
-              ),
-            ],
+                Gap.h32,
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton.primary(
+                    title: 'Reset',
+                    loading: setNewPasswordViewModel.isBusy, // Show loading state
+                    onTap: () {
+                      // Validate form before calling ViewModel method
+                      if (formKey.currentState?.validate() ?? false) {
+                        setNewPasswordViewModel.setNewPassword(
+                             context: context,
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
