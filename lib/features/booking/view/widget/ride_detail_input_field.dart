@@ -117,9 +117,10 @@ class RideDetailsInput extends ConsumerWidget {
               icon: Icons.location_on_outlined,
             ),
           ),
-          Gap.h12,
+          Gap.h18,
           SizedBox(
             width: 200,
+            height: 50,
             child: AppButton(
               title: 'Find Rider',
               onTap: () {

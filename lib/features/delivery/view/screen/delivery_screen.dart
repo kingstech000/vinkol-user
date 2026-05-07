@@ -7,12 +7,12 @@ import 'package:starter_codes/features/delivery/model/delivery_item.dart';
 import 'package:starter_codes/features/delivery/model/delivery_model.dart';
 import 'package:starter_codes/features/delivery/view/widget/custom_tab_bar.dart';
 import 'package:starter_codes/features/delivery/view/widget/delivery_list_view.dart';
-import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_view_model.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/empty_content.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/features/delivery/view/screen/download_report_screen.dart';
 
 class DeliveryScreen extends ConsumerStatefulWidget {
   const DeliveryScreen({super.key});
@@ -113,31 +113,6 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
       child: Row(
         children: [
-          // Container(
-          //   padding: EdgeInsets.all(12.w),
-          //   decoration: BoxDecoration(
-          //     gradient: LinearGradient(
-          //       colors: [
-          //         AppColors.primary,
-          //         AppColors.primary.withOpacity(0.8),
-          //       ],
-          //     ),
-          //     borderRadius: BorderRadius.circular(16.r),
-          //     boxShadow: [
-          //       BoxShadow(
-          //         color: AppColors.primary.withOpacity(0.3),
-          //         blurRadius: 12,
-          //         offset: const Offset(0, 4),
-          //       ),
-          //     ],
-          //   ),
-          //   child: Icon(
-          //     Icons.local_shipping_rounded,
-          //     color: Colors.white,
-          //     size: 20.w,
-          //   ),
-          // ),
-          // Gap.w16,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,65 +131,29 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
               ],
             ),
           ),
+          TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: AppColors.blue.withOpacity(0.1),
+              padding: EdgeInsets.all(6.w),
+              minimumSize: Size.zero,
+              side: const BorderSide(color: AppColors.blue),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DownloadReportScreen(),
+                ),
+              );
+            },
+            child: Icon(Icons.file_download, color: AppColors.blue, size: 20.w),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 20.w,
-              ),
-            ),
-            Gap.h12,
-            AppText.caption(
-              title,
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-            Gap.h4,
-            AppText.h2(
-              value,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // A helper function to handle retries for each tab
   void _onRetry(OrderTabType tabType) {
     if (tabType == OrderTabType.packageDelivery) {
       ref.read(deliveryViewModelProvider).fetchPackageDeliveries();
@@ -263,7 +202,6 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
           child: Column(
             children: [
               _buildHeader(),
-
               CustomTabBar(tabController: _tabController),
               Gap.h8,
               Expanded(

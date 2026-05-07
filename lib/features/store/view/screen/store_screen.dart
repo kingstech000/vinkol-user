@@ -11,7 +11,7 @@ import 'package:starter_codes/features/store/view_model/store_view_model.dart';
 import 'package:starter_codes/provider/store_provider.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/gap.dart';
-import 'dart:async'; // For Timer
+import 'dart:async';
 
 class StoresScreen extends ConsumerStatefulWidget {
   const StoresScreen({super.key});
@@ -24,20 +24,17 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
   String? _previousTag;
+  bool _isFilteringByTag = false;
 
   @override
   void initState() {
     super.initState();
-    // Initial fetch of stores when the screen is first loaded.
-    // The ViewModel's stale time logic will determine if a network call is needed.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Check if a tag is selected
       final selectedTag = ref.read(selectedTagProvider);
       if (selectedTag != null) {
-        ref
-            .read(storesViewModelProvider.notifier)
-            .filterStoresByTag(selectedTag);
-        // Clear the selected tag after using it
+        _isFilteringByTag = true;
+        _previousTag = selectedTag;
+        ref.read(storesViewModelProvider.notifier).filterStoresByTag(selectedTag);
         ref.read(selectedTagProvider.notifier).state = null;
       } else {
         ref.read(storesViewModelProvider.notifier).fetchStoresIfStale();
@@ -63,11 +60,9 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
     super.dispose();
   }
 
-  // Responsive grid configuration
   SliverGridDelegateWithFixedCrossAxisCount _getResponsiveGridDelegate() {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // For very small screens (less than 320px width)
     if (screenWidth < 320) {
       return const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 1,
@@ -76,7 +71,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
         childAspectRatio: 1.5,
       );
     }
-    // For small screens (320px - 480px width)
     else if (screenWidth < 480) {
       return const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -85,7 +79,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
         childAspectRatio: 0.9,
       );
     }
-    // For medium screens (480px - 768px width)
     else if (screenWidth < 768) {
       return const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -94,7 +87,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
         childAspectRatio: 0.85,
       );
     }
-    // For large screens (768px and above)
     else {
       return const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
@@ -113,9 +105,10 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
     if (selectedTag != null && selectedTag != _previousTag) {
       _previousTag = selectedTag;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(storesViewModelProvider.notifier)
-            .filterStoresByTag(selectedTag);
+        setState(() {
+          _isFilteringByTag = true;
+        });
+        ref.read(storesViewModelProvider.notifier).filterStoresByTag(selectedTag);
         ref.read(selectedTagProvider.notifier).state = null;
       });
     }
@@ -193,7 +186,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
 
                   Gap.h20,
 
-                  // Enhanced Search Bar
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
@@ -256,11 +248,17 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
               ),
             ),
 
-            // Content Section
             Expanded(
               child: storesAsyncValue.when(
                 data: (storeResponse) {
-                  _previousTag = null;
+                  if (_isFilteringByTag) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        _isFilteringByTag = false;
+                        _previousTag = null;
+                      });
+                    });
+                  }
                   final List<Store> stores = storeResponse.stores;
                   if (stores.isEmpty) {
                     return RefreshIndicator(
@@ -286,7 +284,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          // Results header
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -303,7 +300,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
 
                           Gap.h16,
 
-                          // Grid
                           Expanded(
                             child: GridView.builder(
                               physics: const AlwaysScrollableScrollPhysics(),
@@ -331,7 +327,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                   );
                 },
                 loading: () {
-                  if (_previousTag != null) {
+                  if (_isFilteringByTag) {
                     return _buildLoadingState();
                   }
                   if (storesAsyncValue.hasValue &&
@@ -370,6 +366,14 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                   return _buildLoadingState();
                 },
                 error: (error, stack) {
+                  if (_isFilteringByTag) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        _isFilteringByTag = false;
+                        _previousTag = null;
+                      });
+                    });
+                  }
                   return RefreshIndicator(
                     color: AppColors.primary,
                     onRefresh: () => ref
@@ -474,7 +478,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Error Icon
           Container(
             width: 80,
             height: 80,
@@ -495,7 +498,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
 
           Gap.h20,
 
-          // Error Title
           Text(
             'Connection Problem',
             style: TextStyle(
@@ -508,7 +510,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
 
           Gap.h8,
 
-          // Error Description
           Text(
             'Unable to load stores. Please check your\ninternet connection and try again.',
             style: TextStyle(
@@ -521,7 +522,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
 
           Gap.h24,
 
-          // Retry Button
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),

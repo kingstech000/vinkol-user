@@ -1,5 +1,10 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/core/utils/network_client.dart';
 import 'package:starter_codes/core/constants/api_routes.dart';
@@ -120,6 +125,65 @@ class DeliveryService {
     } catch (e, _) {
       logger
           .e('An unexpected error occurred while submitting rider rating: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<void> downloadReport(String startDate, String endDate) async {
+    try {
+      final Map<String, dynamic> queryParameters = {
+        'startDate': startDate,
+        'endDate': endDate,
+      };
+
+      logger.d(
+          'Downloading report: ${ApiRoute.downloadReport} with $queryParameters');
+
+      final List<int> pdfBytes = await _networkClient.downloadFile(
+        ApiRoute.downloadReport,
+        queryParameters: queryParameters,
+      );
+
+      // Save the PDF bytes to a file
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${directory.path}/vinkol_report_$timestamp.pdf';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+
+      logger.i('Report downloaded and saved to: $filePath');
+
+      // Open the file
+      final result = await OpenFilex.open(filePath);
+      if (result.type != ResultType.done) {
+        throw Exception('Could not open the report: ${result.message}');
+      }
+    } on DioException catch (e) {
+      logger.e('Error downloading report: ${e.message}');
+      final errorMessage = (e.response?.data is Map)
+          ? (e.response?.data['message'] ?? e.message)
+          : (e.response?.data?.toString() ?? e.message);
+      throw Exception(errorMessage);
+    } catch (e, _) {
+      logger.e('An unexpected error occurred while downloading report: $e');
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<void> cancelOrder(String orderId) async {
+    try {
+      final String endpoint = '${ApiRoute.singleDelivery}/$orderId/cancel';
+      logger.d('Cancelling order: $endpoint');
+
+      final responseData = await _networkClient.patch(endpoint);
+
+      logger.i('Order cancelled successfully: $responseData');
+    } on DioException catch (e) {
+      logger.e('Error cancelling order: ${e.message}');
+      throw Exception(
+          'Failed to cancel order: ${e.response?.data['message'] ?? e.message}');
+    } catch (e) {
+      logger.e('An unexpected error occurred while cancelling order: $e');
       throw Exception('An unexpected error occurred: $e');
     }
   }

@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:starter_codes/core/extensions/string_extension.dart';
+import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
@@ -20,7 +20,6 @@ class CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate total price based on product quantity
     final num totalPrice = product.price * (product.quantity ?? 0);
 
     return Card(
@@ -85,19 +84,19 @@ class CartItemCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           AppText.caption(
-                            '${product.price.toString().toMoney()}/pc', // Unit price
+                            '${double.parse(product.price.toString()).toMoney()}/pc', // Unit price
 
                             color: Colors.grey[600],
                           ),
                           AppText.button(
-                            totalPrice.toString().toMoney(),
+                            double.parse(totalPrice.toString()).toMoney(),
                             color: AppColors.primary, // Blue color from image
                           ),
                         ],
                       ),
                     ],
                   ),
-                  Gap.h8, // Vertical gap between title/price row and quantity/delete row
+                  Gap.h8,
                   Row(
                     // This row contains the quantity controls and the delete icon
                     children: [

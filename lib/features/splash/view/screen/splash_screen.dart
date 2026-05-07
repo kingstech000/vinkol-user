@@ -19,6 +19,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
     _checkAppVersion();
+    _proceedWithInitialization();
   }
 
   Future<void> _checkAppVersion() async {
@@ -38,7 +39,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         currentBuildNumber,
       );
 
-      if (updateRequired && mounted) {
+      if (updateRequired) {
         ForceUpdateBottomSheet.show(context);
       } else {
         _proceedWithInitialization();

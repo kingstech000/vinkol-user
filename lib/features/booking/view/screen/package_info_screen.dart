@@ -14,6 +14,7 @@ import 'package:starter_codes/widgets/app_textfield.dart';
 import 'package:starter_codes/widgets/modal_form_field.dart';
 import 'package:starter_codes/features/booking/model/request.dart';
 import 'package:starter_codes/features/booking/model/order_model.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
 
 class PackageInfoScreen extends ConsumerStatefulWidget {
@@ -154,18 +155,14 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
     FocusScope.of(context).unfocus();
 
     if (pickupLocation == null || dropOffLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Please select both pick-up and drop-off locations first.')),
-      );
+      AppStatusDialogs.showError(context, 'Missing Information',
+          'Please select both pick-up and drop-off locations first.');
       return;
     }
 
     if (_packageNameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter package name.')),
-      );
+      AppStatusDialogs.showError(
+          context, 'Missing Information', 'Please enter package name.');
       return;
     }
 
@@ -177,9 +174,8 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
     // }
 
     if (_vehicleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a vehicle type.')),
-      );
+      AppStatusDialogs.showError(
+          context, 'Missing Information', 'Please select a vehicle type.');
       return;
     }
 
@@ -201,10 +197,8 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
       final userState = user?.currentState;
 
       if (userState == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('User state not available. Please try again.')),
-        );
+        AppStatusDialogs.showError(
+            context, 'Error', 'User state not available. Please try again.');
         return;
       }
 
@@ -237,9 +231,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
       );
     } catch (e) {
       print('Error getting quote: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to get quote: $e')),
-      );
+      AppStatusDialogs.showError(context, 'Error', 'Failed to get quote: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -281,7 +273,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header Section
+                      SizedBox(height: 20.h),
                       _buildHeader(),
                       SizedBox(height: 32.h),
 
@@ -421,7 +413,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
     return Text(
       label,
       style: TextStyle(
-        fontSize: 15.sp,
+        fontSize: 12.sp,
         fontWeight: FontWeight.w600,
         color: Colors.black87,
       ),
@@ -474,7 +466,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
         GestureDetector(
           onTap: onTap,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 16.h),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12.r),
@@ -528,13 +520,6 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
           colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
         ),
         borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: ElevatedButton(
         onPressed: _isLoading ? null : _getQuote,
@@ -561,7 +546,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
                   Text(
                     'Get Quote',
                     style: TextStyle(
-                      fontSize: 17.sp,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                       letterSpacing: 0.5,

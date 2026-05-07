@@ -85,6 +85,35 @@ class NetworkClient {
   }
 
 // ======================================================
+//======================== Download ========================
+//=======================================================
+  Future<List<int>> downloadFile(
+    String uri, {
+    Map<String, dynamic> queryParameters = const {},
+    CancelToken? cancelToken,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    try {
+      Response response = await _dio.get(
+        uri,
+        queryParameters: queryParameters,
+        cancelToken: cancelToken,
+        onReceiveProgress: onReceiveProgress,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {
+            ..._getAuthHeader,
+          },
+        ),
+      );
+
+      return response.data;
+    } on Failure {
+      rethrow;
+    }
+  }
+
+// ======================================================
 //======================== POST ==========================
 //=======================================================
   ///Post request

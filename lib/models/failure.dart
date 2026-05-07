@@ -8,7 +8,9 @@ mixin Failure {
   bool get isInternetConnectionError =>
       runtimeType is NoInternetConnectionException;
 
-  getMessagefromServer(Map error) {
+  getMessagefromServer(dynamic error) {
+    if (error is! Map) return error?.toString() ?? "An error occurred";
+    
     // checking the error format
     // so i can apporpriately get the error message
     // Note: input errors are different from normal error

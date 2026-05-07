@@ -241,12 +241,9 @@ class AppRouter {
           transition: TransitionType.Breeze,
         );
       case NavigatorRoutes.cartScreen:
-        final args = settings.arguments as Map<String, dynamic>;
         return _getPageRoute(
             settings: settings,
-            viewToShow: CartScreen(
-              isFromWebviewClosing: args['isFromWebviewClosing'] as bool,
-            ),
+            viewToShow: const CartScreen(),
             transition: transition);
       case NavigatorRoutes.storeOrderScreen:
         return _getPageRoute(

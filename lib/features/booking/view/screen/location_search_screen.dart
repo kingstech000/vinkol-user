@@ -1,4 +1,3 @@
-// lib/screens/location_search_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,7 +5,6 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart';
-import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 
 class LocationSearchScreen extends ConsumerStatefulWidget {
   final bool isPickupLocation;
@@ -156,12 +154,9 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Header and Search Section
               _buildHeaderAndSearch(),
-
-              // Loading Indicator
               if (_isLoading)
-                Container(
+                SizedBox(
                   height: 3.h,
                   child: LinearProgressIndicator(
                     color: AppColors.primary,
@@ -171,8 +166,6 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                 )
               else
                 SizedBox(height: 3.h),
-
-              // Results Section
               Expanded(
                 child: _buildResultsSection(),
               ),

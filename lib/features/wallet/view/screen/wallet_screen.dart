@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/features/wallet/view/widget/withdrawal_item.dart';
-import 'package:starter_codes/features/wallet/view_model/wallet_history_view_model.dart';
+import 'package:starter_codes/core/utils/textstyles.dart';
+import 'package:starter_codes/features/wallet/view/widget/fund_wallet_sheet.dart';
+import '../../view_model/wallet_history_view_model.dart';
+import '../../data/wallet_service.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/core/utils/network_client.dart';
+import 'package:starter_codes/core/utils/app_logger.dart';
+import '../../model/payment_history_model.dart';
+import '../../view_model/withdrawal_view_model.dart';
+import '../widget/withdrawal_item.dart';
+import 'withdraw_screen.dart';
+import 'transaction_detail_screen.dart';
+
+final walletServiceProvider = Provider((ref) {
+  return WalletService(NetworkClient(), const AppLogger(WalletService));
+});
 
 class WalletHistoryScreen extends ConsumerStatefulWidget {
   const WalletHistoryScreen({super.key});
@@ -15,20 +29,30 @@ class WalletHistoryScreen extends ConsumerStatefulWidget {
       _WalletHistoryScreenState();
 }
 
-class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen> {
+class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(walletOverviewViewModelProvider.notifier).refreshData();
+      ref.read(withdrawalProvider.notifier).refreshData();
     });
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    debugPrint('🟣 WalletHistoryScreen: BUILD METHOD CALLED');
     final walletOverviewState = ref.watch(walletOverviewViewModelProvider);
-    final withdrawalHistoryAsync = walletOverviewState.withdrawalHistory;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -46,15 +70,16 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen> {
                   children: [
                     Gap.h12,
                     AppText.h1(
-                      'Payment History',
+                      'Wallet',
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                     Gap.h8,
                     AppText.caption(
-                      'View your payment history',
+                      'Manage your wallet and transactions',
                       fontSize: 12,
                       color: Colors.grey[600],
+                      fontWeight: FontWeight.w400,
                     ),
                   ],
                 ),
@@ -63,398 +88,557 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // Header Section with Statistics
-          Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Future.wait<void>([
+            ref.read(walletOverviewViewModelProvider.notifier).refreshData(),
+            ref.read(withdrawalProvider.notifier).refreshData(),
+          ]);
+        },
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverToBoxAdapter(
+                child: Container(
+                  margin:
+                      EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: (() {
+                    final wb = walletOverviewState.walletBalance;
+                    if (wb is AsyncData<double>) {
+                      return _buildWalletHeader(wb.value);
+                    }
+                    if (wb is AsyncLoading<double>) {
+                      return _buildWalletHeaderLoading();
+                    }
+                    if (wb is AsyncError<double>) return _buildErrorStats();
+                    return const SizedBox.shrink();
+                  }()),
                 ),
+              ),
+              SliverPersistentHeader(
+                delegate: _SliverAppBarDelegate(
+                  TabBar(
+                    controller: _tabController,
+                    labelColor: AppColors.blue,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: AppColors.blue,
+                    labelStyle: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    unselectedLabelStyle: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    tabs: const [
+                      Tab(text: 'Payments'),
+                      Tab(text: 'Withdrawals'),
+                    ],
+                  ),
+                ),
+                pinned: true,
+              ),
+            ];
+          },
+          body: Container(
+            color: Colors.white,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildPaymentHistoryTab(walletOverviewState),
+                _buildWithdrawalHistoryTab(),
               ],
             ),
-            child: withdrawalHistoryAsync.when(
-              data: (history) => _buildStatsSection(history),
-              loading: () => _buildLoadingStats(),
-              error: (e, s) => _buildErrorStats(),
-            ),
           ),
-
-          // Content Section
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: RefreshIndicator(
-                color: AppColors.primary,
-                onRefresh: () => ref
-                    .read(walletOverviewViewModelProvider.notifier)
-                    .refreshData(),
-                child: withdrawalHistoryAsync.when(
-                  data: (history) => _buildHistoryList(history),
-                  loading: () => _buildLoadingState(withdrawalHistoryAsync),
-                  error: (e, s) => _buildErrorState(e),
-                ),
-              ),
-            ),
-          ),
-          Gap.h20,
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildStatsSection(List<dynamic> history) {
-    final totalTransactions = history.length;
-    final pendingCount =
-        history.where((item) => item.status?.toLowerCase() == 'pending').length;
-    final completedCount = history
-        .where((item) =>
-            item.status?.toLowerCase() == 'completed' ||
-            item.status?.toLowerCase() == 'success' ||
-            item.status?.toLowerCase() == 'successful')
-        .length;
+  Widget _buildPaymentHistoryTab(dynamic walletOverviewState) {
+    final historyState = walletOverviewState.withdrawalHistory;
 
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatItem(
-            icon: Icons.receipt_long_outlined,
-            label: 'Total',
-            value: '$totalTransactions',
-            color: AppColors.primary,
+    if (historyState is AsyncLoading<List<PaymentHistory>>) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.blue),
+      );
+    }
+
+    if (historyState is AsyncError<List<PaymentHistory>>) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.w),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+              Gap.h16,
+              Text(
+                'Error loading history',
+                style: TextStyle(fontSize: 16.sp, color: Colors.grey.shade700),
+              ),
+            ],
           ),
         ),
-        Container(
-          height: 40,
-          width: 1,
-          color: Colors.grey.shade200,
-        ),
-        Expanded(
-          child: _buildStatItem(
-            icon: Icons.access_time,
-            label: 'Pending',
-            value: '$pendingCount',
-            color: Colors.orange,
+      );
+    }
+
+    if (historyState is AsyncData<List<PaymentHistory>>) {
+      final history = historyState.value;
+      if (history.isEmpty) {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.all(32.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.history, size: 64.sp, color: Colors.grey.shade300),
+                Gap.h16,
+                Text(
+                  'No payment history',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                Gap.h8,
+                Text(
+                  'Your payment transactions will appear here',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.grey.shade500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-        ),
-        Container(
-          height: 40,
-          width: 1,
-          color: Colors.grey.shade200,
-        ),
-        Expanded(
-          child: _buildStatItem(
-            icon: Icons.check_circle_outline,
-            label: 'Completed',
-            value: '$completedCount',
-            color: Colors.green,
-          ),
-        ),
-      ],
+        );
+      }
+
+      return ListView.separated(
+        padding: EdgeInsets.all(16.w),
+        itemCount: history.length,
+        separatorBuilder: (context, index) => Gap.h12,
+        itemBuilder: (context, index) {
+          final payment = history[index];
+          final isDebit = payment.type == 'Debit';
+          final dateFormat = payment.createdAt.toLocal();
+          final formattedDate =
+              '${dateFormat.day}/${dateFormat.month}/${dateFormat.year}';
+          final formattedTime =
+              '${dateFormat.hour.toString().padLeft(2, '0')}:${dateFormat.minute.toString().padLeft(2, '0')}';
+
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        TransactionDetailScreen(transaction: payment),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(12.r),
+              child: Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: Colors.grey.shade200, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44.w,
+                      height: 44.h,
+                      decoration: BoxDecoration(
+                        color:
+                            isDebit ? Colors.red.shade50 : Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Icon(
+                        isDebit ? Icons.arrow_downward : Icons.arrow_upward,
+                        color: isDebit
+                            ? Colors.red.shade600
+                            : Colors.green.shade600,
+                        size: 20.sp,
+                      ),
+                    ),
+                    Gap.w12,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            payment.narration.isNotEmpty
+                                ? payment.narration
+                                : (isDebit ? 'Payment' : 'Funding'),
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Gap.h4,
+                          Text(
+                            '$formattedDate at $formattedTime',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${isDebit ? '-' : '+'}${payment.amount.toMoney()}',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isDebit
+                                ? Colors.red.shade600
+                                : Colors.green.shade600,
+                          ),
+                        ),
+                        Gap.h4,
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 6.w, vertical: 2.h),
+                          decoration: BoxDecoration(
+                            color: payment.status.toLowerCase() ==
+                                        'successful' ||
+                                    payment.status.toLowerCase() == 'success'
+                                ? Colors.green.shade50
+                                : payment.status.toLowerCase() == 'pending'
+                                    ? Colors.orange.shade50
+                                    : Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            payment.status.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 9.sp,
+                              fontWeight: FontWeight.w600,
+                              color: payment.status.toLowerCase() ==
+                                          'successful' ||
+                                      payment.status.toLowerCase() == 'success'
+                                  ? Colors.green.shade700
+                                  : payment.status.toLowerCase() == 'pending'
+                                      ? Colors.orange.shade700
+                                      : Colors.red.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildWithdrawalHistoryTab() {
+    return Consumer(
+      builder: (context, ref, _) {
+        final withdrawalState = ref.watch(withdrawalProvider);
+        final wh = withdrawalState.withdrawalHistory;
+
+        if (wh is AsyncLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.blue),
+          );
+        }
+
+        if (wh is AsyncError) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.w),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                  Gap.h16,
+                  Text(
+                    'Error loading withdrawals',
+                    style:
+                        TextStyle(fontSize: 16.sp, color: Colors.grey.shade700),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (wh is AsyncData) {
+          final resp = wh.value;
+          final list = resp?.data ?? [];
+          if (list.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.w),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.account_balance_wallet,
+                        size: 64.sp, color: Colors.grey.shade300),
+                    Gap.h16,
+                    Text(
+                      'No withdrawals yet',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    Gap.h8,
+                    Text(
+                      'Your withdrawal requests will appear here',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey.shade500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: EdgeInsets.all(16.w),
+            itemCount: list.length,
+            separatorBuilder: (context, index) => Gap.h12,
+            itemBuilder: (context, index) {
+              return WithdrawalItem(withdrawal: list[index]);
+            },
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
+  Widget _buildWalletHeader(double balance) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color, size: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Wallet Balance',
+              style: headingStyle5,
+            ),
+            IconButton(
+              icon: Icon(Icons.refresh, size: 30.sp, color: AppColors.blue),
+              onPressed: () {
+                ref
+                    .read(walletOverviewViewModelProvider.notifier)
+                    .refreshData();
+                ref.read(withdrawalProvider.notifier).refreshData();
+              },
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(),
+            ),
+          ],
         ),
         Gap.h8,
-        AppText.h4(
-          value,
-          color: Colors.black87,
-          fontWeight: FontWeight.bold,
+        Text(
+          balance.toMoney(),
+          style: TextStyle(
+            fontSize: 28.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            letterSpacing: -0.5,
+          ),
         ),
-        AppText.caption(
-          label,
-          color: Colors.grey.shade600,
-          fontSize: 12,
+        Gap.h20,
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () => showFundDialog(context, ref, mounted),
+                borderRadius: BorderRadius.circular(12.r),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppColors.blue, AppColors.blue.withOpacity(0.8)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.blue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 16.h,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline,
+                          color: Colors.white,
+                          size: 20.sp,
+                        ),
+                        Gap.w6,
+                        Flexible(
+                          child: Text(
+                            'Fund Wallet',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Gap.w12,
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const WithdrawScreen(),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12.r),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: AppColors.blue, width: 2),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 16.h,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.send_rounded,
+                          color: AppColors.blue,
+                          size: 22.sp,
+                        ),
+                        Gap.w8,
+                        Text(
+                          'Withdraw',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.blue,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildLoadingStats() {
-    return Row(
-      children: [
-        Expanded(child: _buildStatItemSkeleton()),
-        Container(height: 40, width: 1, color: Colors.grey.shade200),
-        Expanded(child: _buildStatItemSkeleton()),
-        Container(height: 40, width: 1, color: Colors.grey.shade200),
-        Expanded(child: _buildStatItemSkeleton()),
-      ],
-    );
-  }
-
-  Widget _buildStatItemSkeleton() {
+  Widget _buildWalletHeaderLoading() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(8),
+        Text(
+          'Wallet Balance',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        Gap.h8,
-        Container(
-          width: 24,
-          height: 16,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        Gap.h4,
-        Container(
-          width: 40,
-          height: 12,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(4),
-          ),
+        const SizedBox(height: 12),
+        const SizedBox(
+          height: 32,
+          child: CircularProgressIndicator(),
         ),
       ],
     );
   }
 
   Widget _buildErrorStats() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.error_outline, color: Colors.red, size: 20),
-        Gap.w8,
-        AppText.caption('Unable to load statistics', color: Colors.red),
-      ],
-    );
-  }
-
-  Widget _buildHistoryList(List<dynamic> history) {
-    if (history.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              const Icon(Icons.history, color: AppColors.primary, size: 20),
-              Gap.w8,
-              AppText.button(
-                'Recent Transactions',
-                color: Colors.black87,
-                fontWeight: FontWeight.w600,
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.separated(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-            itemCount: history.length,
-            separatorBuilder: (context, index) => Divider(
-              color: Colors.grey.shade200,
-              height: 1,
-              indent: 16,
-              endIndent: 16,
-            ),
-            itemBuilder: (context, index) {
-              final item = history[index];
-              return PaymentHistoryItem(payment: item);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoadingState(AsyncValue<List<dynamic>> withdrawalHistoryAsync) {
-    if (withdrawalHistoryAsync.hasValue &&
-        withdrawalHistoryAsync.value!.isNotEmpty) {
-      return _buildHistoryList(withdrawalHistoryAsync.value!);
-    }
-
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: const CircularProgressIndicator(
-              color: AppColors.primary,
-              strokeWidth: 3,
-            ),
-          ),
-          Gap.h20,
-          AppText.button(
-            'Loading transactions...',
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
-          ),
-          Gap.h8,
-          AppText.caption(
-            'Please wait while we fetch your data',
-            color: Colors.grey.shade600,
-            textAlign: TextAlign.center,
-          ),
-        ],
+      child: Text(
+        'Error loading balance',
+        style: TextStyle(color: Colors.grey.shade600),
       ),
     );
   }
+}
 
-  Widget _buildErrorState(dynamic error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(50),
-              ),
-              child:
-                  const Icon(Icons.error_outline, color: Colors.red, size: 40),
-            ),
-            Gap.h20,
-            AppText.button(
-              'Something went wrong',
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
-            Gap.h8,
-            AppText.caption(
-              'We couldn\'t load your payment history. Please check your connection and try again.',
-              color: Colors.grey.shade600,
-              textAlign: TextAlign.center,
-            ),
-            Gap.h20,
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () {
-                ref
-                    .read(walletOverviewViewModelProvider.notifier)
-                    .refreshData();
-              },
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Try Again'),
-            ),
-          ],
-        ),
-      ),
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate(this._tabBar);
+
+  final TabBar _tabBar;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Colors.white,
+      child: _tabBar,
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(60),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(40),
-                ),
-                child: const Icon(Icons.receipt_long_outlined,
-                    size: 48, color: Colors.grey),
-              ),
-            ),
-            Gap.h24,
-            AppText.h5(
-              'No payments yet',
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
-            ),
-            Gap.h8,
-            AppText.caption(
-              'Your payment history will appear here once you start making transactions',
-              color: Colors.grey.shade600,
-              textAlign: TextAlign.center,
-            ),
-            Gap.h24,
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                  Gap.w8,
-                  AppText.caption(
-                    'Pull down to refresh',
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
   }
 }

@@ -5,7 +5,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/features/booking/view/screen/booking_screen.dart';
 import 'package:starter_codes/features/delivery/view/screen/delivery_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/profile_screen.dart';
-import 'package:starter_codes/features/store/view/screen/store_screen.dart';
 import 'package:starter_codes/features/store/view/screen/tags_screen.dart';
 import 'package:starter_codes/features/wallet/view/screen/wallet_screen.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';

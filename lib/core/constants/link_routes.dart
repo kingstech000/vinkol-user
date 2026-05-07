@@ -23,7 +23,7 @@ class LinkRoutes {
 
   // Social Media
   static const String facebookPage =
-      'https://www.facebook.com/YourFacebookPage'; // Replace with actual page
+      'https://www.facebook.com/YourFacebookPage';
   static const String instagramProfile =
       'https://www.instagram.com/vinkollogistics/?igsh=cHFveTlnY2Fuc3Mw&utm_source=qr#';
   static const String twitterProfile =

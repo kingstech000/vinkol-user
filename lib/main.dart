@@ -24,10 +24,9 @@ void main() async {
 
     final rootContainer = ProviderContainer();
 
-    // Initialize SharedPreferences and locator first
     await setupLocator();
 
-      await SystemChrome.setPreferredOrientations([
+    await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);

@@ -126,26 +126,26 @@ class _AppTextFieldState extends State<AppTextField> {
                 : widget.suffixIcon,
             isDense: true,
             contentPadding: widget.contentPadding ??
-                EdgeInsets.only(top: 20.h, bottom: 15.h, left: 20.w),
+                EdgeInsets.only(top: 10.h, bottom: 15.h, left: 20.w),
             hintText: widget.hint,
             hintStyle: widget.hintStyle ??
                 headingStyle6.copyWith(
                     color: AppColors.black.withOpacity(0.35), fontSize: 14.sp),
             filled: true,
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(14.r)),
+                borderRadius: BorderRadius.all(Radius.circular(10.r)),
                 borderSide: widget.validCode
                     ? const BorderSide(color: AppColors.green)
                     : BorderSide.none),
             focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(18.r)),
+                borderRadius: BorderRadius.all(Radius.circular(10.r)),
                 borderSide:
-                    BorderSide(color: widget.borderColor ?? AppColors.black)),
+                    BorderSide(color: widget.borderColor ?? AppColors.primary)),
             errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(18.r)),
+                borderRadius: BorderRadius.all(Radius.circular(10.r)),
                 borderSide: const BorderSide(color: AppColors.red)),
             focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(18.r)),
+                borderRadius: BorderRadius.all(Radius.circular(10.r)),
                 borderSide:
                     BorderSide(color: widget.borderColor ?? AppColors.black)),
             // disabledBorder: const OutlineInputBorder(

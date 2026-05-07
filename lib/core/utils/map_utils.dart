@@ -55,16 +55,16 @@ void addPolyline({
   );
 }
 
-void openGoogleMapsNavigation(double latitude, double longitude) async {
-  final url = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving');
+// void openGoogleMapsNavigation(double latitude, double longitude) async {
+//   final url = Uri.parse(
+//       'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving');
 
-  if (await canLaunchUrl(url)) {
-    await launchUrl(url, mode: LaunchMode.externalApplication);
-  } else {
-    throw 'Could not launch Google Maps';
-  }
-}
+//   if (await canLaunchUrl(url)) {
+//     await launchUrl(url, mode: LaunchMode.externalApplication);
+//   } else {
+//     throw 'Could not launch Google Maps';
+//   }
+// }
 
 Future<void> openGoogleMapsDirections(
     String? origin, String? destination) async {

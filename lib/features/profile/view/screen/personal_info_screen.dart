@@ -12,10 +12,10 @@ import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
 import 'package:starter_codes/widgets/gap.dart';
-
 import 'package:starter_codes/features/profile/view_model/personal_info_view_model.dart';
 import 'package:starter_codes/widgets/modal_form_field.dart';
 import 'package:starter_codes/widgets/phone_number_input.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
 class PersonalInfoScreen extends ConsumerStatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -140,20 +140,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
         (previous, next) {
       if (next.successMessage != null &&
           next.successMessage != previous?.successMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              behavior: SnackBarBehavior.floating,
-              content: Text(next.successMessage!)),
-        );
-      }
-      else if (next.errorMessage != null &&
+        AppStatusDialogs.showSuccess(context, 'Success', next.successMessage!);
+      } else if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              behavior: SnackBarBehavior.floating,
-              content: Text(next.errorMessage!),
-              backgroundColor: Colors.red),
-        );
+        AppStatusDialogs.showError(context, 'Error', next.errorMessage!);
       }
     });
 
@@ -232,7 +222,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 title: 'Update',
                 loading: personalInfoState.isLoading,
                 onTap: personalInfoState.isLoading
-                        ? null
+                    ? null
                     : () async {
                         FocusScope.of(context).unfocus();
                         final success = await ref
@@ -240,15 +230,12 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                             .updateProfile();
 
                         if (success && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            behavior: SnackBarBehavior.floating,
-                            content: AppText.button(
-                              'Updated Successfully',
-                              color: AppColors.white,
-                            ),
-                            backgroundColor: AppColors.green,
-                          ));
-                          NavigationService.instance.goBack();
+                          AppStatusDialogs.showSuccess(
+                            context,
+                            'Success',
+                            'Updated Successfully',
+                            onClosed: () => NavigationService.instance.goBack(),
+                          );
                         }
                       },
               ),

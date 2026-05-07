@@ -1,26 +1,14 @@
 // lib/core/utils/clipboard_utils.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Required for Clipboard functionality
+import 'package:flutter/services.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
-/// Copies the given text to the clipboard and shows a SnackBar confirmation.
 void copyToClipboard(BuildContext context, String textToCopy,
     {String? successMessage}) {
   Clipboard.setData(ClipboardData(text: textToCopy)).then((_) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        content: Text(successMessage ?? 'Copied "$textToCopy" to clipboard'),
-        duration:
-            const Duration(seconds: 2), // How long the SnackBar is visible
-      ),
-    );
+    AppStatusDialogs.showSuccess(context, 'Copied',
+        successMessage ?? 'Copied "$textToCopy" to clipboard');
   }).catchError((error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to copy: $error'),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    AppStatusDialogs.showError(context, 'Error', 'Failed to copy: $error');
   });
 }

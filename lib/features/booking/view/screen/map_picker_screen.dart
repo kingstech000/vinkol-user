@@ -12,6 +12,7 @@ import 'package:starter_codes/provider/location_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
 class MapPickerScreen extends ConsumerStatefulWidget {
   const MapPickerScreen({super.key});
@@ -285,16 +286,10 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
         // Show message about water avoidance
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Location adjusted to nearest land area (avoided water)',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.blue[600],
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
+          AppStatusDialogs.showSuccess(
+            context,
+            'Location Adjusted',
+            'Location adjusted to nearest land area (avoided water)',
           );
         }
       }
@@ -408,16 +403,10 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
     // Show error message
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Location must be within $_userState state only!',
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red[600],
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
+      AppStatusDialogs.showError(
+        context,
+        'Location Error',
+        'Location must be within $_userState state only!',
       );
     }
 
@@ -446,16 +435,10 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
     // Show success message for snapping back
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Location adjusted to $_userState state boundary',
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.green[600],
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
+      AppStatusDialogs.showSuccess(
+        context,
+        'Location Adjusted',
+        'Location adjusted to $_userState state boundary',
       );
     }
 
@@ -546,12 +529,10 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
   void _showLocationError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.orange[600],
-          behavior: SnackBarBehavior.floating,
-        ),
+      AppStatusDialogs.showError(
+        context,
+        'Location Error',
+        message,
       );
     }
   }
@@ -672,7 +653,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
+    ref.watch(userProvider);
 
     return Scaffold(
       appBar: AppBar(

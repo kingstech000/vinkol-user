@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/widgets/modal/confirmation_dialog.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
@@ -14,6 +15,7 @@ class PaymentWebViewScreen extends ConsumerStatefulWidget {
   final String orderId;
   final String reference;
   final bool isStoreOrder;
+  final bool isWalletFunding;
 
   const PaymentWebViewScreen({
     super.key,
@@ -21,6 +23,7 @@ class PaymentWebViewScreen extends ConsumerStatefulWidget {
     required this.orderId,
     required this.reference,
     this.isStoreOrder = false,
+    this.isWalletFunding = false,
   });
 
   @override
@@ -89,17 +92,18 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
       debugPrint('[PaymentWebView] Payment completion detected from URL: $url');
       _navigateToVerification();
     }
-    
+
     // Also check for Paystack's typical success page patterns
-    if (url.contains('paystack.com') && 
+    if (url.contains('paystack.com') &&
         (url.contains('charge/success') || url.contains('pay/success'))) {
       debugPrint('[PaymentWebView] Paystack success page detected: $url');
       _navigateToVerification();
     }
-    
+
     // Check for custom payment success scheme
     if (url.startsWith('payment-success://')) {
-      debugPrint('[PaymentWebView] Payment success detected via JavaScript: $url');
+      debugPrint(
+          '[PaymentWebView] Payment success detected via JavaScript: $url');
       _navigateToVerification();
     }
   }
@@ -164,6 +168,13 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
     debugPrint('[PaymentWebView] Reference: ${widget.reference}');
     debugPrint('[PaymentWebView] Is Store Order: ${widget.isStoreOrder}');
 
+    if (widget.orderId.isEmpty) {
+      debugPrint(
+          '[PaymentWebView] Wallet funding detected, skipping verification');
+      Navigator.of(context).pop(true);
+      return;
+    }
+
     NavigationService.instance.navigateToReplaceAll(
       NavigatorRoutes.paymentVerificationScreen,
       argument: {
@@ -177,12 +188,10 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
   void _showErrorAndNavigateToVerification() {
     if (_hasNavigatedAway) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content:
-            Text('Payment page encountered an issue. Verifying payment...'),
-        duration: Duration(seconds: 2),
-      ),
+    AppStatusDialogs.showError(
+      context,
+      'Issue Encountered',
+      'Payment page encountered an issue. Verifying payment...',
     );
 
     Future.delayed(const Duration(seconds: 2), () {
@@ -191,6 +200,10 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
   }
 
   Future<bool> _onWillPop() async {
+    if (widget.isWalletFunding) {
+      return true; // Simple pop for wallet funding, back to wallet screen
+    }
+
     final result = await showDialog<dynamic>(
       context: context,
       barrierDismissible: true,
@@ -222,7 +235,10 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
           leading: IconButton(
             icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () async {
-              await _onWillPop();
+              final shouldPop = await _onWillPop();
+              if (shouldPop && mounted) {
+                Navigator.of(context).pop();
+              }
             },
           ),
           title: const Text(

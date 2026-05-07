@@ -1,6 +1,5 @@
 // lib/features/booking/model/order_model.dart
 
-
 class OrderModel {
   final String id;
   final String user;
@@ -15,13 +14,16 @@ class OrderModel {
   final String paymentStatus;
   final String orderOtp;
   final String trackingId;
+  final String? externalDeliveryReference;
+  final String? deliveryProvider;
+  final String? externalDeliveryStatus;
+  final String? externalDeliveryPin;
+  final int? externalDeliveryFeeId;
 
   OrderModel({
     required this.id,
     required this.user,
-    // CHANGED: type is LatLngLiteral
     required this.pickupLocation,
-    // CHANGED: type is LatLngLiteral
     required this.dropoffLocation,
     required this.state,
     required this.status,
@@ -32,6 +34,11 @@ class OrderModel {
     required this.paymentStatus,
     required this.orderOtp,
     required this.trackingId,
+    this.externalDeliveryReference,
+    this.deliveryProvider,
+    this.externalDeliveryStatus,
+    this.externalDeliveryPin,
+    this.externalDeliveryFeeId,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -48,19 +55,25 @@ class OrderModel {
     return OrderModel(
       id: json['_id'] as String,
       user: json['user'] as String,
-      // CHANGED: Parse pickupLocation as LatLngLiteral
-      pickupLocation: LatLngLiteral.fromJson(json['pickupLocation'] as Map<String, dynamic>),
-      // CHANGED: Parse dropoffLocation as LatLngLiteral
-      dropoffLocation: LatLngLiteral.fromJson(json['dropoffLocation'] as Map<String, dynamic>),
+      pickupLocation: LatLngLiteral.fromJson(
+          json['pickupLocation'] as Map<String, dynamic>),
+      dropoffLocation: LatLngLiteral.fromJson(
+          json['dropoffLocation'] as Map<String, dynamic>),
       state: json['state'] as String,
       status: json['status'] as String,
       deliveryType: json['deliveryType'] as String,
       vehicleRequest: json['vehicleRequest'] as String,
       amount: parsedAmount,
-      paystackReference: json['paystackReference'] as String,
+      paystackReference: json['paystackReference'] as String? ?? '',
       paymentStatus: json['paymentStatus'] as String,
       orderOtp: json['orderOtp'] as String,
       trackingId: json['trackingId'] as String,
+      externalDeliveryReference: json['externalDeliveryReference'] as String?,
+      deliveryProvider: json['deliveryProvider'] as String?,
+      externalDeliveryStatus: json['externalDeliveryStatus'] as String?,
+      externalDeliveryPin:
+          json['externalDeliveryPin']?.toString(), // Handle parsing safely
+      externalDeliveryFeeId: json['externalDeliveryFeeId'] as int?,
     );
   }
 
@@ -68,9 +81,7 @@ class OrderModel {
     return {
       '_id': id,
       'user': user,
-      // CHANGED: Convert pickupLocation to JSON
       'pickupLocation': pickupLocation.toJson(),
-      // CHANGED: Convert dropoffLocation to JSON
       'dropoffLocation': dropoffLocation.toJson(),
       'state': state,
       'status': status,
@@ -81,15 +92,18 @@ class OrderModel {
       'paymentStatus': paymentStatus,
       'orderOtp': orderOtp,
       'trackingId': trackingId,
+      'externalDeliveryReference': externalDeliveryReference,
+      'deliveryProvider': deliveryProvider,
+      'externalDeliveryStatus': externalDeliveryStatus,
+      'externalDeliveryPin': externalDeliveryPin,
+      'externalDeliveryFeeId': externalDeliveryFeeId,
     };
   }
 
   OrderModel copyWith({
     String? id,
     String? user,
-    // CHANGED: type is LatLngLiteral
     LatLngLiteral? pickupLocation,
-    // CHANGED: type is LatLngLiteral
     LatLngLiteral? dropoffLocation,
     String? state,
     String? status,
@@ -100,13 +114,16 @@ class OrderModel {
     String? paymentStatus,
     String? orderOtp,
     String? trackingId,
+    String? externalDeliveryReference,
+    String? deliveryProvider,
+    String? externalDeliveryStatus,
+    String? externalDeliveryPin,
+    int? externalDeliveryFeeId,
   }) {
     return OrderModel(
       id: id ?? this.id,
       user: user ?? this.user,
-      // CHANGED: copyWith uses LatLngLiteral
       pickupLocation: pickupLocation ?? this.pickupLocation,
-      // CHANGED: copyWith uses LatLngLiteral
       dropoffLocation: dropoffLocation ?? this.dropoffLocation,
       state: state ?? this.state,
       status: status ?? this.status,
@@ -117,12 +134,20 @@ class OrderModel {
       paymentStatus: paymentStatus ?? this.paymentStatus,
       orderOtp: orderOtp ?? this.orderOtp,
       trackingId: trackingId ?? this.trackingId,
+      externalDeliveryReference:
+          externalDeliveryReference ?? this.externalDeliveryReference,
+      deliveryProvider: deliveryProvider ?? this.deliveryProvider,
+      externalDeliveryStatus:
+          externalDeliveryStatus ?? this.externalDeliveryStatus,
+      externalDeliveryPin: externalDeliveryPin ?? this.externalDeliveryPin,
+      externalDeliveryFeeId:
+          externalDeliveryFeeId ?? this.externalDeliveryFeeId,
     );
   }
 
   @override
   String toString() {
-    return 'OrderModel(id: $id, status: $status, pickup: ${pickupLocation.lat},${pickupLocation.lng}, dropoff: ${dropoffLocation.lat},${dropoffLocation.lng})';
+    return 'OrderModel(id: $id, status: $status, pickup: ${pickupLocation.lat},${pickupLocation.lng}, dropoff: ${dropoffLocation.lat},${dropoffLocation.lng}, provider: $deliveryProvider)';
   }
 }
 
@@ -165,6 +190,10 @@ class QuoteResponseModel {
   final String vehicleRequest;
   final double price;
   final double? discountedPrice; // Optional field
+  final int? id; // For External Chowdeck Quote ID
+  final double? vinkolAmount; // For Chowdeck price
+  final bool isAvailable;
+  final String? unavailableMessage;
 
   QuoteResponseModel({
     required this.state,
@@ -175,6 +204,10 @@ class QuoteResponseModel {
     required this.vehicleRequest,
     required this.price,
     this.discountedPrice, // Optional parameter
+    this.id,
+    this.vinkolAmount,
+    this.isAvailable = true,
+    this.unavailableMessage,
   });
 
   factory QuoteResponseModel.fromJson(Map<String, dynamic> json) {
@@ -210,6 +243,42 @@ class QuoteResponseModel {
       vehicleRequest: json['vehicleRequest'] as String,
       price: parsedPrice,
       discountedPrice: parsedDiscountedPrice,
+      id: json['id'] as int?,
+      vinkolAmount: json['vinkol_amount'] != null
+          ? (json['vinkol_amount'] as num).toDouble()
+          : null,
+      isAvailable: json['isAvailable'] as bool? ?? true,
+      unavailableMessage: json['unavailableMessage'] as String?,
+    );
+  }
+
+  QuoteResponseModel copyWith({
+    String? state,
+    String? orderType,
+    LatLngLiteral? dropoffLocation,
+    LatLngLiteral? pickupLocation,
+    String? deliveryType,
+    String? vehicleRequest,
+    double? price,
+    double? discountedPrice,
+    int? id,
+    double? vinkolAmount,
+    bool? isAvailable,
+    String? unavailableMessage,
+  }) {
+    return QuoteResponseModel(
+      state: state ?? this.state,
+      orderType: orderType ?? this.orderType,
+      dropoffLocation: dropoffLocation ?? this.dropoffLocation,
+      pickupLocation: pickupLocation ?? this.pickupLocation,
+      deliveryType: deliveryType ?? this.deliveryType,
+      vehicleRequest: vehicleRequest ?? this.vehicleRequest,
+      price: price ?? this.price,
+      discountedPrice: discountedPrice ?? this.discountedPrice,
+      id: id ?? this.id,
+      vinkolAmount: vinkolAmount ?? this.vinkolAmount,
+      isAvailable: isAvailable ?? this.isAvailable,
+      unavailableMessage: unavailableMessage ?? this.unavailableMessage,
     );
   }
 
@@ -224,6 +293,10 @@ class QuoteResponseModel {
       'price': price,
       if (discountedPrice != null)
         'discountedPrice': discountedPrice, // Only include if not null
+      if (id != null) 'id': id,
+      if (vinkolAmount != null) 'vinkol_amount': vinkolAmount,
+      'isAvailable': isAvailable,
+      if (unavailableMessage != null) 'unavailableMessage': unavailableMessage,
     };
   }
 }

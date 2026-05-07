@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/data/local/local_cache_impl.dart';
 import 'package:starter_codes/widgets/app_flushbar.dart';
+import 'package:starter_codes/core/services/dialog_service.dart';
 
 GetIt locator = GetIt.instance;
 
@@ -18,6 +19,10 @@ Future<void> setupLocator() async {
 
     locator.registerLazySingleton<AppFlushBar>(
       () => AppFlushBar(),
+    );
+
+    locator.registerLazySingleton<DialogService>(
+      () => DialogService(),
     );
 
     print('✅ Locator setup complete');

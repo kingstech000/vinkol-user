@@ -86,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             data.title,
             style: TextStyle(
               fontSize: 28.sp,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               color: Colors.grey.shade800,
             ),
             textAlign: TextAlign.center,

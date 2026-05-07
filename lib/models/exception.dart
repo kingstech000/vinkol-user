@@ -106,7 +106,7 @@ class BadRequestException extends DioException with Failure {
   }
 
   @override
-  String get message => serverResponse?.data?["message"] ?? "Invalid request";
+  String get message => (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Invalid request") : (serverResponse?.data?.toString() ?? "Invalid request");
 
   @override
   String get title => "An error occurred";
@@ -142,7 +142,7 @@ class ConflictException extends DioException with Failure {
 
   @override
   String get message =>
-      serverResponse?.data?["message"] ?? "Conflict occurred.";
+      (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Conflict occurred.") : (serverResponse?.data?.toString() ?? "Conflict occurred.");
 
   @override
   String get title => "Network error";
@@ -161,7 +161,7 @@ class UnauthorizedException extends DioException with Failure {
   }
 
   @override
-  String get message => serverResponse?.data?["message"] ?? "Invalid request";
+  String get message => (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Invalid request") : (serverResponse?.data?.toString() ?? "Invalid request");
 
   @override
   String get title => "Access denied";
@@ -181,7 +181,7 @@ class NotFoundException extends DioException with Failure {
 
   @override
   String get message =>
-      serverResponse?.data?["message"] ?? "Not found, please try again.";
+      (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Not found, please try again.") : (serverResponse?.data?.toString() ?? "Not found, please try again.");
 
   @override
   String get title => "Not Found";
@@ -268,7 +268,7 @@ class ForbiddenException extends DioException with Failure {
   }
 
   @override
-  String get message => serverResponse?.data?["message"] ?? "Access forbidden";
+  String get message => (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Access forbidden") : (serverResponse?.data?.toString() ?? "Access forbidden");
 
   @override
   String get title => "Forbidden";
@@ -288,7 +288,7 @@ class UnprocessableEntityException extends DioException with Failure {
 
   @override
   String get message =>
-      serverResponse?.data?["message"] ?? "Unprocessable entity";
+      (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Unprocessable entity") : (serverResponse?.data?.toString() ?? "Unprocessable entity");
 
   @override
   String get title => "Validation Error";

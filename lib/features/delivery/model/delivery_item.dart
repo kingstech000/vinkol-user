@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/features/delivery/model/delivery_model.dart';
-import 'package:intl/intl.dart'; // Import for date formatting
 
 class DeliveryItem {
   final String customerName;

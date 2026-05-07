@@ -1,12 +1,12 @@
 class OrderInitiationResponse {
   final Order order;
-  final String authorizationUrl;
-  final String reference;
+  final String? authorizationUrl;
+  final String? reference;
 
   OrderInitiationResponse({
     required this.order,
-    required this.authorizationUrl,
-    required this.reference,
+    this.authorizationUrl,
+    this.reference,
   });
 
   factory OrderInitiationResponse.fromJson(Map<String, dynamic> json) {
@@ -40,7 +40,7 @@ class Order {
   final String description;
   final int? amount;
   final int deliveryFee; // Changed to handle null
-  final String paystackReference;
+  final String? paystackReference;
   final String paymentStatus;
   final List<dynamic> products;
   final String? store;
@@ -48,6 +48,14 @@ class Order {
   final String orderOtp;
   final String trackingId;
   final int totalAmount; // Changed to handle null
+
+  final int? externalDeliveryFeeId;
+  final String? deliveryProvider;
+  final int? externalDeliveryId;
+  final String? externalDeliveryReference;
+  final String? externalDeliveryStatus;
+  final String? externalDeliveryPin;
+  final String? paymentSource;
 
   Order({
     required this.user,
@@ -65,7 +73,7 @@ class Order {
     required this.description,
     this.amount,
     required this.deliveryFee,
-    required this.paystackReference,
+    this.paystackReference,
     required this.paymentStatus,
     required this.products,
     this.store,
@@ -73,6 +81,13 @@ class Order {
     required this.orderOtp,
     required this.trackingId,
     required this.totalAmount,
+    this.externalDeliveryFeeId,
+    this.deliveryProvider,
+    this.externalDeliveryId,
+    this.externalDeliveryReference,
+    this.externalDeliveryStatus,
+    this.externalDeliveryPin,
+    this.paymentSource,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -90,18 +105,25 @@ class Order {
       orderType: json['orderType'] as String,
       note: json['note'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      amount: json['amount'] as int?,
-      deliveryFee:
-          (json['deliveryFee'] as int?) ?? 0, // Fixed: Handle null with default
-      paystackReference: json['paystackReference'] as String,
+      amount: (json['amount'] as num?)?.toInt(),
+      deliveryFee: (json['deliveryFee'] as num?)?.toInt() ??
+          0, // Fixed: Handle null with default
+      paystackReference: json['paystackReference'] as String?,
       paymentStatus: json['paymentStatus'] as String,
       products: json['products'] as List<dynamic>? ?? [],
       store: json['store'] as String?,
       id: json['_id'] ?? json['id'],
       orderOtp: json['orderOtp'].toString(),
       trackingId: json['trackingId'] as String,
-      totalAmount:
-          (json['totalAmount'] as int?) ?? 0, // Fixed: Handle null with default
+      totalAmount: (json['totalAmount'] as num?)?.toInt() ??
+          0, // Fixed: Handle null with default
+      externalDeliveryFeeId: json['externalDeliveryFeeId'] as int?,
+      deliveryProvider: json['deliveryProvider'] as String?,
+      externalDeliveryId: json['externalDeliveryId'] as int?,
+      externalDeliveryReference: json['externalDeliveryReference'] as String?,
+      externalDeliveryStatus: json['externalDeliveryStatus'] as String?,
+      externalDeliveryPin: json['externalDeliveryPin'] as String?,
+      paymentSource: json['paymentSource'] as String?,
     );
   }
 
@@ -129,6 +151,18 @@ class Order {
         'orderOtp': orderOtp,
         'trackingId': trackingId,
         'totalAmount': totalAmount,
+        if (externalDeliveryFeeId != null)
+          'externalDeliveryFeeId': externalDeliveryFeeId,
+        if (deliveryProvider != null) 'deliveryProvider': deliveryProvider,
+        if (externalDeliveryId != null)
+          'externalDeliveryId': externalDeliveryId,
+        if (externalDeliveryReference != null)
+          'externalDeliveryReference': externalDeliveryReference,
+        if (externalDeliveryStatus != null)
+          'externalDeliveryStatus': externalDeliveryStatus,
+        if (externalDeliveryPin != null)
+          'externalDeliveryPin': externalDeliveryPin,
+        if (paymentSource != null) 'paymentSource': paymentSource,
       };
 }
 

@@ -16,14 +16,16 @@ class StoreResponse {
 
   // fromJson
   factory StoreResponse.fromJson(Map<String, dynamic> json) {
+    // The API returns: { success, message, data: { fetchedData: [...], total, page_no, no_of_pages, page_size } }
+    final data = json['data'] as Map<String, dynamic>?;
     return StoreResponse(
-      stores: (json['data'] as List<dynamic>?)
+      stores: (data?['fetchedData'] as List<dynamic>?)
               ?.map((e) => Store.fromJson(e as Map<String, dynamic>))
               .toList() ??
-          [], // Provide an empty list if 'data' is null or not a List
-      totalCount: json['totalCount'] as int? ?? 0, // Default to 0 if null
-      currentPage: json['currentPage'] as int? ?? 0, // Default to 0 if null
-      totalPages: json['totalPages'] as int? ?? 0, // Default to 0 if null
+          [], // Provide an empty list if 'fetchedData' is null or not a List
+      totalCount: data?['total'] as int? ?? 0, // Map 'total' to 'totalCount'
+      currentPage: data?['page_no'] as int? ?? 0, // Map 'page_no' to 'currentPage'
+      totalPages: data?['no_of_pages'] as int? ?? 0, // Map 'no_of_pages' to 'totalPages'
     );
   }
 

@@ -330,6 +330,23 @@ class DeliveryModel extends Equatable {
         parsedAmount = double.tryParse(json['amount'] as String);
       }
     }
+    // Fallback for amount
+    if (parsedAmount == null || parsedAmount == 0.0) {
+      final alts = ['itemsTotal', 'subTotal', 'price', 'subtotal'];
+      for (final key in alts) {
+        if (json[key] != null) {
+          if (json[key] is num) {
+            parsedAmount = (json[key] as num).toDouble();
+          } else if (json[key] is String) {
+            parsedAmount = double.tryParse(json[key]);
+          }
+          if (parsedAmount != null && parsedAmount != 0.0) break;
+        }
+      }
+    }
+
+    // Fallback for amount: if still null, default to 0.0 for calculation purposes
+    parsedAmount ??= 0.0;
 
     double? parsedDeliveryFee;
     if (json['deliveryFee'] != null) {
@@ -347,6 +364,20 @@ class DeliveryModel extends Equatable {
       } else if (json['totalAmount'] is String) {
         parsedTotalAmount = double.tryParse(json['totalAmount'] as String);
       }
+    }
+    // Fallback for totalAmount: check 'total_amount' or sum
+    if (parsedTotalAmount == null) {
+      if (json['total_amount'] != null) {
+        if (json['total_amount'] is num)
+          parsedTotalAmount = (json['total_amount'] as num).toDouble();
+        else if (json['total_amount'] is String)
+          parsedTotalAmount = double.tryParse(json['total_amount']);
+      }
+    }
+    // Final fallback: Calculate totalAmount if amount and fee exist
+    if ((parsedTotalAmount == null || parsedTotalAmount == 0.0) &&
+        parsedDeliveryFee != null) {
+      parsedTotalAmount = parsedAmount + parsedDeliveryFee;
     }
 
     return DeliveryModel(

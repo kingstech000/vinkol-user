@@ -52,6 +52,8 @@ class ProductCard extends ConsumerWidget {
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
+                  memCacheHeight: 600, // Optimize memory usage
+                  maxWidthDiskCache: 600, // Optimize disk usage
                   placeholder: (context, url) => Container(
                     color: Colors.grey[50],
                     child: const Center(
@@ -136,7 +138,8 @@ class ProductCard extends ConsumerWidget {
                                 },
                                 title: 'Add To Cart',
                               )
-                            : _buildQuantityControls(context, ref, currentQuantity),
+                            : _buildQuantityControls(
+                                context, ref, currentQuantity),
                       ),
                     ),
                   ],

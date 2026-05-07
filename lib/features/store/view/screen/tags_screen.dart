@@ -130,45 +130,48 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Tag Image
-            Container(
-              width: 130.w,
-              height: 130.h,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: CachedNetworkImage(
-                  imageUrl: tag.imageUrl,
-                  fit: BoxFit.cover,
-                  width: 130.w,
-                  height: 130.h,
-                  placeholder: (context, url) => Container(
-                    color: AppColors.primary.withOpacity(0.1),
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
+            Flexible(
+              child: Container(
+                width: 130.w,
+                height: 130.h,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: CachedNetworkImage(
+                    imageUrl: tag.imageUrl,
+                    fit: BoxFit.cover,
+                    width: 130.w,
+                    height: 130.h,
+                    placeholder: (context, url) => Container(
+                      color: AppColors.primary.withOpacity(0.1),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primary,
+                          ),
+                          strokeWidth: 2,
                         ),
-                        strokeWidth: 2,
                       ),
                     ),
+                    errorWidget: (context, url, error) {
+                      // Fallback icon if image not found
+                      return Container(
+                        color: AppColors.primary.withOpacity(0.1),
+                        child: Icon(
+                          _getTagIcon(tag.tagValue),
+                          size: 40.w,
+                          color: AppColors.primary,
+                        ),
+                      );
+                    },
                   ),
-                  errorWidget: (context, url, error) {
-                    // Fallback icon if image not found
-                    return Container(
-                      color: AppColors.primary.withOpacity(0.1),
-                      child: Icon(
-                        _getTagIcon(tag.tagValue),
-                        size: 40.w,
-                        color: AppColors.primary,
-                      ),
-                    );
-                  },
                 ),
               ),
             ),

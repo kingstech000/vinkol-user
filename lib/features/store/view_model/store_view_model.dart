@@ -39,7 +39,7 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
         !_isDataStale() && 
         state.hasValue &&
         _currentSearchQuery == (search ?? '') &&
-        _currentTag == (tags ?? null)) {
+        _currentTag == (tags)) {
       logger.i('Stores data is not stale and has data. Using cached data.');
       return state.value!;
     }
@@ -86,6 +86,9 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
     if (_currentTag == tag && state.hasValue) {
       return;
     }
+    
+    // Reset cache when tag changes to ensure fresh data
+    _lastFetchedTime = null;
     _currentTag = tag;
 
     state = const AsyncValue.loading();
@@ -95,6 +98,7 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
         tags: _currentTag,
         forceRefresh: true,
       );
+      _lastFetchedTime = DateTime.now();
       state = AsyncValue.data(result);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

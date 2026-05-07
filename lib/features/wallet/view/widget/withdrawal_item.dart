@@ -1,66 +1,89 @@
-// lib/features/wallet/widgets/payment_history_item.dart
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For date formatting
-import 'package:starter_codes/core/extensions/double_extension.dart'; // For toMoney() extension
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';// Import your PaymentHistory model
-import 'package:starter_codes/features/wallet/model/payment_history_model.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../model/withdrawal_model.dart';
+
+import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/widgets/gap.dart';
 
-class PaymentHistoryItem extends StatelessWidget {
-  final PaymentHistory payment; // Takes the PaymentHistory model directly
+class WithdrawalItem extends StatelessWidget {
+  final Withdrawal withdrawal;
 
-  const PaymentHistoryItem({
+  const WithdrawalItem({
     super.key,
-    required this.payment,
+    required this.withdrawal,
   });
+
+  Color _getStatusColor() {
+    switch (withdrawal.status.toLowerCase()) {
+      case 'approved':
+      case 'successful':
+      case 'success':
+        return Colors.green;
+      case 'rejected':
+      case 'failed':
+        return Colors.red;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Determine the color based on status
-    Color statusColor;
-    switch (payment.status.toLowerCase()) {
-      case 'successful':
-        statusColor = AppColors.green; // Assuming you have a green color defined
-        break;
-      case 'pending':
-        statusColor = Colors.orange;
-        break;
-      case 'failed':
-        statusColor = Colors.red;
-        break;
-      default:
-        statusColor = AppColors.greyLight;
-    }
+    final statusColor = _getStatusColor();
+    final dateFormat = withdrawal.createdAt?.toLocal();
+    final formattedDate = dateFormat != null
+        ? '${dateFormat.day}/${dateFormat.month}/${dateFormat.year}'
+        : 'N/A';
+    final formattedTime = dateFormat != null
+        ? '${dateFormat.hour.toString().padLeft(2, '0')}:${dateFormat.minute.toString().padLeft(2, '0')}'
+        : '';
 
-    // Format the date and time from the createdAt DateTime object
-    final String formattedDate = DateFormat('dd MMM yyyy').format(payment.createdAt); // e.g., 05 Jul 2025
-    final String formattedTime = DateFormat('hh:mm a').format(payment.createdAt); // e.g., 03:22 AM
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            width: 44.w,
+            height: 44.h,
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(
+              Icons.outbound_rounded, // or account_balance_wallet
+              color: Colors.red.shade600,
+              size: 20.sp,
+            ),
+          ),
+          Gap.w12,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppText.button(
-                  'Order ID: ${payment.orderId}', // Displaying order ID
-                  fontSize: 14,
+                Text(
+                  'Withdrawal',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
                 ),
                 Gap.h4,
-                AppText.button(
-                  payment.reference, // Displaying reference
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-                Gap.h4,
-                AppText.button(
-                  'Type: ${payment.type}', // Displaying type (Debit/Credit)
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
+                Text(
+                  '${withdrawal.bankName ?? 'Bank Transfer'} • $formattedDate $formattedTime',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey.shade600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -68,22 +91,29 @@ class PaymentHistoryItem extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              AppText.button(
-                payment.amount.toMoney(), // Using toMoney() extension for amount
-                color: AppColors.primary, // Primary color for amount
-                fontSize: 14,
+              Text(
+                '-${withdrawal.amount.toMoney()}',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade600,
+                ),
               ),
               Gap.h4,
-              AppText.caption(
-                payment.status ?? 'Unknown', // Displaying status
-                fontSize: 12,
-                color: statusColor, // Color based on status
-              ),
-              Gap.h4,
-              AppText.caption(
-                '$formattedDate $formattedTime', // Formatted date and time
-                fontSize: 12,
-                color: Colors.grey.shade600,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Text(
+                  withdrawal.status.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 9.sp,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
               ),
             ],
           ),

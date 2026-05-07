@@ -9,7 +9,7 @@ import 'package:starter_codes/features/auth/data/auth_service.dart'; // Your Aut
 import 'package:starter_codes/models/app_state/view_model_state.dart'; // Your ViewModelState
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart'; // Contains resetPasswordProvider
-import 'package:starter_codes/widgets/text_action_modal.dart'; // Your text_action_modal
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
 class OtpViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -32,8 +32,8 @@ class OtpViewModel extends BaseViewModel {
     required BuildContext context,
   }) async {
     try {
-    // changeState(const ViewModelState.busy());
-       _ref.read(resetPasswordProvider.notifier).state = otp;
+      // changeState(const ViewModelState.busy());
+      _ref.read(resetPasswordProvider.notifier).state = otp;
 
       logger.i('OTP verification successful for email: $_email');
       changeState(const ViewModelState.idle());
@@ -45,11 +45,10 @@ class OtpViewModel extends BaseViewModel {
     } on Failure catch (e) {
       logger.e('OTP verification failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => NavigationService.instance.goBack(),
-        dialogText: e.message,
-        buttonText: "Try Again",
+        'Verification Failed',
+        e.message,
       );
     }
   }
@@ -62,17 +61,14 @@ class OtpViewModel extends BaseViewModel {
       logger.i('OTP resend request successful for email: $_email');
       changeState(const ViewModelState.idle());
       // Optionally show a success message to the user that OTP has been resent
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OTP has been resent!')),
-      );
+      AppStatusDialogs.showSuccess(context, 'Success', 'OTP has been resent!');
     } on Failure catch (e) {
       logger.e('Failed to resend OTP: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => NavigationService.instance.goBack(),
-        dialogText: e.message,
-        buttonText: "Try Again",
+        'Resend Failed',
+        e.message,
       );
     }
   }

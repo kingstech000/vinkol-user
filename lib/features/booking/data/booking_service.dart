@@ -29,7 +29,8 @@ class BookingService {
         body: orderDetails.toJson(), // Convert the request model to JSON
       );
       logger.i('Order created successfully: $responseData');
-      final paymentInitiationDetails = OrderInitiationResponse.fromJson(responseData['data']);
+      final paymentInitiationDetails =
+          OrderInitiationResponse.fromJson(responseData['data']);
       return paymentInitiationDetails; // Return the 'data' part of the response
     } catch (e) {
       logger.e('Failed to create order: $e');
@@ -82,7 +83,8 @@ class BookingService {
       // Override or add the deliveryType to the request body
       requestBody['deliveryType'] = deliveryType;
 
-      logger.d('Sending quote request for deliveryType: $deliveryType with body: $requestBody');
+      logger.d(
+          'Sending quote request for deliveryType: $deliveryType with body: $requestBody');
 
       final responseData = await _networkClient.post(
         ApiRoute.getQuote,
@@ -98,27 +100,64 @@ class BookingService {
     }
   }
 
-  /// Fetches quotes for both 'express' and 'regular' delivery types.
-  /// Returns a list of QuoteResponseModel.
+  /// Fetches an external delivery quote from Chowdeck.
+  Future<QuoteResponseModel> _getChowdeckQuote({
+    required GetQuoteRequest quoteDetails,
+  }) async {
+    try {
+      final requestBody = {
+        "dropoffLocation": {
+          "lat": quoteDetails.dropoffLocation.lat,
+          "lng": quoteDetails.dropoffLocation.lng
+        },
+        "pickupLocation": {
+          "lat": quoteDetails.pickupLocation.lat,
+          "lng": quoteDetails.pickupLocation.lng
+        }
+      };
+
+      logger.d('Sending Chowdeck quote request: $requestBody');
+
+      final responseData = await _networkClient.post(
+        ApiRoute.getChowdeckQuote,
+        body: requestBody,
+      );
+
+      logger.i('Chowdeck quote generated successfully: $responseData');
+
+      // Map the response to QuoteResponseModel
+      final data = responseData['data'];
+      return QuoteResponseModel(
+        state: quoteDetails.state,
+        orderType: quoteDetails.orderType,
+        deliveryType: 'priority', // Chowdeck is Priority+
+        vehicleRequest: quoteDetails.vehicleRequest,
+        price: (data['vinkol_amount'] as num).toDouble(),
+        pickupLocation: LatLngLiteral(
+          lat: double.parse(quoteDetails.pickupLocation.lat),
+          lng: double.parse(quoteDetails.pickupLocation.lng),
+        ),
+        dropoffLocation: LatLngLiteral(
+          lat: double.parse(quoteDetails.dropoffLocation.lat),
+          lng: double.parse(quoteDetails.dropoffLocation.lng),
+        ),
+        id: data['id'],
+        vinkolAmount: (data['vinkol_amount'] as num).toDouble(),
+        isAvailable: true,
+      );
+    } catch (e) {
+      logger.e('Failed to get Chowdeck quote: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetches quotes for 'regular', 'express', and 'priority' delivery types.
   Future<List<QuoteResponseModel>> getAllQuotesForDeliveryTypes({
     required GetQuoteRequest baseQuoteDetails,
   }) async {
     List<QuoteResponseModel> quotes = [];
 
-    // 1. Get quote for 'express'
-    try {
-      final expressQuote = await _getQuote(
-        quoteDetails: baseQuoteDetails,
-        deliveryType: 'express',
-      );
-      quotes.add(expressQuote);
-    } catch (e) {
-      logger.e('Error fetching express quote, continuing with regular: $e');
-      // Decide if you want to rethrow here or just log and continue
-      // For now, we'll just log and try for 'regular'
-    }
-
-    // 2. Get quote for 'regular'
+    // 1. Regular Quote (Internal)
     try {
       final regularQuote = await _getQuote(
         quoteDetails: baseQuoteDetails,
@@ -127,15 +166,58 @@ class BookingService {
       quotes.add(regularQuote);
     } catch (e) {
       logger.e('Error fetching regular quote: $e');
-      // If both fail, the list might be empty or contain only one.
-      // You might want to throw an error if no quotes are retrieved.
-      if (quotes.isEmpty) {
-         rethrow; // Re-throw if even the regular quote failed and no express was found
-      }
+      quotes.add(QuoteResponseModel(
+          state: baseQuoteDetails.state,
+          orderType: baseQuoteDetails.orderType,
+          deliveryType: 'regular',
+          vehicleRequest: baseQuoteDetails.vehicleRequest,
+          price: 0,
+          pickupLocation: LatLngLiteral(lat: 0, lng: 0),
+          dropoffLocation: LatLngLiteral(lat: 0, lng: 0),
+          isAvailable: false,
+          unavailableMessage: "Regular delivery unavailable"));
     }
 
-    // You can sort the quotes here if needed, e.g., by price
-    // quotes.sort((a, b) => a.totalAmount!.compareTo(b.totalAmount!));
+    // 2. Express Quote (Internal)
+    try {
+      final expressQuote = await _getQuote(
+        quoteDetails: baseQuoteDetails,
+        deliveryType: 'express',
+      );
+      quotes.add(expressQuote);
+    } catch (e) {
+      logger.e('Error fetching express quote: $e');
+      quotes.add(QuoteResponseModel(
+          state: baseQuoteDetails.state,
+          orderType: baseQuoteDetails.orderType,
+          deliveryType: 'express',
+          vehicleRequest: baseQuoteDetails.vehicleRequest,
+          price: 0,
+          pickupLocation: LatLngLiteral(lat: 0, lng: 0),
+          dropoffLocation: LatLngLiteral(lat: 0, lng: 0),
+          isAvailable: false,
+          unavailableMessage: "Express delivery unavailable"));
+    }
+
+    // 3. Priority+ Quote (Chowdeck)
+    try {
+      final priorityQuote = await _getChowdeckQuote(
+        quoteDetails: baseQuoteDetails,
+      );
+      quotes.add(priorityQuote);
+    } catch (e) {
+      logger.e('Error fetching priority quote: $e');
+      quotes.add(QuoteResponseModel(
+          state: baseQuoteDetails.state,
+          orderType: baseQuoteDetails.orderType,
+          deliveryType: 'priority',
+          vehicleRequest: baseQuoteDetails.vehicleRequest,
+          price: 0,
+          pickupLocation: LatLngLiteral(lat: 0, lng: 0),
+          dropoffLocation: LatLngLiteral(lat: 0, lng: 0),
+          isAvailable: false,
+          unavailableMessage: "Priority+ delivery unavailable"));
+    }
 
     return quotes;
   }
