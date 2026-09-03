@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/state_boundaries.dart';
+import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
@@ -15,7 +16,10 @@ import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
 class MapPickerScreen extends ConsumerStatefulWidget {
-  const MapPickerScreen({super.key});
+  final bool? isPickupLocation;
+  final String? stopId;
+
+  const MapPickerScreen({super.key, this.isPickupLocation, this.stopId});
 
   @override
   ConsumerState<MapPickerScreen> createState() => _MapPickerScreenState();
@@ -595,6 +599,19 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
       _pickedLocation!,
       formattedAddress: _pickedAddress,
     );
+
+    // Update the ride location notifier if stopId is provided
+    if (widget.stopId != null) {
+      final notifier = ref.read(rideLocationProvider.notifier);
+      notifier.updateStopLocation(widget.stopId!, selectedLocation);
+    } else if (widget.isPickupLocation != null) {
+      final notifier = ref.read(rideLocationProvider.notifier);
+      if (widget.isPickupLocation!) {
+        notifier.setPickUpLocation(selectedLocation);
+      } else {
+        notifier.setDropOffLocation(selectedLocation);
+      }
+    }
 
     Navigator.pop(context, selectedLocation);
   }

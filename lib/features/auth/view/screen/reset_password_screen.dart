@@ -54,50 +54,56 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             child: Form(
               // Wrap with Form for validation
               key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.h2('Reset Password'),
-                  Gap.h8,
-                  AppText.body('Let\'s reset your password quickly'),
-                  Gap.h32,
-                  AppText.caption('E-mail Address'),
-                  Gap.h8,
-                  AppTextField(
-                    controller: _emailController,
-                    hint: 'michael.osato@gmail.com',
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email address';
-                      }
-                      // Basic email validation regex
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                        return 'Please enter a valid email address';
-                      }
-                      return null;
-                    },
-                  ),
-                  Gap.h32,
-                  SizedBox(
-                    width: double.infinity,
-                    child: AppButton.primary(
-                      title: 'Send',
-                      loading: resetPasswordViewModel.isBusy,
-                      onTap: resetPasswordViewModel.state.maybeWhen(
-                        busy: () => null, // Disable button if busy
-                        orElse: () => () {
-                          // Validate form before calling sendPasswordResetEmail
-                          if (_formKey.currentState?.validate() ?? false) {
-                            resetPasswordViewModel.sendPasswordResetEmail(
-                                context: context);
-                          }
-                        },
+              child: AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText.h2('Reset Password'),
+                    Gap.h8,
+                    AppText.body('Let\'s reset your password quickly'),
+                    Gap.h32,
+                    AppText.caption('E-mail Address'),
+                    Gap.h8,
+                    AppTextField(
+                      controller: _emailController,
+                      hint: 'michael.osato@gmail.com',
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
+                      textCapitalization: TextCapitalization.none,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email address';
+                        }
+                        // Basic email validation regex
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                    Gap.h32,
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton.primary(
+                        title: 'Send',
+                        loading: resetPasswordViewModel.isBusy,
+                        onTap: resetPasswordViewModel.state.maybeWhen(
+                          busy: () => null, // Disable button if busy
+                          orElse: () => () {
+                            // Validate form before calling sendPasswordResetEmail
+                            if (_formKey.currentState?.validate() ?? false) {
+                              resetPasswordViewModel.sendPasswordResetEmail(
+                                  context: context);
+                            }
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                  Gap.h32,
-                ],
+                    Gap.h32,
+                  ],
+                ),
               ),
             ),
           ),

@@ -1,5 +1,4 @@
 // lib/services/orders_service.dart
-
 // ignore_for_file: unused_field
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,9 +7,9 @@ import 'package:starter_codes/core/utils/network_client.dart';
 import 'package:starter_codes/core/constants/api_routes.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
-import 'package:starter_codes/features/booking/model/order_model.dart'; // Contains OrderModel and QuoteResponseModel
+import 'package:starter_codes/features/booking/model/order_model.dart';
 import 'package:starter_codes/features/booking/model/request.dart';
-import 'package:starter_codes/features/payment/model/order_initiation_response_model.dart'; // Contains CreateOrderRequest and GetQuoteRequest
+import 'package:starter_codes/features/payment/model/order_initiation_response_model.dart';
 
 class BookingService {
   final NetworkClient _networkClient;
@@ -18,6 +17,76 @@ class BookingService {
   final AppLogger logger;
 
   BookingService(this._networkClient, this._localCache, this.logger);
+
+  Future<BulkQuoteResponse> getBulkQuote({
+    required GetNewBulkQuoteRequest quoteRequest,
+  }) async {
+    try {
+      logger.i('Bulk Quote Request: ${quoteRequest.toJson()}');
+      final responseData = await _networkClient.post(
+        ApiRoute.getBulkQuote,
+        body: quoteRequest.toJson(),
+      );
+      logger.i('Bulk Quote generated successfully: $responseData');
+      return BulkQuoteResponse.fromJson(
+          responseData['data'] as Map<String, dynamic>);
+    } catch (e) {
+      logger.e('Failed to get bulk quote: $e');
+      rethrow;
+    }
+  }
+
+  Future<OrderInitiationResponse> createBulkOrderNew({
+    required CreateNewBulkOrderRequest orderRequest,
+  }) async {
+    try {
+      logger.i('Create Bulk Order Request: ${orderRequest.toJson()}');
+      final responseData = await _networkClient.post(
+        ApiRoute.createBulkOrder,
+        body: orderRequest.toJson(),
+      );
+      logger.i('Bulk Order created successfully: $responseData');
+      return OrderInitiationResponse.fromJson(responseData['data']);
+    } catch (e) {
+      logger.e('Failed to create bulk order: $e');
+      rethrow;
+    }
+  }
+
+  Future<OrderInitiationResponse> createMultiOrderNew({
+    required CreateNewMultiOrderRequest orderRequest,
+  }) async {
+    try {
+      logger.i('Create Multi Order Request: ${orderRequest.toJson()}');
+      final responseData = await _networkClient.post(
+        ApiRoute.createMultiOrder,
+        body: orderRequest.toJson(),
+      );
+      logger.i('Multi Order created successfully: $responseData');
+      return OrderInitiationResponse.fromJson(responseData['data']);
+    } catch (e) {
+      logger.e('Failed to create multi order: $e');
+      rethrow;
+    }
+  }
+
+  Future<MultiOrderQuoteResponse> getMultiOrderQuote({
+    required GetNewMultiOrderQuoteRequest quoteRequest,
+  }) async {
+    try {
+      logger.i('Multi Order Quote Request: ${quoteRequest.toJson()}');
+      final responseData = await _networkClient.post(
+        ApiRoute.getMultiOrderQuote,
+        body: quoteRequest.toJson(),
+      );
+      logger.i('Multi Order Quote generated successfully: $responseData');
+      return MultiOrderQuoteResponse.fromJson(
+          responseData['data'] as Map<String, dynamic>);
+    } catch (e) {
+      logger.e('Failed to get multi order quote: $e');
+      rethrow;
+    }
+  }
 
   Future<OrderInitiationResponse> createOrder({
     required CreateOrderRequest orderDetails,
@@ -38,23 +107,48 @@ class BookingService {
     }
   }
 
-  /// Fetches details for a single order by its ID.
-  ///
-  /// This function constructs the URL with the provided order ID and sends a GET request.
-  /// It assumes authorization is handled globally by the `NetworkClient`'s interceptors.
-  ///
-  /// Returns an `OrderModel` object on success.
-  /// Throws an exception if fetching the order details fails.
+  Future<OrderInitiationResponse> createBulkOrder({
+    required CreateBulkOrderRequest orderDetails,
+  }) async {
+    try {
+      logger.i('Bulk Order Request: ${orderDetails.toJson()}');
+      final responseData = await _networkClient.post(
+        ApiRoute.createOrderNew,
+        body: orderDetails.toJson(),
+      );
+      logger.i('Bulk Order created successfully: $responseData');
+      return OrderInitiationResponse.fromJson(responseData['data']);
+    } catch (e) {
+      logger.e('Failed to create bulk order: $e');
+      rethrow;
+    }
+  }
+
+  Future<OrderInitiationResponse> createMultiOrder({
+    required CreateMultiOrderRequest orderDetails,
+  }) async {
+    try {
+      logger.i('Multi Order Request: ${orderDetails.toJson()}');
+      final responseData = await _networkClient.post(
+        ApiRoute.createOrderNew,
+        body: orderDetails.toJson(),
+      );
+      logger.i('Multi Order created successfully: $responseData');
+      return OrderInitiationResponse.fromJson(responseData['data']);
+    } catch (e) {
+      logger.e('Failed to create multi order: $e');
+      rethrow;
+    }
+  }
+
   Future<OrderModel> getOrderDetails({
     required String orderId,
   }) async {
     try {
-      // The NetworkClient is assumed to automatically add the Authorization header
       final responseData = await _networkClient.get(
-        '${ApiRoute.getSingleOrder}/$orderId', // Construct the URL with the order ID
+        '${ApiRoute.getSingleOrder}/$orderId',
       );
 
-      // The actual order data is nested under the 'data' key in the response
       final order =
           OrderModel.fromJson(responseData['data'] as Map<String, dynamic>);
       logger.i('Order details fetched successfully for ID: $orderId');
@@ -65,14 +159,6 @@ class BookingService {
     }
   }
 
-  /// Fetches a delivery quote based on order details.
-  ///
-  /// This function takes a `GetQuoteRequest` object and sends a POST request
-  /// to the get quote endpoint. It assumes authorization is handled globally
-  /// by the `NetworkClient`'s interceptors.
-  ///
-  /// Returns a `QuoteResponseModel` object on success.
-  /// Throws an exception if fetching the quote fails.
   Future<QuoteResponseModel> _getQuote({
     required GetQuoteRequest quoteDetails,
     required String deliveryType, // Explicitly pass deliveryType here
@@ -80,7 +166,6 @@ class BookingService {
     try {
       // Create a mutable map from quoteDetails.toJson()
       final Map<String, dynamic> requestBody = quoteDetails.toJson();
-      // Override or add the deliveryType to the request body
       requestBody['deliveryType'] = deliveryType;
 
       logger.d(
@@ -88,7 +173,7 @@ class BookingService {
 
       final responseData = await _networkClient.post(
         ApiRoute.getQuote,
-        body: requestBody, // Use the modified body
+        body: requestBody,
       );
       logger.i('Quote generated successfully for $deliveryType: $responseData');
 
@@ -151,7 +236,6 @@ class BookingService {
     }
   }
 
-  /// Fetches quotes for 'regular', 'express', and 'priority' delivery types.
   Future<List<QuoteResponseModel>> getAllQuotesForDeliveryTypes({
     required GetQuoteRequest baseQuoteDetails,
   }) async {

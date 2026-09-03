@@ -10,17 +10,20 @@ import 'package:starter_codes/features/delivery/model/delivery_model.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
 import 'package:starter_codes/provider/navigation_provider.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
+import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
 
 class PaymentVerificationScreen extends ConsumerStatefulWidget {
   final String orderId;
   final String reference;
   final bool isStoreOrder;
+  final bool isMultiOrder;
 
   const PaymentVerificationScreen({
     super.key,
     required this.orderId,
     required this.reference,
     this.isStoreOrder = false,
+    this.isMultiOrder = false,
   });
 
   @override
@@ -148,9 +151,15 @@ class _PaymentVerificationScreenState
 
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
-          NavigationService.instance.navigateToReplaceAll(widget.isStoreOrder
-              ? NavigatorRoutes.storeOrderScreen
-              : NavigatorRoutes.bookingOrderScreen);
+          if (widget.isMultiOrder) {
+            ref.read(navigationIndexProvider.notifier).state = 2;
+            NavigationService.instance
+                .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+          } else {
+            NavigationService.instance.navigateToReplaceAll(widget.isStoreOrder
+                ? NavigatorRoutes.storeOrderScreen
+                : NavigatorRoutes.bookingOrderScreen);
+          }
         }
       });
     }

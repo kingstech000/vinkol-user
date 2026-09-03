@@ -1,6 +1,7 @@
 // lib/features/auth/viewmodel/signup_viewmodel.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
@@ -41,6 +42,9 @@ class SignUpViewModel extends BaseViewModel {
 
       // Clear guest mode when user successfully signs up
       await GuestModeUtils.clearGuestMode();
+
+      // Notify OS to save credentials (triggers password manager save prompt)
+      TextInput.finishAutofillContext();
 
       changeState(const ViewModelState.idle());
       ref.watch(verifyEmailProvider.notifier).state = email;

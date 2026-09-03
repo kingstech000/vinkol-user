@@ -11,6 +11,8 @@ import 'package:starter_codes/features/auth/view/screen/verify_email_otp_screen.
 import 'package:starter_codes/features/auth/view/screens/auth_choice_screen.dart';
 import 'package:starter_codes/features/delivery/view/screen/booking_order_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/map_with_quote_screen.dart';
+import 'package:starter_codes/features/booking/view/screen/bulk_map_with_quote_screen.dart';
+import 'package:starter_codes/features/booking/view/screen/multi_map_with_quote_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/package_info_screen.dart';
 import 'package:starter_codes/features/dashboard/view/screen/dashboard_screen.dart';
 import 'package:starter_codes/features/onboarding/view/screen/onboarding_screen.dart';
@@ -192,6 +194,16 @@ class AppRouter {
             settings: settings,
             viewToShow: const MapWithQuotesScreen(),
             transition: transition);
+      case NavigatorRoutes.bulkMapWithQuoteScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const BulkMapWithQuotesScreen(),
+            transition: transition);
+      case NavigatorRoutes.multiMapWithQuoteScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const MultiMapWithQuoteScreen(),
+            transition: transition);
       case NavigatorRoutes.bookingOrderScreen:
         return _getPageRoute(
             settings: settings,
@@ -226,6 +238,8 @@ class AppRouter {
             paymentUrl: args['paymentUrl'] as String,
             orderId: args['orderId'] as String,
             reference: args['reference'] as String,
+            isStoreOrder: args['isStoreOrder'] as bool? ?? false,
+            isMultiOrder: args['isMultiOrder'] as bool? ?? false,
           ),
           transition: TransitionType.SlideUp,
         );
@@ -237,6 +251,8 @@ class AppRouter {
           viewToShow: PaymentVerificationScreen(
             orderId: args['orderId'] as String,
             reference: args['reference'] as String,
+            isStoreOrder: args['isStoreOrder'] as bool? ?? false,
+            isMultiOrder: args['isMultiOrder'] as bool? ?? false,
           ),
           transition: TransitionType.Breeze,
         );

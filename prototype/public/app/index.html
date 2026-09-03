@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vinkol — Clickable Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="/app/css/app.css" />
+  </head>
+  <body>
+    <div class="hx">
+      <aside class="hx__rail">
+        <div class="hx__brand">
+          <h1>Vinkol — clickable prototype</h1>
+          <p>Direction A · Midnight. Tap inside the phone to walk the flows. Switch market to see the globalization layer work.</p>
+        </div>
+        <nav id="rail"></nav>
+      </aside>
+      <main class="hx__stage">
+        <div class="hx__bar">
+          <div class="hx__t">
+            <button data-theme-set="dark" aria-pressed="true">Dark</button>
+            <button data-theme-set="light" aria-pressed="false">Light</button>
+          </div>
+          <div class="hx__t">
+            <button data-mkt="NG" aria-pressed="true">Nigeria · NGN</button>
+            <button data-mkt="CA" aria-pressed="false">Canada · CAD</button>
+          </div>
+        </div>
+        <div class="dev"><div class="dev__in" id="dev"></div></div>
+        <p class="hx__hint" id="hint"></p>
+      </main>
+    </div>
+    <script type="module" src="/app/js/main.js"></script>
+  </body>
+</html>

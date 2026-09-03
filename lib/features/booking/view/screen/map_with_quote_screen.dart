@@ -1,9 +1,6 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:starter_codes/core/constants/assets.dart';
-
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -268,7 +265,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
           Navigator.of(context).pushReplacement(MaterialPageRoute(
               builder: (context) => PaymentWebViewScreen(
                     paymentUrl: orderInitiationResponse.authorizationUrl!,
-                    orderId: orderInitiationResponse.order.id,
+                    orderId: orderInitiationResponse.order?.id ?? '',
                     reference: orderInitiationResponse.reference ?? '',
                     isStoreOrder: false,
                   )));
@@ -280,7 +277,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
           NavigationService.instance.navigateToReplaceAll(
             NavigatorRoutes.paymentVerificationScreen,
             argument: {
-              'orderId': orderInitiationResponse.order.id,
+              'orderId': orderInitiationResponse.order?.id ?? '',
               'reference': orderInitiationResponse.reference ?? '',
               'isStoreOrder': false,
             },
@@ -815,14 +812,14 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                 false,
                 'Pay securely with card',
               ),
-              Gap.h16,
-              _buildPaymentDetailOption(
-                context,
-                'Globus Bank',
-                Icons.account_balance,
-                false,
-                'Pay with Globus Bank',
-              ),
+              // Gap.h16,
+              // _buildPaymentDetailOption(
+              //   context,
+              //   'Globus Bank',
+              //   Icons.account_balance,
+              //   false,
+              //   'Pay with Globus Bank',
+              // ),
               Gap.h32,
             ],
           ),
@@ -847,7 +844,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
               });
               Navigator.pop(context);
             },
-      child: Container(                                                                                              
+      child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
         decoration: BoxDecoration(
           color: isDisabled

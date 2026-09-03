@@ -1,0 +1,159 @@
+/* DIRECTION C — KINETIC
+ * Dark, high-energy, and the only direction with two accents. The split is semantic, not
+ * decorative:
+ *
+ *   AMBER  = motion. A thing that is happening right now — in flight, rider moving, live ETA.
+ *   BLUE   = Vinkol. Brand, navigation, settled state, completed work.
+ *
+ * That rule is what stops this becoming an orange delivery-app clone: the orange is never
+ * chrome and never brand, it only ever means "this is moving". Introducing a second accent
+ * is a real change to the ratified palette — logged as D-06.
+ */
+
+[data-dir='kinetic'] {
+  --bg: #08090a;
+  --surf: #131518;
+  --surf2: #1c1f23;
+  --line: #26292f;
+  --txt: #ffffff;
+  --txt2: #969ca6;
+  --txt3: #666c76;
+  --acc: #2e8bef;          /* Vinkol — brand, nav, settled */
+  --live: #ff6b2c;         /* motion — live only */
+  --live-deep: #e2521a;
+  --ok: #34c77b;
+  --warn: #f5a524;
+  --bad: #f2545b;
+  --r-lg: 26px;
+  --r-md: 18px;
+
+  background: var(--bg);
+  color: var(--txt);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+[data-dir='kinetic'] .scr { background: var(--bg); color: var(--txt); }
+
+.kn-pad { padding: 0 20px; }
+.kn-head { display: flex; align-items: center; gap: 12px; padding: 2px 20px 18px; }
+.kn-av { width: 46px; height: 46px; border-radius: 999px; background: var(--surf2); border: 1px solid var(--line);
+  display: grid; place-items: center; font-weight: 700; font-size: 14px; flex: none; }
+.kn-head__t { flex: 1; min-width: 0; }
+.kn-head__t small { display: block; font-size: 12px; color: var(--txt3); }
+.kn-head__t b { display: block; font-size: 18px; letter-spacing: -0.3px; margin-top: 1px; }
+.kn-ico { width: 44px; height: 44px; border-radius: 16px; background: var(--surf); border: 1px solid var(--line);
+  display: grid; place-items: center; color: var(--txt2); flex: none; cursor: pointer; }
+
+.kn-points { display: flex; align-items: center; gap: 9px; background: var(--surf); border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 14px 8px 10px; }
+.kn-points i { color: var(--live); display: grid; place-items: center; }
+.kn-points small { display: block; font-size: 10px; color: var(--txt3); letter-spacing: .3px; text-transform: uppercase; }
+.kn-points b { display: block; font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.kn-title { font-size: 27px; font-weight: 800; letter-spacing: -0.8px; margin: 0; }
+.kn-sec { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 12px; }
+.kn-sec b { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+.kn-sec button { background: none; border: 0; color: var(--txt3); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+.kn-search { display: flex; align-items: center; gap: 11px; background: var(--surf); border: 1px solid var(--line);
+  border-radius: 18px; padding: 15px 16px; color: var(--txt3); font-size: 14.5px; }
+.kn-search input { border: 0; outline: 0; background: none; flex: 1; font: inherit; color: var(--txt); }
+
+/* The live object. Amber, because it is moving. */
+.kn-live { border-radius: var(--r-lg); padding: 20px; color: #fff; position: relative; overflow: hidden;
+  background: linear-gradient(140deg, var(--live) 0%, var(--live-deep) 100%); }
+.kn-live::after { content: ''; position: absolute; right: -60px; bottom: -80px; width: 210px; height: 210px;
+  border-radius: 999px; background: rgba(255,255,255,.09); }
+.kn-live__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; position: relative; }
+.kn-live__lab { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; opacity: .85;
+  display: inline-flex; align-items: center; gap: 6px; }
+.kn-live__lab i { width: 7px; height: 7px; border-radius: 999px; background: #fff;
+  animation: knpulse 1.6s ease-in-out infinite; }
+@keyframes knpulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.8); } }
+.kn-live__eta { font-size: 44px; font-weight: 800; letter-spacing: -1.6px; line-height: 1; margin-top: 12px;
+  font-variant-numeric: tabular-nums; position: relative; }
+.kn-live__eta span { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; margin-left: 6px; }
+.kn-live__sub { font-size: 13.5px; opacity: .9; margin-top: 7px; position: relative; }
+.kn-live__id { font-size: 12px; font-weight: 700; letter-spacing: .3px; background: rgba(0,0,0,.18);
+  padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+.kn-live__foot { display: flex; align-items: center; gap: 11px; margin-top: 20px; padding-top: 17px;
+  border-top: 1px solid rgba(255,255,255,.22); position: relative; }
+.kn-live__foot b { font-size: 14.5px; }
+.kn-live__foot small { display: block; font-size: 11.5px; opacity: .8; }
+.kn-live__call { width: 40px; height: 40px; border-radius: 999px; background: #fff; color: var(--live-deep);
+  display: grid; place-items: center; border: 0; cursor: pointer; flex: none; }
+
+.kn-acts { display: flex; gap: 10px; }
+.kn-act { flex: 1; background: var(--surf); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 15px 8px; color: inherit; font: inherit; cursor: pointer; text-align: center; }
+.kn-act i { display: grid; place-items: center; color: var(--acc); margin-bottom: 9px; }
+.kn-act span { font-size: 11.5px; font-weight: 600; color: var(--txt2); }
+
+.kn-card { background: var(--surf); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px; }
+
+.kn-rec { display: flex; align-items: center; gap: 13px; width: 100%; background: var(--surf);
+  border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 15px; color: inherit; font: inherit;
+  text-align: left; cursor: pointer; margin-bottom: 10px; }
+.kn-rec__i { width: 42px; height: 42px; border-radius: 14px; background: var(--surf2); color: var(--txt2);
+  display: grid; place-items: center; flex: none; }
+.kn-rec__i--live { background: rgba(255,107,44,.14); color: var(--live); }
+.kn-rec__b { flex: 1; min-width: 0; }
+.kn-rec__b b { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.kn-rec__b small { display: block; font-size: 12.5px; color: var(--txt3); margin-top: 2px; }
+.kn-tag { font-size: 11px; font-weight: 700; padding: 6px 11px; border-radius: 999px; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px; }
+.kn-tag i { width: 6px; height: 6px; border-radius: 999px; background: currentColor; flex: none; }
+.kn-tag--live { background: rgba(255,107,44,.14); color: var(--live); }
+.kn-tag--done { background: rgba(52,199,123,.13); color: var(--ok); }
+.kn-tag--wait { background: rgba(245,165,36,.14); color: var(--warn); }
+.kn-tag--bad { background: rgba(242,84,91,.14); color: var(--bad); }
+.kn-tag--bad i { border-radius: 1px; }
+.kn-tag--off { background: var(--surf2); color: var(--txt3); }
+.kn-tag--off i { border-radius: 1px; }
+
+.kn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 17px 13px; }
+.kn-grid small { display: block; font-size: 11px; color: var(--txt3); margin-bottom: 3px; }
+.kn-grid b { font-size: 15px; font-weight: 600; }
+.kn-live .kn-grid small { color: rgba(255,255,255,.75); }
+.kn-live .kn-grid b { color: #fff; }
+
+/* Progress: amber while moving, blue once settled. */
+.kn-track { display: flex; align-items: center; margin: 6px 0 13px; }
+.kn-track__n { width: 12px; height: 12px; border-radius: 999px; background: var(--line); flex: none; }
+.kn-track__n--on { background: var(--acc); }
+.kn-track__n--now { background: var(--live); box-shadow: 0 0 0 5px rgba(255,107,44,.2); }
+.kn-track__s { flex: 1; height: 3px; background: var(--line); }
+.kn-track__s--on { background: var(--acc); }
+
+.kn-ev { display: flex; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.kn-ev:last-child { border-bottom: 0; }
+.kn-ev__d { width: 10px; height: 10px; border-radius: 999px; background: var(--line); margin-top: 5px; flex: none; }
+.kn-ev__d--on { background: var(--acc); }
+.kn-ev__d--now { background: var(--live); }
+.kn-ev__b { flex: 1; min-width: 0; }
+.kn-ev__b b { display: block; font-size: 14px; font-weight: 600; }
+.kn-ev__b small { display: block; font-size: 12px; color: var(--txt3); margin-top: 2px; }
+.kn-ev__t { text-align: right; flex: none; font-variant-numeric: tabular-nums; }
+.kn-ev__t b { display: block; font-size: 13px; }
+.kn-ev__t small { display: block; font-size: 11px; color: var(--txt3); }
+
+.kn-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+  min-height: 54px; border-radius: 999px; border: 0; background: var(--acc); color: #fff; font: inherit;
+  font-size: 15px; font-weight: 700; cursor: pointer; }
+.kn-btn--live { background: var(--live); }
+.kn-btn--q { background: var(--surf); color: var(--txt); border: 1px solid var(--line); }
+
+.kn-nav { flex: none; display: flex; justify-content: space-around; padding: 11px 10px 26px; background: var(--surf);
+  border-top: 1px solid var(--line); }
+.kn-nav button { background: none; border: 0; color: var(--txt3); cursor: pointer; padding: 8px 16px;
+  display: grid; place-items: center; gap: 4px; font: inherit; }
+.kn-nav button[aria-current='true'] { color: var(--acc); }
+.kn-nav span { font-size: 10px; font-weight: 600; }
+
+.kn-map { position: absolute; inset: 0; }
+.kn-pin { position: absolute; transform: translate(-50%,-50%); width: 48px; height: 48px; border-radius: 999px;
+  display: grid; place-items: center; background: var(--live); color: #fff; border: 4px solid var(--bg); }
+.kn-sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surf); border-radius: 30px 30px 0 0;
+  border-top: 1px solid var(--line); padding: 10px 20px 26px; max-height: 62%; overflow-y: auto; }
+.kn-sheet::-webkit-scrollbar { width: 0; }
+.kn-grip { width: 42px; height: 4px; border-radius: 999px; background: var(--line); margin: 0 auto 16px; }

@@ -1,0 +1,957 @@
+/* Vinkol prototype — component layer.
+ * Rules enforced here: e0 by default (hairline, no shadow), one radius level per nesting
+ * depth, status never by colour alone, all numerics tabular.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================ TYPE SCALE */
+/* Sizes match lib/core/design/vinkol_type.dart exactly. */
+
+.t-display-l {
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 40px;
+  font-weight: 700;
+  letter-spacing: -0.68px;
+}
+.t-display-s {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+  letter-spacing: -0.56px;
+}
+.t-h1 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 700;
+  letter-spacing: -0.36px;
+}
+.t-h2 {
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+.t-h3 {
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.085px;
+}
+.t-h4 {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.t-body-l {
+  font-size: 17px;
+  line-height: 26px;
+}
+.t-body {
+  font-size: 15px;
+  line-height: 22px;
+}
+.t-body-s {
+  font-size: 13px;
+  line-height: 20px;
+}
+.t-label {
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.065px;
+}
+.t-label-s {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.44px;
+  text-transform: uppercase;
+}
+.t-caption {
+  font-size: 12px;
+  line-height: 16px;
+}
+.t-button {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: 0.15px;
+}
+
+/* Numerics. Tabular figures are what keep columns aligned and stop digits jittering as
+ * values update — signature #4. Never substitute a body style for money or an ETA. */
+.t-num-xl,
+.t-num-l,
+.t-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+.t-num-xl {
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 700;
+}
+.t-num-l {
+  font-size: 22px;
+  line-height: 26px;
+  font-weight: 600;
+}
+.t-num {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  letter-spacing: 0.26px;
+  font-variant-numeric: tabular-nums;
+}
+
+.c-primary { color: var(--text-primary); }
+.c-secondary { color: var(--text-secondary); }
+.c-tertiary { color: var(--text-tertiary); }
+.c-brand { color: var(--text-brand); }
+.c-inverse { color: var(--text-inverse); }
+
+/* ============================================================ HARNESS */
+/* Everything outside the phone. Deliberately neutral so it never competes with the design. */
+
+.harness {
+  display: grid;
+  grid-template-columns: 264px 1fr;
+  min-height: 100vh;
+  background: #0b0d10;
+  color: #e9ecf0;
+}
+
+.harness__rail {
+  border-right: 1px solid #1b1f25;
+  padding: 20px 0;
+  overflow-y: auto;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.harness__brand {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid #1b1f25;
+  margin-bottom: 12px;
+}
+.harness__brand h1 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+.harness__brand p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #6e7784;
+}
+
+.harness__group {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #545c68;
+  padding: 16px 20px 6px;
+  font-weight: 600;
+}
+
+.harness__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 20px;
+  background: none;
+  border: 0;
+  border-left: 2px solid transparent;
+  color: #99a1ae;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.harness__link:hover { color: #e9ecf0; background: #12161b; }
+.harness__link[aria-current='true'] {
+  color: #fff;
+  border-left-color: var(--brand-500);
+  background: #12161b;
+}
+.harness__tag {
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #545c68;
+}
+
+.harness__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 32px 24px 56px;
+}
+
+.harness__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.harness__note {
+  max-width: 560px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+  color: #6e7784;
+}
+.harness__note b { color: #99a1ae; font-weight: 600; }
+
+.harness__toggle {
+  display: inline-flex;
+  border: 1px solid #1b1f25;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.harness__toggle button {
+  background: none;
+  border: 0;
+  color: #6e7784;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.harness__toggle button[aria-pressed='true'] { background: #1b1f25; color: #fff; }
+
+/* The phone. 390x844 — a standard modern device, not an imaginary 375. */
+.device {
+  width: 390px;
+  height: 844px;
+  border-radius: 44px;
+  padding: 10px;
+  background: #1b1f25;
+  box-shadow: 0 40px 80px -24px rgba(0, 0, 0, 0.6);
+  flex: none;
+}
+.device__screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 34px;
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--text-primary);
+  isolation: isolate;
+}
+
+/* ============================================================ SCREEN SHELL */
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+  overflow: hidden;
+}
+
+.status-bar {
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--page-margin);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 5;
+}
+.status-bar__icons { display: flex; gap: 5px; align-items: center; opacity: 0.85; }
+.status-bar--over { color: var(--text-primary); }
+
+.appbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--page-margin) var(--space-md);
+  background: var(--canvas);
+}
+.appbar__back {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.appbar__title { flex: 1; min-width: 0; }
+.appbar__action {
+  border: 0;
+  background: none;
+  color: var(--text-brand);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--page-margin) 120px;
+}
+.content--flush { padding-left: 0; padding-right: 0; }
+.content::-webkit-scrollbar { width: 0; }
+
+.section { margin-top: var(--section-gap); }
+.section--hero { margin-top: var(--section-gap-hero); }
+.section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+/* ============================================================ SURFACES */
+/* e0 is the default. A shadow is the exception, and there is at most one e2+ on screen. */
+
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-e0);
+}
+.surface--sunken { background: var(--surface-sunken); border-color: transparent; }
+.surface--e2 { box-shadow: var(--shadow-e2); }
+.pad { padding: var(--card-padding); }
+
+.divider { height: 1px; background: var(--border-subtle); border: 0; margin: 0; }
+
+/* ============================================================ ROWS */
+/* Density is the feature: 6–8 of these visible on a standard phone. */
+
+.rows {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  min-height: 56px;
+  width: 100%;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.row:first-child { border-top: 0; }
+.row:active { background: var(--surface-sunken); }
+.row__body { flex: 1; min-width: 0; }
+.row__title {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row__meta {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Money and ETAs land on a shared right-hand optical axis — signature #4. */
+.row__value {
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+.row__chevron { flex: none; color: var(--text-disabled); }
+
+.row__icon {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+}
+
+/* ============================================================ STATUS */
+/* The triple: label + shape + colour, in that priority order (decision D-05).
+ * Every rule here is written so the status survives greyscale. */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: 0.44px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.status__shape {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: var(--radius-full);
+  border: 1.5px solid currentColor;
+  position: relative;
+}
+.status__shape--filled { background: currentColor; }
+.status__shape--half {
+  background: linear-gradient(to right, currentColor 50%, transparent 50%);
+}
+.status__shape--tick { background: currentColor; }
+.status__shape--tick::after {
+  content: '';
+  position: absolute;
+  left: 2.5px;
+  top: 0.5px;
+  width: 3px;
+  height: 6px;
+  border: solid var(--surface);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.status__shape--slash::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-top: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+.status__shape--alert {
+  background: currentColor;
+}
+.status__shape--alert::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 1px;
+  width: 1.5px;
+  height: 4.5px;
+  background: var(--surface);
+  box-shadow: 0 5px 0 0 var(--surface);
+}
+.status__shape--ring { animation: ring 1.6s var(--ease-standard) infinite; }
+@keyframes ring {
+  0% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  70% { box-shadow: 0 0 0 5px transparent; opacity: 0.65; }
+  100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
+}
+
+.status--draft, .status--cancelled, .status--refunded { color: var(--text-tertiary); }
+.status--awaitingPayment { color: var(--warning); }
+.status--findingRider, .status--inTransit { color: var(--brand); }
+.status--riderAssigned, .status--atPickup { color: var(--info); }
+.status--delivered { color: var(--success); }
+.status--failed { color: var(--danger); }
+
+/* ============================================================ THE LINE */
+/* Signature #1: one continuous route line, four scales, same geometry every time. */
+
+.line {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  column-gap: var(--space-md);
+}
+.line__rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.line__node {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--brand);
+  background: var(--surface);
+  z-index: 1;
+}
+.line__node--filled { background: var(--brand); }
+.line__node--done { background: var(--success); border-color: var(--success); }
+.line__node--future { border-color: var(--border-default); background: var(--surface); }
+.line__node--terminus {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+.line__path {
+  flex: 1;
+  width: 2px;
+  min-height: 18px;
+  background: var(--border-default);
+}
+.line__path--done { background: var(--success); }
+.line__path--active {
+  background: linear-gradient(var(--brand) 50%, var(--border-default) 50%);
+  background-size: 100% 200%;
+  animation: flow 2.4s linear infinite;
+}
+@keyframes flow {
+  from { background-position: 0 100%; }
+  to { background-position: 0 0%; }
+}
+.line__path--dotted {
+  background: none;
+  border-left: 2px dotted var(--border-default);
+  width: 0;
+}
+.line__stop { padding-bottom: var(--space-lg); min-width: 0; }
+.line__stop:last-child { padding-bottom: 0; }
+
+/* Compressed 2-node glyph for a list row. Same geometry, smaller scale. */
+.line-glyph {
+  width: 8px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+  padding: 4px 0;
+}
+.line-glyph__node {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--brand);
+  flex: none;
+}
+.line-glyph__node--end { border-radius: 1px; transform: rotate(45deg); background: var(--brand); }
+.line-glyph__path { flex: 1; width: 1.5px; background: var(--border-default); min-height: 10px; }
+
+/* ============================================================ BUTTONS */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 52px;
+  padding: 0 var(--space-xl);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.15px;
+  cursor: pointer;
+  transition: background var(--dur-instant) var(--ease-standard),
+    border-color var(--dur-instant) var(--ease-standard);
+}
+.btn--block { width: 100%; }
+.btn--primary { background: var(--brand); color: var(--on-brand); }
+.btn--primary:active { background: var(--brand-pressed); }
+.btn--secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.btn--ghost { background: none; color: var(--text-brand); min-height: 44px; }
+.btn--danger { background: none; color: var(--danger); border-color: var(--border-default); }
+.btn:disabled { background: var(--surface-sunken); color: var(--text-disabled); cursor: not-allowed; }
+.btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.btn-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* Bottom-anchored primary action — a protected pattern (do-not-lose #5). */
+.action-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: var(--space-lg) var(--page-margin) var(--space-xxl);
+  background: var(--surface);
+  border-top: 1px solid var(--border-subtle);
+  z-index: 4;
+}
+.action-bar__summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+/* ============================================================ THE POD */
+/* Signature #2: nav at rest, live-delivery status when a delivery is active. One object. */
+
+.pod {
+  position: absolute;
+  left: var(--page-margin);
+  right: var(--page-margin);
+  bottom: 24px;
+  background: var(--pod-bg);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-e2);
+  z-index: 6;
+  overflow: hidden;
+  transition: border-radius var(--dur-base) var(--ease-emphasized);
+}
+.pod__nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px 8px;
+}
+.pod__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 0;
+  padding: 6px 10px;
+  min-width: 48px;
+  min-height: 44px;
+  color: #6e7784;
+  cursor: pointer;
+  font: inherit;
+}
+.pod__item[aria-current='true'] { color: #fff; }
+.pod__item span { font-size: 10px; letter-spacing: 0.2px; font-weight: 600; }
+
+/* The live variant: same object, more content. */
+.pod--live { border-radius: var(--radius-lg); }
+.pod__live {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.pod__live-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--brand-800);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex: none;
+}
+.pod__live-body { flex: 1; min-width: 0; color: #fff; }
+.pod__live-eta {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  color: #fff;
+  text-align: right;
+  flex: none;
+}
+
+/* ============================================================ MAP */
+/* Signature #5: the map is the canvas; controls are e0 hairline surfaces, never floating
+ * shadowed cards. */
+
+.map {
+  position: absolute;
+  inset: 0;
+  background: var(--map-ground);
+  overflow: hidden;
+}
+.map svg { width: 100%; height: 100%; display: block; }
+
+.map__controls {
+  position: absolute;
+  right: var(--page-margin);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  z-index: 3;
+}
+
+.map__pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  z-index: 2;
+}
+.map__pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--brand);
+  border: 3px solid var(--surface);
+  box-shadow: var(--shadow-e1);
+}
+.map__pin-label {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+/* ============================================================ SHEET */
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-top: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-e2);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  max-height: 78%;
+  transition: transform var(--dur-base) var(--ease-emphasized);
+}
+.sheet__grip {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--border-default);
+  margin: var(--space-sm) auto var(--space-xs);
+  flex: none;
+}
+.sheet__body { padding: var(--space-md) var(--page-margin) var(--space-xxl); overflow-y: auto; }
+
+/* ============================================================ FORM */
+
+.field { margin-top: var(--space-lg); }
+.field__label {
+  display: block;
+  margin-bottom: var(--space-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.field__input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 15px;
+}
+.field__input::placeholder { color: var(--text-tertiary); }
+.field__input:focus { outline: 2px solid var(--focus-ring); outline-offset: -1px; border-color: transparent; }
+.field--error .field__input { border-color: var(--danger-fill); }
+/* Errors are stated in words and tied to the field — never a red border alone. */
+.field__error {
+  display: flex;
+  gap: 6px;
+  margin-top: var(--space-sm);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--danger);
+}
+.field__hint { margin-top: var(--space-sm); font-size: 13px; color: var(--text-tertiary); }
+
+.otp { display: flex; gap: var(--space-sm); }
+.otp input {
+  flex: 1;
+  height: 56px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+/* ============================================================ MONEY */
+
+.money { display: flex; flex-direction: column; gap: var(--space-md); }
+.money__line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+.money__line dt { color: var(--text-secondary); font-size: 15px; }
+.money__line dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.money__line--total dt { color: var(--text-primary); font-weight: 600; }
+.money__line--total dd { font-size: 22px; font-weight: 700; }
+/* The symbol is set at reduced emphasis so the number is the hero — signature #4. */
+.sym { color: var(--text-tertiary); font-weight: 500; }
+
+/* ============================================================ FEEDBACK STATES */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-sunken) 25%,
+    var(--border-subtle) 37%,
+    var(--surface-sunken) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1200ms linear infinite;
+  border-radius: var(--radius-xs);
+}
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.empty {
+  text-align: center;
+  padding: var(--space-huge-2) var(--space-xl);
+}
+.empty__mark { display: flex; justify-content: center; margin-bottom: var(--space-xl); }
+.empty h3 { margin: 0 0 var(--space-sm); }
+.empty p { margin: 0 auto var(--space-xl); max-width: 30ch; color: var(--text-secondary); }
+
+.banner {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+}
+.banner--warning { background: var(--warning-ground); border-color: transparent; color: var(--warning); }
+.banner--danger { background: var(--danger-ground); border-color: transparent; color: var(--danger); }
+.banner--info { background: var(--info-ground); border-color: transparent; color: var(--info); }
+.banner__body { flex: 1; color: var(--text-primary); }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.chip[aria-pressed='true'] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+
+.tabs { display: flex; gap: var(--space-xl); border-bottom: 1px solid var(--border-subtle); }
+.tabs button {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: var(--space-md) 0;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.tabs button[aria-selected='true'] { color: var(--text-primary); border-bottom-color: var(--brand); }
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  flex: none;
+}
+
+.stack { display: flex; flex-direction: column; }
+.hstack { display: flex; align-items: center; }
+.gap-xs { gap: var(--space-xs); }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }
+.grow { flex: 1; min-width: 0; }
+.mt-sm { margin-top: var(--space-sm); }
+.mt-md { margin-top: var(--space-md); }
+.mt-lg { margin-top: var(--space-lg); }
+.mt-xl { margin-top: var(--space-xl); }
+.mt-xxl { margin-top: var(--space-xxl); }
+.center { text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

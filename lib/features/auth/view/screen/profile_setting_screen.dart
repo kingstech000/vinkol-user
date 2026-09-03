@@ -95,141 +95,148 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
               padding: const EdgeInsets.all(20.0),
               child: Form(
                 key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText.h1(
-                        'Complete Profile'), // Updated title as per image
-                    Gap.h6,
-                    // Subtitle from image is missing, keeping original subtitle for now
-                    AppText.body('Complete details to complete profile'),
+                child: AutofillGroup(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText.h1(
+                          'Complete Profile'), // Updated title as per image
+                      Gap.h6,
+                      // Subtitle from image is missing, keeping original subtitle for now
+                      AppText.body('Complete details to complete profile'),
 
-                    // Center profile image removed as per image
-                    // The image shows no profile picture upload area.
-                    // If you need it, you can re-add it here with GestureDetector and showModalBottomSheet.
-                    Gap.h24,
-                    AppText.caption('First name'),
-                    Gap.h4,
-                    AppTextField(
-                      controller: _firstNameController,
-                      hint: 'Sarah',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'First name cannot be empty';
-                        }
-                        return null;
-                      },
-                    ),
-                    Gap.h16,
-                    AppText.caption('Last Name'),
-                    Gap.h4,
-                    AppTextField(
-                      controller: _surnameController,
-                      hint: 'Osato',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Surname cannot be empty';
-                        }
-                        return null;
-                      },
-                    ),
-                    Gap.h16,
-                    // AppText.caption('Country'),
-                    // Gap.h4,
-                    // ModalFormField(
-                    //   title: viewModel.country.isEmpty
-                    //       ? 'Select Country'
-                    //       : viewModel.country,
-                    //   textColor: viewModel.country.isEmpty
-                    //       ? AppColors.darkgrey.withOpacity(0.5)
-                    //       : AppColors.black,
-                    //   options: _countries, // Get states from ViewModel
-                    //   controller: _countryController,
-                    //   onOptionSelected: (option) {
-                    //     viewModel.setCountry(option);
-                    //   }, // Control ModalFormField's text
-                    // ),
-                    Gap.h16,
-                    AppText.caption('State'),
-                    Gap.h4,
-                    ModalFormField(
-                      title: viewModel.selectedState.isEmpty
-                          ? 'Select State'
-                          : viewModel.selectedState,
-                      textColor: viewModel.selectedState.isEmpty
-                          ? AppColors.darkgrey.withOpacity(0.5)
-                          : AppColors.black,
-                      options: _states, // Get states from ViewModel
-                      controller: _stateController,
-                      enableSearch: true,
-                      modalHeightFactor: 0.9,
-                      onOptionSelected: (option) {
-                        viewModel.setSelectedState(option);
-                      }, // Control ModalFormField's text
-                    ),
-                    Gap.h16,
-                    AppText.caption('Phone number'),
-                    Gap.h4,
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          child: AppTextField(
-                            controller: _phoneNumberPrefixController,
-                            hint: '+234',
-                            enabled: false,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return '';
+                      // Center profile image removed as per image
+                      // The image shows no profile picture upload area.
+                      // If you need it, you can re-add it here with GestureDetector and showModalBottomSheet.
+                      Gap.h24,
+                      AppText.caption('First name'),
+                      Gap.h4,
+                      AppTextField(
+                        controller: _firstNameController,
+                        hint: 'Sarah',
+                        autofillHints: const [AutofillHints.givenName],
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'First name cannot be empty';
+                          }
+                          return null;
+                        },
+                      ),
+                      Gap.h16,
+                      AppText.caption('Last Name'),
+                      Gap.h4,
+                      AppTextField(
+                        controller: _surnameController,
+                        hint: 'Osato',
+                        autofillHints: const [AutofillHints.familyName],
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Surname cannot be empty';
+                          }
+                          return null;
+                        },
+                      ),
+                      Gap.h16,
+                      // AppText.caption('Country'),
+                      // Gap.h4,
+                      // ModalFormField(
+                      //   title: viewModel.country.isEmpty
+                      //       ? 'Select Country'
+                      //       : viewModel.country,
+                      //   textColor: viewModel.country.isEmpty
+                      //       ? AppColors.darkgrey.withOpacity(0.5)
+                      //       : AppColors.black,
+                      //   options: _countries, // Get states from ViewModel
+                      //   controller: _countryController,
+                      //   onOptionSelected: (option) {
+                      //     viewModel.setCountry(option);
+                      //   }, // Control ModalFormField's text
+                      // ),
+                      Gap.h16,
+                      AppText.caption('State'),
+                      Gap.h4,
+                      ModalFormField(
+                        title: viewModel.selectedState.isEmpty
+                            ? 'Select State'
+                            : viewModel.selectedState,
+                        textColor: viewModel.selectedState.isEmpty
+                            ? AppColors.darkgrey.withOpacity(0.5)
+                            : AppColors.black,
+                        options: _states, // Get states from ViewModel
+                        controller: _stateController,
+                        enableSearch: true,
+                        modalHeightFactor: 0.9,
+                        onOptionSelected: (option) {
+                          viewModel.setSelectedState(option);
+                        }, // Control ModalFormField's text
+                      ),
+                      Gap.h16,
+                      AppText.caption('Phone number'),
+                      Gap.h4,
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 80,
+                            child: AppTextField(
+                              controller: _phoneNumberPrefixController,
+                              hint: '+234',
+                              enabled: false,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return '';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          Gap.w8,
+                          // Main phone number field
+                          Expanded(
+                            child: AppTextField(
+                              formatter: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(10),
+                                NoLeadingZeroFormatter(),
+                              ],
+                              controller: _phoneNumberController,
+                              hint: '901 234 5678',
+                              keyboardType: TextInputType.phone,
+                              autofillHints: const [
+                                AutofillHints.telephoneNumberLocal
+                              ],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Phone number cannot be empty';
+                                }
+                                // Basic phone number validation
+                                if (value.length < 10 || value.length > 15) {
+                                  return 'Invalid phone number length';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 40),
+                      SizedBox(
+                        width: double.infinity,
+                        child: AppButton.primary(
+                          title: 'Submit',
+                          loading: viewModel.isBusy,
+                          onTap: viewModel.state.maybeWhen(
+                            busy: () => null, // Disable button if busy
+                            orElse: () => () {
+                              if (_formKey.currentState?.validate() ?? false) {
+                                viewModel.submitProfile(context: context);
                               }
-                              return null;
                             },
                           ),
-                        ),
-                        Gap.w8,
-                        // Main phone number field
-                        Expanded(
-                          child: AppTextField(
-                            formatter: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
-                              NoLeadingZeroFormatter(),
-                            ],
-                            controller: _phoneNumberController,
-                            hint: '901 234 5678',
-                            keyboardType: TextInputType.phone,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Phone number cannot be empty';
-                              }
-                              // Basic phone number validation
-                              if (value.length < 10 || value.length > 15) {
-                                return 'Invalid phone number length';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
-                    SizedBox(
-                      width: double.infinity,
-                      child: AppButton.primary(
-                        title: 'Submit',
-                        loading: viewModel.isBusy,
-                        onTap: viewModel.state.maybeWhen(
-                          busy: () => null, // Disable button if busy
-                          orElse: () => () {
-                            if (_formKey.currentState?.validate() ?? false) {
-                              viewModel.submitProfile(context: context);
-                            }
-                          },
                         ),
                       ),
-                    ),
-                    Gap.h32,
-                  ],
+                      Gap.h32,
+                    ],
+                  ),
                 ),
               ),
             ),

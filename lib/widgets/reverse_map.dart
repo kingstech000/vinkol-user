@@ -5,17 +5,21 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
-import 'package:starter_codes/core/utils/colors.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ReverseLocationStringMap extends ConsumerStatefulWidget {
   final String? pickupLocationString;
   final String? dropoffLocationString;
+  // Optional: pass coordinates directly to skip geocoding
+  final LatLng? pickupLatLng;
+  final LatLng? dropoffLatLng;
 
   const ReverseLocationStringMap({
     super.key,
-    required this.pickupLocationString,
-    required this.dropoffLocationString,
+    this.pickupLocationString,
+    this.dropoffLocationString,
+    this.pickupLatLng,
+    this.dropoffLatLng,
   });
 
   @override
@@ -52,13 +56,18 @@ class _ReverseLocationStringMapState
     LatLng? newPickupCoordinates;
     LatLng? newDropoffCoordinates;
 
-    if (widget.pickupLocationString != null &&
+    // Use direct coordinates if provided (bulk orders), else geocode from string
+    if (widget.pickupLatLng != null) {
+      newPickupCoordinates = widget.pickupLatLng;
+    } else if (widget.pickupLocationString != null &&
         widget.pickupLocationString!.isNotEmpty) {
       newPickupCoordinates =
           await _getCoordinatesFromAddress(widget.pickupLocationString!);
     }
 
-    if (widget.dropoffLocationString != null &&
+    if (widget.dropoffLatLng != null) {
+      newDropoffCoordinates = widget.dropoffLatLng;
+    } else if (widget.dropoffLocationString != null &&
         widget.dropoffLocationString!.isNotEmpty) {
       newDropoffCoordinates =
           await _getCoordinatesFromAddress(widget.dropoffLocationString!);

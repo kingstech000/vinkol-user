@@ -1,24 +1,28 @@
 class OrderInitiationResponse {
-  final Order order;
+  final Order? order;
+  final List<String>? orderIds;
   final String? authorizationUrl;
   final String? reference;
 
   OrderInitiationResponse({
-    required this.order,
+    this.order,
+    this.orderIds,
     this.authorizationUrl,
     this.reference,
   });
 
   factory OrderInitiationResponse.fromJson(Map<String, dynamic> json) {
     return OrderInitiationResponse(
-      order: Order.fromJson(json['order']),
+      order: json['order'] != null ? Order.fromJson(json['order']) : null,
+      orderIds: json['orders'] != null ? List<String>.from(json['orders']) : null,
       authorizationUrl: json['authorization_url'],
       reference: json['reference'],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'order': order.toJson(),
+        'order': order?.toJson(),
+        'orders': orderIds,
         'authorization_url': authorizationUrl,
         'reference': reference,
       };

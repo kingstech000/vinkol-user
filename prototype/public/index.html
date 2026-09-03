@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vinkol — Wave 1 Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body>
+    <div class="harness">
+      <aside class="harness__rail">
+        <div class="harness__brand">
+          <h1>Vinkol · Wave 1</h1>
+          <p>Quiet Infrastructure + editorial hero</p>
+        </div>
+        <nav id="rail"></nav>
+      </aside>
+
+      <main class="harness__stage">
+        <div class="harness__bar">
+          <div class="harness__toggle" id="theme-toggle">
+            <button data-theme-set="light" aria-pressed="true">Light</button>
+            <button data-theme-set="dark" aria-pressed="false">Dark</button>
+          </div>
+          <div class="harness__toggle" id="market-toggle">
+            <button data-market-set="NG" aria-pressed="true">Nigeria · NGN</button>
+            <button data-market-set="CA" aria-pressed="false">Canada · CAD</button>
+          </div>
+        </div>
+
+        <div class="device">
+          <div class="device__screen" id="screen"></div>
+        </div>
+
+        <p class="harness__note" id="note"></p>
+      </main>
+    </div>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/constants/assets.dart';
 import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
@@ -11,6 +12,7 @@ import 'package:starter_codes/core/utils/launch_link.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/dashboard/view/screen/dashboard_screen.dart';
+import 'package:starter_codes/features/delivery/model/delivery_model.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_detail_view_model.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_view_model.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
@@ -145,9 +147,33 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                       if (delivery == null) {
                         return Container(color: Colors.grey.shade300);
                       }
+                      // For bulk orders use the exact lat/lng from the API
+                      // to avoid unreliable geocoding of Nigerian addresses.
+                      final isBulk = delivery.isBulkOrder == true;
+                      final pickupLat = delivery.pickup?.location?.lat;
+                      final pickupLng = delivery.pickup?.location?.lng;
+                      final dropoffLat =
+                          delivery.dropoffs?.isNotEmpty == true
+                              ? delivery.dropoffs!.first.location?.lat
+                              : null;
+                      final dropoffLng =
+                          delivery.dropoffs?.isNotEmpty == true
+                              ? delivery.dropoffs!.first.location?.lng
+                              : null;
+
                       return ReverseLocationStringMap(
                         pickupLocationString: delivery.pickupLocation,
                         dropoffLocationString: delivery.dropoffLocation,
+                        pickupLatLng: (isBulk &&
+                                pickupLat != null &&
+                                pickupLng != null)
+                            ? LatLng(pickupLat, pickupLng)
+                            : null,
+                        dropoffLatLng: (isBulk &&
+                                dropoffLat != null &&
+                                dropoffLng != null)
+                            ? LatLng(dropoffLat, dropoffLng)
+                            : null,
                       );
                     },
                     loading: () => Container(color: Colors.grey.shade300),
@@ -459,6 +485,8 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                             color: Colors
                                                                 .grey.shade600,
                                                             fontSize: 11.sp,
+                                                            fontWeight:
+                                                                FontWeight.w600,
                                                           ),
                                                           Gap.h4,
                                                           AppText.body(
@@ -480,6 +508,8 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                             color: Colors
                                                                 .grey.shade600,
                                                             fontSize: 12.sp,
+                                                            fontWeight:
+                                                                FontWeight.w600,
                                                           ),
                                                           if (delivery
                                                                   .deliveryAgent
@@ -598,8 +628,6 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                                     .trim();
 
                                                             try {
-                                                              // Handle international format (+234...)
-                                                              // Use makePhoneCall directly for international format
                                                               if (phoneNumber
                                                                   .startsWith(
                                                                       '+')) {
@@ -643,62 +671,70 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                               Gap.h16,
                                             ],
 
-                                            // Location Card
-                                            _EnhancedCard(
-                                              child: Column(
-                                                children: [
-                                                  _EnhancedLocationInfo(
-                                                    icon: Icons.trip_origin,
-                                                    iconColor: Colors.green,
-                                                    title: 'Pick-up Location',
-                                                    address: delivery
-                                                            .pickupLocation ??
-                                                        'N/A',
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                            vertical: 16.h),
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                            width: 8.w +
-                                                                8.w), // Half of container padding + half of icon container size (8.w padding + ~17w for half the container)
-                                                        Container(
-                                                          width: 2.w,
-                                                          height: 40.h,
-                                                          decoration:
-                                                              const BoxDecoration(
-                                                            gradient:
-                                                                LinearGradient(
-                                                              colors: [
-                                                                Colors.green,
-                                                                AppColors
-                                                                    .primary
-                                                              ],
-                                                              begin: Alignment
-                                                                  .topCenter,
-                                                              end: Alignment
-                                                                  .bottomCenter,
+                                            // Location Card – bulk vs standard
+                                            if (delivery.isBulkOrder == true &&
+                                                delivery.route != null &&
+                                                delivery.route!.isNotEmpty) ...[
+                                              _BulkRouteCard(
+                                                  delivery: delivery),
+                                              Gap.h16,
+                                            ] else ...[
+                                              _EnhancedCard(
+                                                child: Column(
+                                                  children: [
+                                                    _EnhancedLocationInfo(
+                                                      icon: Icons.trip_origin,
+                                                      iconColor: Colors.green,
+                                                      title: 'Pick-up Location',
+                                                      address: delivery
+                                                              .pickupLocation ??
+                                                          'N/A',
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                              vertical: 16.h),
+                                                      child: Row(
+                                                        children: [
+                                                          SizedBox(
+                                                              width: 8.w + 8.w),
+                                                          Container(
+                                                            width: 2.w,
+                                                            height: 40.h,
+                                                            decoration:
+                                                                const BoxDecoration(
+                                                              gradient:
+                                                                  LinearGradient(
+                                                                colors: [
+                                                                  Colors.green,
+                                                                  AppColors
+                                                                      .primary
+                                                                ],
+                                                                begin: Alignment
+                                                                    .topCenter,
+                                                                end: Alignment
+                                                                    .bottomCenter,
+                                                              ),
                                                             ),
                                                           ),
-                                                        ),
-                                                      ],
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                  _EnhancedLocationInfo(
-                                                    icon: Icons.location_on,
-                                                    iconColor:
-                                                        AppColors.primary,
-                                                    title: 'Drop-off Location',
-                                                    address: delivery
-                                                            .dropoffLocation ??
-                                                        'N/A',
-                                                  ),
-                                                ],
+                                                    _EnhancedLocationInfo(
+                                                      icon: Icons.location_on,
+                                                      iconColor:
+                                                          AppColors.primary,
+                                                      title:
+                                                          'Drop-off Location',
+                                                      address: delivery
+                                                              .dropoffLocation ??
+                                                          'N/A',
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            Gap.h16,
+                                              Gap.h16,
+                                            ],
 
                                             // Package Details Card
                                             _EnhancedCard(
@@ -795,7 +831,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                 ],
                                               ),
                                             ),
-                                            Gap.h24,
+                                            Gap.h16,
 
                                             // Cancel Order Button
                                             if (delivery.status
@@ -998,7 +1034,7 @@ class _EnhancedLocationInfo extends StatelessWidget {
               AppText.body(
                 address,
                 fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ],
           ),
@@ -1034,6 +1070,209 @@ class _DetailRow extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Bulk Location Card – pickup + numbered dropoffs
+// ---------------------------------------------------------------------------
+
+class _BulkRouteCard extends StatelessWidget {
+  final DeliveryModel delivery;
+  const _BulkRouteCard({required this.delivery});
+
+  @override
+  Widget build(BuildContext context) {
+    final pickup = delivery.pickup;
+    final dropoffs = delivery.dropoffs ?? [];
+
+    return _EnhancedCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.local_shipping_outlined,
+                  color: AppColors.primary, size: 20.w),
+              Gap.w8,
+              AppText.h5(
+                'Locations',
+                fontWeight: FontWeight.bold,
+                fontSize: 16.sp,
+              ),
+              const Spacer(),
+              if (dropoffs.isNotEmpty)
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: AppText.caption(
+                    '${dropoffs.length} drop-off${dropoffs.length > 1 ? 's' : ''}',
+                    color: AppColors.primary,
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ],
+          ),
+          Gap.h16,
+
+          // ── Pickup ──────────────────────────────────────────────────
+          _LocationRow(
+            icon: Icons.trip_origin,
+            iconColor: Colors.green,
+            label: 'Pickup',
+            address: pickup?.location?.address,
+            isLast: false,
+          ),
+
+          // ── Dropoffs ────────────────────────────────────────────────
+          ...List.generate(dropoffs.length, (i) {
+            final drop = dropoffs[i];
+            return _LocationRow(
+              icon: Icons.location_on,
+              iconColor: AppColors.primary,
+              label: 'Drop-off ${i + 1}',
+              name: drop.name,
+              phone: drop.contact,
+              address: drop.location?.address,
+              isLast: i == dropoffs.length - 1,
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Single location row (pickup or dropoff)
+// ---------------------------------------------------------------------------
+
+class _LocationRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String? name;
+  final String? phone;
+  final String? address;
+  final bool isLast;
+
+  const _LocationRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.isLast,
+    this.name,
+    this.phone,
+    this.address,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Icon + connector
+          Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(7.r),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 16.w),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2.w,
+                    margin: EdgeInsets.symmetric(vertical: 4.h),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          iconColor.withOpacity(0.5),
+                          AppColors.primary.withOpacity(0.3)
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          Gap.w12,
+
+          // Content
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 20.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Label chip
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: iconColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6.r),
+                    ),
+                    child: AppText.caption(
+                      label,
+                      color: iconColor,
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Gap.h6,
+                  // Name + phone on one line
+                  if (name != null || phone != null)
+                    Row(
+                      children: [
+                        if (name != null)
+                          AppText.body(
+                            name!,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        if (name != null && phone != null)
+                          AppText.caption(
+                            '  •  ',
+                            color: Colors.grey.shade400,
+                            fontSize: 13.sp,
+                          ),
+                        if (phone != null)
+                          AppText.body(
+                            phone!,
+                            color: AppColors.primary,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                      ],
+                    ),
+                  if (name != null || phone != null) Gap.h4,
+                  // Address
+                  AppText.body(
+                    address ?? 'Address not available',
+                    color: Colors.grey.shade600,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -2,8 +2,8 @@ name: starter_codes
 description: "A new Flutter project."
 publish_to: "none"
 
-version: 2.0.8+0 #ios÷
-# version: 2.0.3+31 #android÷
+# version: 2.0.12+0 #ios÷
+version: 2.0.3+35 #android÷
 
 environment:
   sdk: ">=3.3.4 <4.0.0"

@@ -1,6 +1,7 @@
 // lib/features/auth/viewmodel/login_viewmodel.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
@@ -95,6 +96,9 @@ class LoginViewModel extends BaseViewModel {
 
         // Email is verified - proceed with normal login flow
         logger.i('Login successful! Email verified. Proceeding to dashboard.');
+
+        // Notify OS to save credentials (triggers password manager save prompt)
+        TextInput.finishAutofillContext();
 
         _authService.sendFcmTokenToBackend();
 

@@ -1,5 +1,46 @@
 // lib/features/booking/model/order_model.dart
 
+class Guest {
+  final String email;
+  final String firstname;
+  final String lastname;
+  final String phone;
+  final String? role;
+  final String? id;
+
+  Guest({
+    required this.email,
+    required this.firstname,
+    required this.lastname,
+    required this.phone,
+    this.role,
+    this.id,
+  });
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {
+      'email': email,
+      'firstname': firstname,
+      'lastname': lastname,
+      'phone': phone,
+    };
+    if (role != null) data['role'] = role;
+    if (id != null) data['_id'] = id;
+    return data;
+  }
+
+  factory Guest.fromJson(Map<String, dynamic> json) {
+    return Guest(
+      email: json['email'] as String,
+      firstname: json['firstname'] as String,
+      lastname: json['lastname'] as String,
+      phone: json['phone'] as String,
+      role: json['role'] as String?,
+      id: json['_id'] as String? ?? json['id'] as String?,
+    );
+  }
+}
+
 class OrderModel {
   final String id;
   final String user;
@@ -371,5 +412,244 @@ class QuoteItem {
       'price': price,
       'vehicleType': vehicleType,
     };
+  }
+}
+
+class LatLngWithAddress {
+  final double lat;
+  final double lng;
+  final String? address;
+
+  LatLngWithAddress({
+    required this.lat,
+    required this.lng,
+    this.address,
+  });
+
+  factory LatLngWithAddress.fromJson(Map<String, dynamic> json) {
+    return LatLngWithAddress(
+      lat: (json['lat'] as num).toDouble(),
+      lng: (json['lng'] as num).toDouble(),
+      address: json['address'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {
+      'lat': lat,
+      'lng': lng,
+    };
+    if (address != null) data['address'] = address;
+    return data;
+  }
+}
+
+class RouteEndpoint {
+  final LatLngWithAddress location;
+  final String contact;
+  final String? name;
+
+  RouteEndpoint({
+    required this.location,
+    required this.contact,
+    this.name,
+  });
+
+  factory RouteEndpoint.fromJson(Map<String, dynamic> json) {
+    return RouteEndpoint(
+      location:
+          LatLngWithAddress.fromJson(json['location'] as Map<String, dynamic>),
+      contact: json['contact'] as String,
+      name: json['name'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {
+      'location': location.toJson(),
+      'contact': contact,
+    };
+    if (name != null) data['name'] = name;
+    return data;
+  }
+}
+
+class BulkRoute {
+  final RouteEndpoint from;
+  final RouteEndpoint to;
+  final double price;
+  final double distance;
+  final String? id;
+
+  BulkRoute({
+    required this.from,
+    required this.to,
+    required this.price,
+    required this.distance,
+    this.id,
+  });
+
+  factory BulkRoute.fromJson(Map<String, dynamic> json) {
+    return BulkRoute(
+      from: RouteEndpoint.fromJson(json['from'] as Map<String, dynamic>),
+      to: RouteEndpoint.fromJson(json['to'] as Map<String, dynamic>),
+      price: (json['price'] as num).toDouble(),
+      distance: (json['distance'] as num).toDouble(),
+      id: json['_id'] as String? ?? json['id'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {
+      'from': from.toJson(),
+      'to': to.toJson(),
+      'price': price,
+      'distance': distance,
+    };
+    if (id != null) data['_id'] = id;
+    return data;
+  }
+}
+
+class BulkQuoteResponse {
+  final String quote;
+  final double totalAmount;
+  final double totalDistance;
+  final List<BulkRoute> route;
+  final int stops;
+
+  BulkQuoteResponse({
+    required this.quote,
+    required this.totalAmount,
+    required this.totalDistance,
+    required this.route,
+    required this.stops,
+  });
+
+  factory BulkQuoteResponse.fromJson(Map<String, dynamic> json) {
+    return BulkQuoteResponse(
+      quote: json['quote'] as String,
+      totalAmount: (json['totalAmount'] as num).toDouble(),
+      totalDistance: (json['totalDistance'] as num).toDouble(),
+      route: (json['route'] as List<dynamic>)
+          .map((e) => BulkRoute.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      stops: json['stops'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'quote': quote,
+      'totalAmount': totalAmount,
+      'totalDistance': totalDistance,
+      'route': route.map((e) => e.toJson()).toList(),
+      'stops': stops,
+    };
+  }
+}
+
+class MultiOrderItem {
+  final String? id;
+  final LatLngWithAddress pickupLocation;
+  final LatLngWithAddress dropoffLocation;
+  final String? pickupContactName;
+  final String? pickupContactPhone;
+  final String? receiverContactName;
+  final String? receiverContactPhone;
+  final String? state;
+  final String? vehicleRequest;
+  final String? note;
+  final String? description;
+  final double deliveryFee;
+  final double distance;
+
+  MultiOrderItem({
+    this.id,
+    required this.pickupLocation,
+    required this.dropoffLocation,
+    this.pickupContactName,
+    this.pickupContactPhone,
+    this.receiverContactName,
+    this.receiverContactPhone,
+    this.state,
+    this.vehicleRequest,
+    this.note,
+    this.description,
+    required this.deliveryFee,
+    required this.distance,
+  });
+
+  factory MultiOrderItem.fromJson(Map<String, dynamic> json) {
+    final pickupContact = json['pickupContact'] as Map<String, dynamic>?;
+    final receiverContact = json['receiverContact'] as Map<String, dynamic>?;
+    return MultiOrderItem(
+      id: json['_id'] as String?,
+      pickupLocation:
+          LatLngWithAddress.fromJson(json['pickupLocation'] as Map<String, dynamic>),
+      dropoffLocation:
+          LatLngWithAddress.fromJson(json['dropoffLocation'] as Map<String, dynamic>),
+      pickupContactName: pickupContact?['name'] as String?,
+      pickupContactPhone: pickupContact?['phone'] as String?,
+      receiverContactName: receiverContact?['name'] as String?,
+      receiverContactPhone: receiverContact?['phone'] as String?,
+      state: json['state'] as String?,
+      vehicleRequest: json['vehicleRequest'] as String?,
+      note: json['note'] as String?,
+      description: json['description'] as String?,
+      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0,
+      distance: (json['distance'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+class MultiOrderQuoteResponse {
+  final String? user;
+  final Guest? guest;
+  final double totalAmount;
+  final String quote;
+  final int totalOrders;
+  final List<MultiOrderItem> orders;
+
+  MultiOrderQuoteResponse({
+    this.user,
+    this.guest,
+    required this.totalAmount,
+    required this.quote,
+    required this.totalOrders,
+    this.orders = const [],
+  });
+
+  factory MultiOrderQuoteResponse.fromJson(Map<String, dynamic> json) {
+    // Parse orders from quoteDetails.orders if present
+    List<MultiOrderItem> parsedOrders = [];
+    final quoteDetails = json['quoteDetails'] as Map<String, dynamic>?;
+    if (quoteDetails != null && quoteDetails['orders'] is List) {
+      parsedOrders = (quoteDetails['orders'] as List)
+          .map((e) => MultiOrderItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    return MultiOrderQuoteResponse(
+      user: json['user'] as String?,
+      guest: json['guest'] != null
+          ? Guest.fromJson(json['guest'] as Map<String, dynamic>)
+          : null,
+      totalAmount: (json['totalAmount'] as num).toDouble(),
+      quote: json['quote'] as String,
+      totalOrders: json['totalOrders'] as int,
+      orders: parsedOrders,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {
+      'totalAmount': totalAmount,
+      'quote': quote,
+      'totalOrders': totalOrders,
+    };
+    if (user != null) data['user'] = user;
+    if (guest != null) data['guest'] = guest!.toJson();
+    return data;
   }
 }

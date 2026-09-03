@@ -178,7 +178,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
           Navigator.of(context).pushReplacement(MaterialPageRoute(
               builder: (context) => PaymentWebViewScreen(
                     paymentUrl: orderResponse.authorizationUrl!,
-                    orderId: orderResponse.order.id,
+                    orderId: orderResponse.order?.id ?? '',
                     reference: orderResponse.reference ?? '',
                     isStoreOrder: true,
                   )));
@@ -186,7 +186,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
           NavigationService.instance.navigateToReplaceAll(
             NavigatorRoutes.paymentVerificationScreen,
             argument: {
-              'orderId': orderResponse.order.id,
+              'orderId': orderResponse.order?.id ?? '',
               'reference': orderResponse.reference ?? '',
               'isStoreOrder': true,
             },
@@ -813,14 +813,14 @@ class _CartScreenState extends ConsumerState<CartScreen>
                 false,
                 'Pay securely with card',
               ),
-              Gap.h16,
-              _buildPaymentDetailOption(
-                context,
-                'Globus Bank',
-                Icons.account_balance,
-                false,
-                'Pay with Globus Bank',
-              ),
+              // Gap.h16,
+              // _buildPaymentDetailOption(
+              //   context,
+              //   'Globus Bank',
+              //   Icons.account_balance,
+              //   false,
+              //   'Pay with Globus Bank',
+              // ),
               Gap.h32,
             ],
           ),

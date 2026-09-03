@@ -1,6 +1,93 @@
 import 'package:equatable/equatable.dart';
 // import 'package:intl/intl.dart'; // Uncomment if you use DateFormat for date/time parsing
 
+// --- Bulk Order Sub-Models ---
+
+class BulkLocationPoint extends Equatable {
+  final double? lat;
+  final double? lng;
+  final String? address;
+
+  const BulkLocationPoint({this.lat, this.lng, this.address});
+
+  factory BulkLocationPoint.fromJson(Map<String, dynamic> json) {
+    return BulkLocationPoint(
+      lat: (json['lat'] as num?)?.toDouble(),
+      lng: (json['lng'] as num?)?.toDouble(),
+      address: json['address'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'lat': lat,
+        'lng': lng,
+        'address': address,
+      };
+
+  @override
+  List<Object?> get props => [lat, lng, address];
+}
+
+class BulkContact extends Equatable {
+  final BulkLocationPoint? location;
+  final String? contact;
+  final String? name;
+
+  const BulkContact({this.location, this.contact, this.name});
+
+  factory BulkContact.fromJson(Map<String, dynamic> json) {
+    return BulkContact(
+      location: json['location'] is Map<String, dynamic>
+          ? BulkLocationPoint.fromJson(
+              json['location'] as Map<String, dynamic>)
+          : null,
+      contact: json['contact'] as String?,
+      name: json['name'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'location': location?.toJson(),
+        'contact': contact,
+        'name': name,
+      };
+
+  @override
+  List<Object?> get props => [location, contact, name];
+}
+
+class BulkOrderRoute extends Equatable {
+  final BulkContact? from;
+  final BulkContact? to;
+  final double? distance;
+  final String? id;
+
+  const BulkOrderRoute({this.from, this.to, this.distance, this.id});
+
+  factory BulkOrderRoute.fromJson(Map<String, dynamic> json) {
+    return BulkOrderRoute(
+      from: json['from'] is Map<String, dynamic>
+          ? BulkContact.fromJson(json['from'] as Map<String, dynamic>)
+          : null,
+      to: json['to'] is Map<String, dynamic>
+          ? BulkContact.fromJson(json['to'] as Map<String, dynamic>)
+          : null,
+      distance: (json['distance'] as num?)?.toDouble(),
+      id: json['_id'] as String? ?? json['id'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'from': from?.toJson(),
+        'to': to?.toJson(),
+        'distance': distance,
+        '_id': id,
+      };
+
+  @override
+  List<Object?> get props => [from, to, distance, id];
+}
+
 // --- Nested Models ---
 
 class UserOrderModel extends Equatable {
@@ -275,6 +362,17 @@ class DeliveryModel extends Equatable {
   final String? date;
   final String? time;
 
+  // --- Bulk order fields ---
+  final bool? isBulkOrder;
+  final BulkContact? pickup;
+  final List<BulkContact>? dropoffs;
+  final int? totalOrders;
+  final List<BulkOrderRoute>? route;
+  final double? walletAmountUsed;
+  final String? paymentSource;
+  final String? paymentReference;
+  final double? riderFee;
+
   const DeliveryModel({
     this.id,
     this.user,
@@ -301,6 +399,16 @@ class DeliveryModel extends Equatable {
     this.createdAt,
     this.description,
     this.note,
+    // bulk
+    this.isBulkOrder,
+    this.pickup,
+    this.dropoffs,
+    this.totalOrders,
+    this.route,
+    this.walletAmountUsed,
+    this.paymentSource,
+    this.paymentReference,
+    this.riderFee,
   });
 
   factory DeliveryModel.fromJson(Map<String, dynamic> json) {
@@ -368,10 +476,11 @@ class DeliveryModel extends Equatable {
     // Fallback for totalAmount: check 'total_amount' or sum
     if (parsedTotalAmount == null) {
       if (json['total_amount'] != null) {
-        if (json['total_amount'] is num)
+        if (json['total_amount'] is num) {
           parsedTotalAmount = (json['total_amount'] as num).toDouble();
-        else if (json['total_amount'] is String)
+        } else if (json['total_amount'] is String) {
           parsedTotalAmount = double.tryParse(json['total_amount']);
+        }
       }
     }
     // Final fallback: Calculate totalAmount if amount and fee exist
@@ -391,8 +500,8 @@ class DeliveryModel extends Equatable {
         status: json['status'] as String?,
         deliveryType: json['deliveryType'] as String?,
         orderType: json['orderType'] as String?,
-        amount: parsedAmount, // Use the parsed amount
-        deliveryFee: parsedDeliveryFee, // Use the parsed deliveryFee
+        amount: parsedAmount,
+        deliveryFee: parsedDeliveryFee,
         paystackReference: json['paystackReference'] as String?,
         paymentStatus: json['paymentStatus'] as String?,
         products: (json['products'] as List<dynamic>?)
@@ -401,9 +510,9 @@ class DeliveryModel extends Equatable {
         store: json['store'] is Map<String, dynamic>
             ? StoreModel.fromJson(json['store'] as Map<String, dynamic>)
             : null,
-        orderOtp: parsedOrderOtp, // Use the parsed orderOtp
+        orderOtp: parsedOrderOtp,
         trackingId: json['trackingId'] as String?,
-        totalAmount: parsedTotalAmount, // Use the parsed totalAmount
+        totalAmount: parsedTotalAmount,
         deliveryAgent: agent,
         vehicleRequest: json['vehicleRequest'] as String?,
         vehicleType: json['vehicleType'] as String?,
@@ -411,7 +520,23 @@ class DeliveryModel extends Equatable {
         time: json['time'],
         date: json['date'],
         createdAt: json['createdAt'],
-        note: json['note'] as String?);
+        note: json['note'] as String?,
+        // bulk order fields
+        isBulkOrder: json['isBulkOrder'] as bool?,
+        pickup: json['pickup'] is Map<String, dynamic>
+            ? BulkContact.fromJson(json['pickup'] as Map<String, dynamic>)
+            : null,
+        dropoffs: (json['dropoffs'] as List<dynamic>?)
+            ?.map((e) => BulkContact.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        totalOrders: json['totalOrders'] as int?,
+        route: (json['route'] as List<dynamic>?)
+            ?.map((e) => BulkOrderRoute.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        walletAmountUsed: (json['walletAmountUsed'] as num?)?.toDouble(),
+        paymentSource: json['paymentSource'] as String?,
+        paymentReference: json['paymentReference'] as String?,
+        riderFee: (json['riderFee'] as num?)?.toDouble());
   }
 
   Map<String, dynamic> toJson() {
@@ -468,6 +593,15 @@ class DeliveryModel extends Equatable {
         vehicleType,
         date,
         time,
+        isBulkOrder,
+        pickup,
+        dropoffs,
+        totalOrders,
+        route,
+        walletAmountUsed,
+        paymentSource,
+        paymentReference,
+        riderFee,
       ];
 
   int get totalItemsOrdered {
@@ -501,6 +635,15 @@ class DeliveryModel extends Equatable {
     String? vehicleType,
     String? date,
     String? time,
+    bool? isBulkOrder,
+    BulkContact? pickup,
+    List<BulkContact>? dropoffs,
+    int? totalOrders,
+    List<BulkOrderRoute>? route,
+    double? walletAmountUsed,
+    String? paymentSource,
+    String? paymentReference,
+    double? riderFee,
   }) {
     return DeliveryModel(
       id: id ?? this.id,
@@ -525,6 +668,15 @@ class DeliveryModel extends Equatable {
       vehicleType: vehicleType ?? this.vehicleType,
       date: date ?? this.date,
       time: time ?? this.time,
+      isBulkOrder: isBulkOrder ?? this.isBulkOrder,
+      pickup: pickup ?? this.pickup,
+      dropoffs: dropoffs ?? this.dropoffs,
+      totalOrders: totalOrders ?? this.totalOrders,
+      route: route ?? this.route,
+      walletAmountUsed: walletAmountUsed ?? this.walletAmountUsed,
+      paymentSource: paymentSource ?? this.paymentSource,
+      paymentReference: paymentReference ?? this.paymentReference,
+      riderFee: riderFee ?? this.riderFee,
     );
   }
 }
@@ -536,7 +688,7 @@ class DeliveriesResponse extends Equatable {
   final String message;
   final List<DeliveryModel> data;
 
-  DeliveriesResponse({
+  const DeliveriesResponse({
     required this.success,
     required this.message,
     required this.data,

@@ -121,6 +121,9 @@ class _PhoneNumberInputState extends State<PhoneNumberInput> {
               controller: _localNumberController,
               enabled: widget.enabled,
               keyboardType: TextInputType.phone,
+              autofillHints: widget.enabled
+                  ? const [AutofillHints.telephoneNumberLocal]
+                  : null,
               decoration: InputDecoration(
                 hintText: widget.hint,
                 hintStyle: TextStyle(

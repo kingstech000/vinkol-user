@@ -1,0 +1,95 @@
+{
+  "success": true,
+  "message": "Multi-order quote generated",
+  "data": {
+    "user": "6962c17b42fec43bb2ee7ee1",
+    "totalAmount": 5644,
+    "quote": "6a0494f860ca17af2cf8a78e",
+    "totalOrders": 2,
+
+    "quoteDetails": {
+      "user": "6962c17b42fec43bb2ee7ee1",
+
+      "orders": [
+        {
+          "_id": "6a0494f860ca17af2cf8a78f",
+
+          "pickupLocation": {
+            "lat": 6.344837099999999,
+            "lng": 5.634048,
+            "address": "New Benin Market, 2nd Victory Rd, off New Lagos Road, Use, Benin City 300102, Edo, Nigeria"
+          },
+
+          "dropoffLocation": {
+            "lat": 6.3576043,
+            "lng": 5.6427317,
+            "address": "222 Ewah Rd, Junction, Benin City 300102, Edo, Nigeria"
+          },
+
+          "pickupContact": {
+            "name": "Michael Angelo",
+            "phone": "091648739333"
+          },
+
+          "receiverContact": {
+            "name": "Michael Angelo",
+            "phone": "091648739333"
+          },
+
+          "state": "Edo",
+          "vehicleRequest": "bike",
+          "note": "Nothing",
+          "description": "Yam and egg",
+          "deliveryFee": 2700,
+          "distance": 3.8
+        },
+
+        {
+          "_id": "6a0494f860ca17af2cf8a790",
+
+          "pickupLocation": {
+            "lat": 6.3773845,
+            "lng": 5.6669254,
+            "address": "6 gibefuwmen street, Upper Mission Ext, Uselu, Benin City 301112, Edo, Nigeria"
+          },
+
+          "dropoffLocation": {
+            "lat": 6.3542274,
+            "lng": 5.6645289,
+            "address": "9M37+MP8, Uselu, Benin City 300104, Edo, Nigeria"
+          },
+
+          "pickupContact": {
+            "name": "Kelvin Lean",
+            "phone": "091473933033"
+          },
+
+          "receiverContact": {
+            "name": "Kelvin Lean",
+            "phone": "091473933033"
+          },
+
+          "state": "Edo",
+          "vehicleRequest": "bike",
+          "note": "Omooooh",
+          "description": "Amala",
+          "deliveryFee": 2944,
+          "distance": 5.2
+        }
+      ],
+
+      "totalAmount": 5644,
+      "totalOrders": 2,
+      "used": false,
+
+      "expiresAt": "2026-05-13T15:27:56.733Z",
+
+      "_id": "6a0494f860ca17af2cf8a78e",
+
+      "createdAt": "2026-05-13T15:12:56.747Z",
+      "updatedAt": "2026-05-13T15:12:56.747Z",
+
+      "__v": 0
+    }
+  }
+}

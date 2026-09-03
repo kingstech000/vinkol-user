@@ -1,27 +1,23 @@
 class ApiRoute {
   /// Base Url
-  // static const String baseUrl = "https://vinkol-server.onrender.com/api/v1";
-  static const String baseUrl =
-      "https://vinkol-server-staging.vercel.app/api/v1";
+
+  static const String baseUrl = "https://vinkol-server.onrender.com/api/v1";
+//   static const String baseUrl =
+//       "https://vinkol-server-staging.vercel.app/api/v1";
 
   // Auth Url
   static const String login = "$baseUrl/users/login";
   static const String forgotPassword = "$baseUrl/users/forgot-password";
-  static const String resetPassword =
-      "$baseUrl/users/reset-password";
+  static const String resetPassword = "$baseUrl/users/reset-password";
 
   // Signup & Verification
-  static const String signUp =
-      "$baseUrl/users/register";
-  static const String verifyEmail =
-      "$baseUrl/users/verify-email";
-  static const String resendOtp =
-      "$baseUrl/users/resend-otp";
+  static const String signUp = "$baseUrl/users/register";
+  static const String verifyEmail = "$baseUrl/users/verify-email";
+  static const String resendOtp = "$baseUrl/users/resend-otp";
   static const String forgetPassword = '$baseUrl/users/forgot-password';
   static const String requestPasswordReset = '$baseUrl/users/reset-password';
   // User & Profile Management
-  static const String userProfile =
-      "$baseUrl/users/profile";
+  static const String userProfile = "$baseUrl/users/profile";
   static const String updateProfile = "$baseUrl/users/update-profile";
 
   // Orders/Bookings Routes
@@ -32,6 +28,10 @@ class ApiRoute {
 
   static const String createOrderNew = "$baseUrl/orders/create-new";
   static const String getChowdeckQuote = "$baseUrl/orders/get-cd-quote";
+  static const String getBulkQuote = "$baseUrl/orders/get-bulk-quote";
+  static const String createBulkOrder = "$baseUrl/orders/create-bulk-order";
+  static const String getMultiOrderQuote = "$baseUrl/orders/multi-order-quote";
+  static const String createMultiOrder = "$baseUrl/orders/create-multi-order";
 
   // STORE
   static const String stores = '$baseUrl/stores';

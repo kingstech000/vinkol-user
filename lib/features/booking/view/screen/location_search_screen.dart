@@ -8,8 +8,10 @@ import 'package:starter_codes/provider/location_provider.dart';
 
 class LocationSearchScreen extends ConsumerStatefulWidget {
   final bool isPickupLocation;
+  final String? stopId;
 
-  const LocationSearchScreen({super.key, required this.isPickupLocation});
+  const LocationSearchScreen(
+      {super.key, required this.isPickupLocation, this.stopId});
 
   @override
   ConsumerState<LocationSearchScreen> createState() =>
@@ -95,10 +97,14 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
           .fetchCoordinateFromPlaceId(tempLocationModel);
 
       final notifier = ref.read(rideLocationProvider.notifier);
-      if (widget.isPickupLocation) {
-        notifier.setPickUpLocation(detailedLocation);
+      if (widget.stopId != null) {
+        notifier.updateStopLocation(widget.stopId!, detailedLocation);
       } else {
-        notifier.setDropOffLocation(detailedLocation);
+        if (widget.isPickupLocation) {
+          notifier.setPickUpLocation(detailedLocation);
+        } else {
+          notifier.setDropOffLocation(detailedLocation);
+        }
       }
 
       if (mounted) {
@@ -178,7 +184,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
 
   Widget _buildHeaderAndSearch() {
     return Container(
-      padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 20.h),
+      padding: EdgeInsets.fromLTRB(24.w, 0.h, 24.w, 20.h),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -219,7 +225,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                           ? 'Pick-up Location'
                           : 'Drop-off Location',
                       style: TextStyle(
-                        fontSize: 20.sp,
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
                         color: Colors.black87,
                         letterSpacing: -0.5,
@@ -229,7 +235,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                     Text(
                       'Search for an address',
                       style: TextStyle(
-                        fontSize: 13.sp,
+                        fontSize: 12.sp,
                         color: Colors.grey[600],
                         fontWeight: FontWeight.w400,
                       ),
@@ -286,18 +292,18 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(12.r),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(12.r),
                   borderSide: BorderSide(
                     color: Colors.grey[300]!,
                     width: 1.5,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(12.r),
                   borderSide: const BorderSide(
                     color: AppColors.primary,
                     width: 2,
@@ -305,7 +311,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                 ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 16.w,
-                  vertical: 18.h,
+                  vertical: 10.h,
                 ),
               ),
             ),
@@ -400,8 +406,8 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
           child: Row(
             children: [
               Container(
-                width: 48.w,
-                height: 48.w,
+                width: 40.w,
+                height: 40.w,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10.r),
@@ -420,7 +426,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                     Text(
                       description,
                       style: TextStyle(
-                        fontSize: 15.sp,
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
@@ -432,7 +438,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                       Text(
                         secondaryText,
                         style: TextStyle(
-                          fontSize: 13.sp,
+                          fontSize: 12.sp,
                           color: Colors.grey[600],
                         ),
                         maxLines: 1,

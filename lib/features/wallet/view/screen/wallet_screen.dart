@@ -601,8 +601,9 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
         ),
         const SizedBox(height: 12),
         const SizedBox(
-          height: 32,
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            color: AppColors.blue,
+          ),
         ),
       ],
     );

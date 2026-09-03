@@ -375,7 +375,7 @@ class StoreService {
       );
 
       logger.i(
-          'Store order created successfully. Order ID: ${orderInitiation.order.id}');
+          'Store order created successfully. Order ID: ${orderInitiation.order?.id}');
       logger.i('Payment URL: ${orderInitiation.authorizationUrl}');
 
       return orderInitiation;

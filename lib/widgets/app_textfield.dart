@@ -37,6 +37,9 @@ class AppTextField extends StatefulWidget {
   final EdgeInsets? contentPadding;
   final bool enabled;
   final bool validCode;
+  final Iterable<String>? autofillHints;
+  final bool enableSuggestions;
+  final bool autocorrect;
 
   const AppTextField({
     super.key,
@@ -69,6 +72,9 @@ class AppTextField extends StatefulWidget {
     this.fillColor,
     this.maxLength,
     this.focusColor,
+    this.autofillHints,
+    this.enableSuggestions = true,
+    this.autocorrect = true,
   });
 
   @override
@@ -94,6 +100,9 @@ class _AppTextFieldState extends State<AppTextField> {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       TextFormField(
+          autofillHints: widget.autofillHints,
+          enableSuggestions: widget.enableSuggestions,
+          autocorrect: widget.autocorrect,
           textCapitalization: widget.textCapitalization,
           maxLength: widget.maxLength,
           maxLines: widget.maxLines,
@@ -171,6 +180,7 @@ class PinCodeField extends StatefulWidget {
     this.isCompleted = false,
     this.isError = false,
     this.autoDismissKeyboard,
+    this.autofillHints,
   });
   final double? width;
   final double? height;
@@ -183,6 +193,7 @@ class PinCodeField extends StatefulWidget {
   final bool isCompleted;
   final bool isError;
   final TextEditingController otpController;
+  final Iterable<String>? autofillHints;
 
   @override
   State<PinCodeField> createState() => _PinCodeFieldState();

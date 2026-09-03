@@ -47,104 +47,115 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             child: Form(
               // Wrap with Form for validation
               key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.h2('Sign up'),
-                  Gap.h8,
-                  AppText.body('Create an account with few steps'),
-                  Gap.h32,
-                  AppText.caption('E-mail Address'),
-                  Gap.h8,
-                  AppTextField(
-                    controller: _emailController,
-                    hint: 'vinkol.user@gmail.com',
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) => Validator.email(value),
-                    suffixIcon: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.email,
-                        size: 20, // Adjusted size for better visibility
-                        color: AppColors.greyLight,
-                      ),
-                    ),
-                  ),
-                  Gap.h16,
-                  AppText.caption('Password'),
-                  Gap.h8,
-                  AppTextField(
-                    controller: _passwordController,
-                    hint: '********',
-                    isPassword: true, // Use isPassword for toggling visibility
-                    validator: (value) =>
-                        Validator.password(value), // Add password validator
-                  ),
-                  Gap.h16,
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _termsAgreed,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            _termsAgreed = value!;
-                          });
-                        },
-                        activeColor: AppColors.primary,
-                      ),
-                      Expanded(
-                        child: AppText.caption(
-                          'I agree to the terms & conditions',
+              child: AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText.h2('Sign up'),
+                    Gap.h8,
+                    AppText.body('Create an account with few steps'),
+                    Gap.h32,
+                    AppText.caption('E-mail Address'),
+                    Gap.h8,
+                    AppTextField(
+                      controller: _emailController,
+                      hint: 'vinkol.user@gmail.com',
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.email],
+                      textCapitalization: TextCapitalization.none,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      validator: (value) => Validator.email(value),
+                      suffixIcon: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.email,
+                          size: 20, // Adjusted size for better visibility
+                          color: AppColors.greyLight,
                         ),
                       ),
-                    ],
-                  ),
-                  Gap.h32,
-                  SizedBox(
-                    width: double.infinity,
-                    child: AppButton.primary(
-                      title: 'Next',
-                      loading: signUpViewModel.isBusy,
-                      onTap: (_termsAgreed &&
-                              signUpViewModel.state.maybeWhen(
-                                busy: () => false,
-                                orElse: () => true,
-                              ))
-                          ? () {
-                              if (_formKey.currentState?.validate() ?? false) {
-                                // Validate form
-                                signUpViewModel.signUp(
-                                  email: _emailController.text,
-                                  password: _passwordController.text,
-                                  termsAgreed: _termsAgreed,
-                                  context: context,
-                                );
-                              }
-                            }
-                          : null, // Disable button
                     ),
-                  ),
-                  Gap.h32,
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Gap.h16,
+                    AppText.caption('Password'),
+                    Gap.h8,
+                    AppTextField(
+                      controller: _passwordController,
+                      hint: '********',
+                      isPassword:
+                          true, // Use isPassword for toggling visibility
+                      autofillHints: const [AutofillHints.newPassword],
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      validator: (value) =>
+                          Validator.password(value), // Add password validator
+                    ),
+                    Gap.h16,
+                    Row(
                       children: [
-                        AppText.caption('Have an account? '),
-                        GestureDetector(
-                          onTap: signUpViewModel
-                              .navigateToLogin, // Use ViewModel for navigation
+                        Checkbox(
+                          value: _termsAgreed,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _termsAgreed = value!;
+                            });
+                          },
+                          activeColor: AppColors.primary,
+                        ),
+                        Expanded(
                           child: AppText.caption(
-                            'Login',
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
+                            'I agree to the terms & conditions',
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Gap.h16,
-                ],
+                    Gap.h32,
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton.primary(
+                        title: 'Next',
+                        loading: signUpViewModel.isBusy,
+                        onTap: (_termsAgreed &&
+                                signUpViewModel.state.maybeWhen(
+                                  busy: () => false,
+                                  orElse: () => true,
+                                ))
+                            ? () {
+                                if (_formKey.currentState?.validate() ??
+                                    false) {
+                                  // Validate form
+                                  signUpViewModel.signUp(
+                                    email: _emailController.text,
+                                    password: _passwordController.text,
+                                    termsAgreed: _termsAgreed,
+                                    context: context,
+                                  );
+                                }
+                              }
+                            : null, // Disable button
+                      ),
+                    ),
+                    Gap.h32,
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AppText.caption('Have an account? '),
+                          GestureDetector(
+                            onTap: signUpViewModel
+                                .navigateToLogin, // Use ViewModel for navigation
+                            child: AppText.caption(
+                              'Login',
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Gap.h16,
+                  ],
+                ),
               ),
             ),
           ),

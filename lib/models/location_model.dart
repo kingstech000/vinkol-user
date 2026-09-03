@@ -151,6 +151,24 @@ class LocationModel {
     );
   }
 
+  LocationModel copyWith({
+    String? address,
+    String? formattedAddress,
+    LatLng? coordinates,
+    String? placeId,
+    String? state,
+    String? country,
+  }) {
+    return LocationModel(
+      address: address ?? this.address,
+      formattedAddress: formattedAddress ?? this.formattedAddress,
+      coordinates: coordinates ?? this.coordinates,
+      placeId: placeId ?? this.placeId,
+      state: state ?? this.state,
+      country: country ?? this.country,
+    );
+  }
+
   @override
   String toString() {
     return 'LocationModel(address: $address, formattedAddress: $formattedAddress, '

@@ -52,5 +52,7 @@ class NavigatorRoutes {
   // ADD THESE NEW CONSTANTS:
   static const paymentWebViewScreen = 'payment-webview-screen';
   static const paymentVerificationScreen = 'payment-verification-screen';
+  static const String bulkMapWithQuoteScreen = 'bulk-map-with-quote-screen';
+  static const String multiMapWithQuoteScreen = 'multi-map-with-quote-screen';
   
 }

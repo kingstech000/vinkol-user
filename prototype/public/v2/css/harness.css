@@ -1,0 +1,40 @@
+/* v2 harness. Neutral chrome so it never competes with the three directions. */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+.h2x { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; background: #08090b; color: #e9ecf0; }
+.h2x__rail { border-right: 1px solid #17191d; height: 100vh; position: sticky; top: 0; overflow-y: auto; padding-bottom: 32px; }
+.h2x__brand { padding: 20px; border-bottom: 1px solid #17191d; }
+.h2x__brand h1 { margin: 0; font-size: 15px; letter-spacing: -0.2px; }
+.h2x__brand p { margin: 4px 0 0; font-size: 11px; color: #5c636e; line-height: 16px; }
+
+.h2x__dir { padding: 16px 20px 6px; }
+.h2x__dir b { font-size: 12px; letter-spacing: 0.3px; display: block; }
+.h2x__dir span { font-size: 10px; color: #5c636e; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.h2x__link { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 20px;
+  background: none; border: 0; border-left: 2px solid transparent; color: #8b93a0; font: inherit;
+  font-size: 13px; text-align: left; cursor: pointer; }
+.h2x__link:hover { background: #0f1114; color: #fff; }
+.h2x__link[aria-current='true'] { color: #fff; background: #0f1114; }
+.h2x__link[data-dir='midnight'][aria-current='true'] { border-left-color: #2e8bef; }
+.h2x__link[data-dir='daylight'][aria-current='true'] { border-left-color: #0e74d8; }
+.h2x__link[data-dir='kinetic'][aria-current='true'] { border-left-color: #ff6b2c; }
+
+.h2x__stage { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 30px 24px 60px; }
+.h2x__note { max-width: 620px; text-align: center; font-size: 12px; line-height: 19px; color: #6b7280; margin: 0; }
+.h2x__note b { color: #99a1ae; }
+
+.dev { width: 390px; height: 844px; border-radius: 46px; padding: 10px; background: #1a1d21; flex: none;
+  box-shadow: 0 40px 90px -30px rgba(0,0,0,.75); }
+.dev__in { position: relative; width: 100%; height: 100%; border-radius: 36px; overflow: hidden; }
+
+/* Every direction paints its own screen surface. */
+.scr { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+.scr__body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.scr__body::-webkit-scrollbar { width: 0; }
+
+.sb { flex: none; height: 46px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 22px; font-size: 13px; font-weight: 600; position: relative; z-index: 5; }
+.sb svg { opacity: .9; }
+.sb__r { display: flex; align-items: center; gap: 5px; }

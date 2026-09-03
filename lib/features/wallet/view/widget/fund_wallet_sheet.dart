@@ -263,7 +263,7 @@ Future<void> _fundWallet(
     double amount, WidgetRef ref, BuildContext context, bool mounted) async {
   try {
     final walletService = ref.read(walletServiceProvider);
-    final data = await walletService.fundWallet(amount, 'Globus');
+    final data = await walletService.fundWallet(amount, 'Paystack');
 
     if (data['authorization_url'] != null && mounted) {
       final result = await Navigator.push(

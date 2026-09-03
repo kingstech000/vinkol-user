@@ -30,9 +30,9 @@ class NetworkClient {
   static Dio createDio() {
     var dio = Dio(BaseOptions(
       baseUrl: ApiRoute.baseUrl,
-      receiveTimeout: const Duration(milliseconds: 20000), // 15 seconds
-      connectTimeout: const Duration(milliseconds: 20000),
-      sendTimeout: const Duration(milliseconds: 20000),
+      receiveTimeout: const Duration(milliseconds: 30000), // 15 seconds
+      connectTimeout: const Duration(milliseconds: 30000),
+      sendTimeout: const Duration(milliseconds: 30000),
     ));
 
     dio.interceptors.addAll({

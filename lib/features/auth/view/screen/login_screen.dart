@@ -66,114 +66,123 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey, 
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.h1(
-                'Login ',
-                color: AppColors.black,
-              ),
-              Gap.h4,
-              AppText.h1(
-                'Welcome Back',
-                color: AppColors.black,
-              ),
-              Gap.h32,
-              AppText.caption(
-                'Email Address',
-                fontSize: 16,
-                color: AppColors.black,
-              ),
-              Gap.h4,
-              AppTextField(
-                controller: _emailController,
-                hint: 'sample@gmail.com',
-                keyboardType: TextInputType.emailAddress,
-                // No need for onChanged here as listener handles it
-                validator: (value) => Validator.email(value),
-                suffixIcon: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.email,
-                    size: 20, 
-                    color: AppColors.greyLight,
+        child: AutofillGroup(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppText.h1(
+                  'Login ',
+                  color: AppColors.black,
+                ),
+                Gap.h4,
+                AppText.h1(
+                  'Welcome Back',
+                  color: AppColors.black,
+                ),
+                Gap.h32,
+                AppText.caption(
+                  'Email Address',
+                  fontSize: 16,
+                  color: AppColors.black,
+                ),
+                Gap.h4,
+                AppTextField(
+                  controller: _emailController,
+                  hint: 'sample@gmail.com',
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.email],
+                  textCapitalization: TextCapitalization.none,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  // No need for onChanged here as listener handles it
+                  validator: (value) => Validator.email(value),
+                  suffixIcon: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.email,
+                      size: 20,
+                      color: AppColors.greyLight,
+                    ),
                   ),
                 ),
-              ),
-              Gap.h16,
-              AppText.caption(
-                'Password',
-                fontSize: 16,
-                color: AppColors.black,
-              ),
-              Gap.h4,
-              AppTextField(
-                controller: _passwordController,
-                hint: '********',
-                isPassword: true,
-                validator: (value) => Validator.password(value),
-              ),
-              Gap.h36,
-              SizedBox(
-                width: double.infinity,
-                child: AppButton.primary(
-                  title: 'Login',
-                  loading: loginViewModel.isBusy,
-                  onTap: loginViewModel.state.maybeWhen(
-                    busy: () => null, // Disable button if busy
-                    orElse: () => () {
-                      // Validate form before calling login
-                      if (_formKey.currentState?.validate() ?? false) {
-                        loginViewModel.login(context: context);
-                      }
-                    },
+                Gap.h16,
+                AppText.caption(
+                  'Password',
+                  fontSize: 16,
+                  color: AppColors.black,
+                ),
+                Gap.h4,
+                AppTextField(
+                  controller: _passwordController,
+                  hint: '********',
+                  isPassword: true,
+                  autofillHints: const [AutofillHints.password],
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  validator: (value) => Validator.password(value),
+                ),
+                Gap.h36,
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton.primary(
+                    title: 'Login',
+                    loading: loginViewModel.isBusy,
+                    onTap: loginViewModel.state.maybeWhen(
+                      busy: () => null, // Disable button if busy
+                      orElse: () => () {
+                        // Validate form before calling login
+                        if (_formKey.currentState?.validate() ?? false) {
+                          loginViewModel.login(context: context);
+                        }
+                      },
+                    ),
                   ),
                 ),
-              ),
-              Gap.h32,
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        // Call the navigateToResetPassword from the view model
-                        onTap: loginViewModel.navigateToResetPassword,
-                        child: Center(
-                          child: RichText(
-                            textAlign: TextAlign.center,
-                            text: const TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: 'Can\'t remember your password? ',
-                                  style: TextStyle(
-                                    color: AppColors.darkgrey,
-                                    fontSize: 12,
+                Gap.h32,
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          // Call the navigateToResetPassword from the view model
+                          onTap: loginViewModel.navigateToResetPassword,
+                          child: Center(
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: const TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'Can\'t remember your password? ',
+                                    style: TextStyle(
+                                      color: AppColors.darkgrey,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                                TextSpan(
-                                  text: 'Reset it. ',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
+                                  TextSpan(
+                                    text: 'Reset it. ',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Gap.h16,
-                    ],
+                        Gap.h16,
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

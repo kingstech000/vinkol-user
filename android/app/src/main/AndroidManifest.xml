@@ -1,21 +1,41 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    
-    <!-- Camera and Storage Permissions -->
+
+    <!-- Camera Permission (used for avatar capture) -->
     <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    
+
     <!-- Location Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    
-    <!-- Microphone Permission -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    
-    <!-- Contacts Permission -->
-    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
+    <!-- Notification Permission (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!--
+        Force-remove storage/media permissions injected by image_picker and
+        file_picker plugins. The app uses the Android system Photo Picker
+        (via ImageSource.gallery) which needs no storage permissions.
+        Removing these keeps the app compliant with the Google Play
+        Photo and Video Permissions policy.
+    -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+        tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        tools:node="remove"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:node="remove"/>
+
+    <!-- Unused permissions removed from this manifest -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"
+        tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"
+        tools:node="remove"/>
     <application
         android:label="vinkol"
         android:name="${applicationName}"

@@ -1,0 +1,176 @@
+/* Vinkol design tokens.
+ * Direct transcription of lib/core/design/. Same values, same names.
+ * If a value changes in Dart, change it here in the same commit.
+ * Contrast ratios were computed by .claude/scripts/contrast.py, not estimated.
+ */
+
+:root {
+  /* --- Brand. 500 is the existing Vinkol blue and never changes. --- */
+  --brand-50: #edf5fe;
+  --brand-100: #d3e7fd;
+  --brand-200: #a8cefa;
+  --brand-300: #74b0f5;
+  --brand-400: #3b90ec;
+  --brand-500: #0e74d8;
+  --brand-600: #0b5eb4;
+  --brand-700: #0a4c92;
+  --brand-800: #0b3d73;
+  --brand-900: #0c2f56;
+  --brand-950: #081e38;
+
+  /* --- Neutral, cooled to sit with the blue. --- */
+  --white: #ffffff;
+  --neutral-50: #f4f6f8;
+  --neutral-100: #e9ecf0;
+  --neutral-200: #dce0e6;
+  --neutral-300: #c3c9d2;
+  --neutral-400: #99a1ae;
+  --neutral-500: #6e7784;
+  --neutral-600: #545c68;
+  --neutral-700: #3d444e;
+  --neutral-800: #272c34;
+  --neutral-900: #171a20;
+  --neutral-950: #0d0f13;
+  --black: #000000;
+
+  /* --- State. text and fill differ deliberately. --- */
+  --success-text: #0a6b4a;
+  --success-fill: #0e8a5f;
+  --success-ground: #e7f6f0;
+  --warning-text: #8a5200;
+  --warning-fill: #f0a202; /* 2.13:1 with white — never carries white text */
+  --warning-ground: #fef4e0;
+  --danger-text: #c4362b;
+  --danger-fill: #d93b2e;
+  --danger-ground: #fdecea;
+
+  /* --- Spacing, 4pt scale --- */
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-xxl: 24px;
+  --space-xxxl: 32px;
+  --space-huge: 40px;
+  --space-huge-2: 48px;
+  --space-huge-3: 64px;
+
+  --page-margin: 20px;
+  --section-gap: 28px;
+  --section-gap-hero: 32px;
+  --card-padding: 16px;
+
+  /* --- Radius --- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  /* --- Motion --- */
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-deliberate: 480ms;
+  --ease-standard: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+
+  /* --- Type --- */
+  --font-display: 'Montserrat', system-ui, sans-serif;
+  --font-text: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* --- Semantic layer: light --- */
+:root,
+[data-theme='light'] {
+  --brand: var(--brand-500);
+  --brand-hover: var(--brand-600);
+  --brand-pressed: var(--brand-700);
+  --brand-subtle: var(--brand-50);
+  --on-brand: var(--white);
+
+  --canvas: var(--neutral-50);
+  --surface: var(--white);
+  --surface-raised: var(--white);
+  --surface-sunken: var(--neutral-100);
+  --surface-inverse: var(--neutral-900);
+
+  --border-subtle: var(--neutral-200);
+  --border-default: var(--neutral-300);
+  --border-strong: var(--neutral-400);
+  --focus-ring: var(--brand-700);
+
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-500);
+  --text-disabled: var(--neutral-400);
+  --text-inverse: var(--white);
+  --text-brand: var(--brand-600);
+
+  --success: var(--success-text);
+  --warning: var(--warning-text);
+  --danger: var(--danger-text);
+  --info: var(--brand-600);
+  --info-ground: var(--brand-50);
+
+  /* e0 is the default: a hairline and no shadow. */
+  --shadow-e0: none;
+  --shadow-e1: 0 1px 2px rgba(13, 15, 19, 0.06);
+  --shadow-e2: 0 8px 24px -8px rgba(13, 15, 19, 0.18);
+  --shadow-e3: 0 16px 40px -12px rgba(13, 15, 19, 0.24);
+
+  --pod-bg: var(--neutral-900);
+  --map-ground: #e8ecef;
+  --map-road: #ffffff;
+  --map-water: #d9e4ec;
+}
+
+/* --- Semantic layer: dark. Elevation reads through surface lightness, not shadow. --- */
+[data-theme='dark'] {
+  --brand: var(--brand-400);
+  --brand-hover: var(--brand-300);
+  --brand-pressed: var(--brand-500);
+  --brand-subtle: var(--brand-900);
+  --on-brand: var(--neutral-950);
+
+  --canvas: var(--neutral-950);
+  --surface: var(--neutral-900);
+  --surface-raised: var(--neutral-800);
+  --surface-sunken: var(--black);
+  --surface-inverse: var(--white);
+
+  --border-subtle: var(--neutral-800);
+  --border-default: var(--neutral-700);
+  --border-strong: var(--neutral-600);
+  --focus-ring: var(--brand-300);
+
+  --text-primary: var(--neutral-100);
+  --text-secondary: var(--neutral-400);
+  --text-tertiary: var(--neutral-500);
+  --text-disabled: var(--neutral-600);
+  --text-inverse: var(--neutral-900);
+  --text-brand: var(--brand-300);
+
+  --success: #3dba8c;
+  --success-ground: #0b2a20;
+  --warning: #ffb020;
+  --warning-ground: #2e2005;
+  --danger: #ff8a80;
+  --danger-ground: #2e1310;
+  --info: var(--brand-300);
+  --info-ground: var(--brand-950);
+
+  --shadow-e0: none;
+  --shadow-e1: none;
+  --shadow-e2: none;
+  --shadow-e3: none;
+
+  --pod-bg: var(--neutral-800);
+  --map-ground: #14181d;
+  --map-road: #23292f;
+  --map-water: #101820;
+}

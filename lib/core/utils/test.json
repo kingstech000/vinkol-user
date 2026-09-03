@@ -1,0 +1,19 @@
+{success: true, message: Bulk quote generated, data: {quote: 6a0329d8716ca0df5f186ace, totalAmount: 5976, totalDistance: 10.8, route: [
+            {from: {location: {lat: 6.344837099999999, lng: 5.634048, address: New Benin Market,
+                        2nd Victory Rd, off New Lagos Road, Use, Benin City 300102, Edo, Nigeria
+                    }, contact: 09165748839, name: Ikenna
+                }, to: {location: {lat: 6.3349826, lng: 5.6037944, address: De James Hotel Road Auchi,
+                        8JM3+XGM, Ogogugbo, Benin City 300102, Edo, Nigeria
+                    }, contact: 09148393339, name: Jeyfery
+                }, price: 2790, distance: 4.5
+            },
+            {from: {location: {lat: 6.3349826, lng: 5.6037944, address: De James Hotel Road Auchi,
+                        8JM3+XGM, Ogogugbo, Benin City 300102, Edo, Nigeria
+                    }, contact: 09148393339, name: Jeyfery
+                }, to: {location: {lat: 6.374446000000001, lng: 5.6134347, address: No 151 Ugbowo-Lagos Rd, Uselu, Benin City 300103, Edo, Nigeria
+                    }, contact: 09165748839, name: Ikenna
+                }, price: 3186, distance: 6.3
+            }
+        ], stops: 2
+    }
+}

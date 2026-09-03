@@ -42,7 +42,7 @@ class StoreOrderViewModel extends StateNotifier<StoreOrderState> {
           await _storeService.createStoreOrder(orderPayload);
 
       _logger.i(
-          'Store order created. Order ID: ${orderInitiationResponse.order.id}');
+          'Store order created. Order ID: ${orderInitiationResponse.order?.id}');
 
       state = state.copyWith(isLoading: false);
 

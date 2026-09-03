@@ -65,64 +65,28 @@ class _VerifyEmailOtpScreenState extends ConsumerState<VerifyEmailOtpScreen> {
             child: Form(
               // Wrap with Form for validation
               key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.h2('Enter OTP code'),
-                  Gap.h8,
-                  AppText.free('We have sent a code to $email'),
-                  Gap.h32,
-                  PinCodeField(
-                    otpController: _otpController,
-                    length: 4,
-                    onCompleted: (v) {
-                      // Optionally trigger verification on completion
-                      if (_formKey.currentState?.validate() ?? false) {
-                        verifyEmailOtpViewModel.verifyEmailOtp(
-                          otp: _otpController.text,
-                          context: context,
-                        );
-                      }
-                    },
-                    onSubmitted: (v) {
-                      // Optionally trigger verification on submission
-                      if (_formKey.currentState?.validate() ?? false) {
-                        verifyEmailOtpViewModel.verifyEmailOtp(
-                          otp: _otpController.text,
-                          context: context,
-                        );
-                      }
-                    },
-                  ),
-                  Gap.h16,
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: canResend
-                          ? () {
-                              verifyEmailOtpViewModel.resendEmailOtp(
-                                  context: context);
-                            }
-                          : null, // Disable onTap if not ready to resend
-                      child: AppText.caption(
-                        canResend
-                            ? 'Resend code'
-                            : 'Resend code in ${verifyEmailOtpViewModel.secondsRemaining}s', // Show countdown
-                        color: canResend
-                            ? AppColors.primary
-                            : AppColors
-                                .darkgrey, // Change color based on availability
-                      ),
-                    ),
-                  ),
-                  Gap.h32,
-                  AppButton.primary(
-                    title: 'Next',
-                    loading: verifyEmailOtpViewModel.isBusy,
-                    onTap: verifyEmailOtpViewModel.state.maybeWhen(
-                      busy: () => null, // Disable button if busy
-                      orElse: () => () {
-                        // Validate form before calling verifyEmailOtp
+              child: AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText.h2('Enter OTP code'),
+                    Gap.h8,
+                    AppText.free('We have sent a code to $email'),
+                    Gap.h32,
+                    PinCodeField(
+                      otpController: _otpController,
+                      length: 4,
+                      onCompleted: (v) {
+                        // Optionally trigger verification on completion
+                        if (_formKey.currentState?.validate() ?? false) {
+                          verifyEmailOtpViewModel.verifyEmailOtp(
+                            otp: _otpController.text,
+                            context: context,
+                          );
+                        }
+                      },
+                      onSubmitted: (v) {
+                        // Optionally trigger verification on submission
                         if (_formKey.currentState?.validate() ?? false) {
                           verifyEmailOtpViewModel.verifyEmailOtp(
                             otp: _otpController.text,
@@ -131,9 +95,47 @@ class _VerifyEmailOtpScreenState extends ConsumerState<VerifyEmailOtpScreen> {
                         }
                       },
                     ),
-                  ),
-                  Gap.h32,
-                ],
+                    Gap.h16,
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: GestureDetector(
+                        onTap: canResend
+                            ? () {
+                                verifyEmailOtpViewModel.resendEmailOtp(
+                                    context: context);
+                              }
+                            : null, // Disable onTap if not ready to resend
+                        child: AppText.caption(
+                          canResend
+                              ? 'Resend code'
+                              : 'Resend code in ${verifyEmailOtpViewModel.secondsRemaining}s', // Show countdown
+                          color: canResend
+                              ? AppColors.primary
+                              : AppColors
+                                  .darkgrey, // Change color based on availability
+                        ),
+                      ),
+                    ),
+                    Gap.h32,
+                    AppButton.primary(
+                      title: 'Next',
+                      loading: verifyEmailOtpViewModel.isBusy,
+                      onTap: verifyEmailOtpViewModel.state.maybeWhen(
+                        busy: () => null, // Disable button if busy
+                        orElse: () => () {
+                          // Validate form before calling verifyEmailOtp
+                          if (_formKey.currentState?.validate() ?? false) {
+                            verifyEmailOtpViewModel.verifyEmailOtp(
+                              otp: _otpController.text,
+                              context: context,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                    Gap.h32,
+                  ],
+                ),
               ),
             ),
           ),

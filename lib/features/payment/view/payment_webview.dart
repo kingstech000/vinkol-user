@@ -16,6 +16,7 @@ class PaymentWebViewScreen extends ConsumerStatefulWidget {
   final String reference;
   final bool isStoreOrder;
   final bool isWalletFunding;
+  final bool isMultiOrder;
 
   const PaymentWebViewScreen({
     super.key,
@@ -24,6 +25,7 @@ class PaymentWebViewScreen extends ConsumerStatefulWidget {
     required this.reference,
     this.isStoreOrder = false,
     this.isWalletFunding = false,
+    this.isMultiOrder = false,
   });
 
   @override
@@ -168,7 +170,7 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
     debugPrint('[PaymentWebView] Reference: ${widget.reference}');
     debugPrint('[PaymentWebView] Is Store Order: ${widget.isStoreOrder}');
 
-    if (widget.orderId.isEmpty) {
+    if (widget.orderId.isEmpty && !widget.isMultiOrder) {
       debugPrint(
           '[PaymentWebView] Wallet funding detected, skipping verification');
       Navigator.of(context).pop(true);
@@ -181,6 +183,7 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
         'orderId': widget.orderId,
         'reference': widget.reference,
         'isStoreOrder': widget.isStoreOrder,
+        'isMultiOrder': widget.isMultiOrder,
       },
     );
   }

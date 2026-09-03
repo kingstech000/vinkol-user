@@ -30,7 +30,7 @@ class _EnterOTPCodeScreenState extends ConsumerState<EnterOTPCodeScreen> {
   void initState() {
     super.initState();
     final email = ref.read(resetEmailProvider);
-    _displayedEmail = email ;
+    _displayedEmail = email;
 
     // Delay provider modification until after the build phase is complete
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,71 +92,73 @@ class _EnterOTPCodeScreenState extends ConsumerState<EnterOTPCodeScreen> {
       appBar: MiniAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.h2('Enter OTP code'),
-            Gap.h8,
-            AppText.free('We have sent a code to $_displayedEmail'),
-            Gap.h32,
-            // PinCodeField is assumed to be a custom widget that takes an otpController
-            // and has onCompleted/onSubmitted callbacks.
-            PinCodeField(
-              otpController: _otpController,
-              length: 4,
-              onCompleted: (v) {
-                // Trigger verification automatically when OTP is completed
-                if (!isBusy) {
-                  // Prevent multiple calls if already busy
-                  otpViewModel.verifyOtp(otp: v, context: context);
-                }
-              },
-              onSubmitted: (v) {
-                // Optional: You can also use onSubmitted, ensure it's not redundant
-                // with onCompleted if both trigger verification.
-                if (!isBusy) {
-                  otpViewModel.verifyOtp(otp: v, context: context);
-                }
-              },
-            ),
-            Gap.h16,
-            Align(
-              alignment: Alignment.centerLeft,
-              child: _canResend
-                  ? GestureDetector(
-                      onTap:
-                          isBusy // Disable resend button if ViewModel is busy
-                              ? null
-                              : () {
-                                  otpViewModel.resendOtp(context: context);
-                                  _startResendTimer(); // Restart timer after resend
-                                },
-                      child: AppText.caption(
-                        'Resend Code',
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : AppText.caption('Resend code in ${_resendCountdown}s'),
-            ),
-            Gap.h32,
-            SizedBox(
-              width: double.infinity,
-              child: AppButton.primary(
-                title: 'Next',
-                loading: isBusy,
-                onTap: isBusy // Disable "Next" button if ViewModel is busy
-                    ? null
-                    : () {
-                        otpViewModel.verifyOtp(
-                          otp: _otpController.text,
-                          context: context,
-                        );
-                      },
+        child: AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppText.h2('Enter OTP code'),
+              Gap.h8,
+              AppText.free('We have sent a code to $_displayedEmail'),
+              Gap.h32,
+              // PinCodeField is assumed to be a custom widget that takes an otpController
+              // and has onCompleted/onSubmitted callbacks.
+              PinCodeField(
+                otpController: _otpController,
+                length: 4,
+                onCompleted: (v) {
+                  // Trigger verification automatically when OTP is completed
+                  if (!isBusy) {
+                    // Prevent multiple calls if already busy
+                    otpViewModel.verifyOtp(otp: v, context: context);
+                  }
+                },
+                onSubmitted: (v) {
+                  // Optional: You can also use onSubmitted, ensure it's not redundant
+                  // with onCompleted if both trigger verification.
+                  if (!isBusy) {
+                    otpViewModel.verifyOtp(otp: v, context: context);
+                  }
+                },
               ),
-            ),
-            Gap.h32,
-          ],
+              Gap.h16,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: _canResend
+                    ? GestureDetector(
+                        onTap:
+                            isBusy // Disable resend button if ViewModel is busy
+                                ? null
+                                : () {
+                                    otpViewModel.resendOtp(context: context);
+                                    _startResendTimer(); // Restart timer after resend
+                                  },
+                        child: AppText.caption(
+                          'Resend Code',
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : AppText.caption('Resend code in ${_resendCountdown}s'),
+              ),
+              Gap.h32,
+              SizedBox(
+                width: double.infinity,
+                child: AppButton.primary(
+                  title: 'Next',
+                  loading: isBusy,
+                  onTap: isBusy // Disable "Next" button if ViewModel is busy
+                      ? null
+                      : () {
+                          otpViewModel.verifyOtp(
+                            otp: _otpController.text,
+                            context: context,
+                          );
+                        },
+                ),
+              ),
+              Gap.h32,
+            ],
+          ),
         ),
       ),
     );

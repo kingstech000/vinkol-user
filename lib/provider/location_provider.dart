@@ -99,7 +99,10 @@ class LocationController {
         final result = data['result'];
 
         if (result != null) {
-          return LocationModel.fromPlaceDetailsResult(result);
+          final detailedLocation = LocationModel.fromPlaceDetailsResult(result);
+          return detailedLocation.copyWith(
+            formattedAddress: location.formattedAddress ?? detailedLocation.formattedAddress,
+          );
         } else {
           throw Exception('No result found for the place ID.');
         }

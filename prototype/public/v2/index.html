@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vinkol — Three Directions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="/v2/css/harness.css" />
+    <link rel="stylesheet" href="/v2/css/midnight.css" />
+    <link rel="stylesheet" href="/v2/css/daylight.css" />
+    <link rel="stylesheet" href="/v2/css/kinetic.css" />
+  </head>
+  <body>
+    <div class="h2x">
+      <aside class="h2x__rail">
+        <div class="h2x__brand">
+          <h1>Vinkol — three directions</h1>
+          <p>Rebuilt from your references. Same screens, three visual systems.</p>
+        </div>
+        <nav id="rail"></nav>
+      </aside>
+      <main class="h2x__stage">
+        <div style="display:flex;gap:10px">
+          <div class="h2x__toggle" id="mkt" style="display:inline-flex;border:1px solid #17191d;border-radius:999px;overflow:hidden">
+            <button data-mkt="NG" style="background:#17191d;color:#fff;border:0;font:inherit;font-size:12px;padding:6px 14px;cursor:pointer">Nigeria · NGN</button>
+            <button data-mkt="CA" style="background:none;color:#6b7280;border:0;font:inherit;font-size:12px;padding:6px 14px;cursor:pointer">Canada · CAD</button>
+          </div>
+        </div>
+        <div class="dev"><div class="dev__in" id="dev"></div></div>
+        <p class="h2x__note" id="note"></p>
+      </main>
+    </div>
+    <script type="module" src="/v2/js/main.js"></script>
+  </body>
+</html>
