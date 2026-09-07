@@ -22,6 +22,11 @@ class NotificationService {
   late ProviderContainer _container;
 
   NotificationService._internal();
+
+  /// Where the user's push choice is kept. Local, because the backend has no
+  /// notification-preference endpoint to keep it in.
+  static const String pushEnabledCacheKey = 'push_notifications_enabled';
+
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -82,6 +87,14 @@ class NotificationService {
     print(token);
     return token;
   }
+
+  /// Unregisters this device from push.
+  ///
+  /// This is what the notification toggle in Settings actually does. There is no
+  /// notification-preference endpoint (`08-backend-gaps.md`), so the honest way to switch
+  /// push off is at the source: drop the FCM registration so the server has nothing to send
+  /// to. A preference flag alone would leave notifications arriving with the toggle off.
+  Future<void> deleteToken() => _firebaseMessaging.deleteToken();
 
   Future<void> showNotification(RemoteMessage message) async {
     final data = message.data;

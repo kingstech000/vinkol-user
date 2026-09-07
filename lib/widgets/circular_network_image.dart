@@ -31,7 +31,7 @@ class CircularNetworkImage extends StatelessWidget {
         color: Colors.grey.shade200, // Default background for placeholder/error
         child: FadeInImage.assetNetwork(
           placeholder: placeholderAsset ??
-            ImageAsset.logo, // Fallback placeholder if none provided
+              ImageAsset.logo, // Fallback placeholder if none provided
           image: imageUrl,
           height: effectiveHeight,
           width: effectiveWidth,

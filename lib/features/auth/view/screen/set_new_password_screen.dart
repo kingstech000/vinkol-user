@@ -1,104 +1,93 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/utils/validators.dart';
 import 'package:starter_codes/features/auth/view_model/set_new_password_view_model.dart';
-import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
-import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/app_textfield.dart';
-import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/l10n/l10n.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
-// Change from StatefulWidget to ConsumerWidget
-class SetNewPasswordScreen extends ConsumerWidget {
+/// Step two of the reset: choose the new password.
+///
+/// The mismatch is reported on the **confirm** field, not the first one — that is the field
+/// the user has to change, and putting the error anywhere else sends them to the wrong box.
+class SetNewPasswordScreen extends ConsumerStatefulWidget {
   const SetNewPasswordScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Add WidgetRef ref
-    final setNewPasswordViewModel = ref.watch(setNewPasswordViewModelProvider);
-    final formKey = GlobalKey<FormState>(); // Form key for validation
+  ConsumerState<SetNewPasswordScreen> createState() =>
+      _SetNewPasswordScreenState();
+}
 
-    return Scaffold(
-      appBar: MiniAppBar(),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            // Wrap with Form for validation
-            key: formKey,
-            child: AutofillGroup(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.h2('Set New Password'),
-                  Gap.h8,
-                  AppText.free('Let\'s reset your password quickly'),
-                  Gap.h32,
-                  AppText.caption(
-                    'Create New Password',
-                    fontSize: 14,
-                  ),
-                  Gap.h4,
-                  AppTextField(
-                    controller: setNewPasswordViewModel
-                        .newPasswordController, // Use ViewModel's controller (or make them public in VM)
-                    hint: '********',
-                    isPassword: true,
-                    autofillHints: const [AutofillHints.newPassword],
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    validator: (value) => Validator.password(value),
-                  ),
-                  Gap.h16,
-                  AppText.caption(
-                    'Confirm Password',
-                    fontSize: 14,
-                  ),
-                  Gap.h4,
-                  AppTextField(
-                    controller: setNewPasswordViewModel
-                        .confirmPasswordController, // Use ViewModel's controller (or make them public in VM)
-                    hint: '********',
-                    isPassword: true,
-                    autofillHints: const [AutofillHints.newPassword],
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    // Add a validator to check if passwords match.
-                    // This validator needs access to _newPasswordController's text.
-                    // A better way is to pass new password text to this validator.
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
-                      }
-                      if (value !=
-                          setNewPasswordViewModel.newPasswordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
-                  ),
-                  Gap.h32,
-                  SizedBox(
-                    width: double.infinity,
-                    child: AppButton.primary(
-                      title: 'Reset',
-                      loading:
-                          setNewPasswordViewModel.isBusy, // Show loading state
-                      onTap: () {
-                        // Validate form before calling ViewModel method
-                        if (formKey.currentState?.validate() ?? false) {
-                          setNewPasswordViewModel.setNewPassword(
-                            context: context,
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ],
+class _SetNewPasswordScreenState extends ConsumerState<SetNewPasswordScreen> {
+  String? _passwordError;
+  String? _confirmError;
+
+  void _submit(SetNewPasswordViewModel vm) {
+    final password = vm.newPasswordController.text;
+    final confirm = vm.confirmPasswordController.text;
+    final passwordError = Validator.password(password);
+    final confirmError = confirm.isEmpty
+        ? 'Repeat your new password.'
+        : (confirm != password ? 'These two passwords do not match.' : null);
+
+    setState(() {
+      _passwordError = passwordError;
+      _confirmError = confirmError;
+    });
+    if (passwordError != null || confirmError != null) return;
+    vm.setNewPassword(context: context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final vm = ref.watch(setNewPasswordViewModelProvider);
+
+    return VinkolAuthScaffold(
+      title: l10n.authCreateNewPassword,
+      body: l10n.authNewPasswordBody,
+      fields: <Widget>[
+        AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              VinkolPasswordField(
+                pill: true,
+                label: l10n.authNewPassword,
+                controller: vm.newPasswordController,
+                hint: l10n.authPasswordHint,
+                helper: l10n.authPasswordHelper,
+                error: _passwordError,
+                autofillHint: AutofillHints.newPassword,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) {
+                  if (_passwordError != null) {
+                    setState(() => _passwordError = null);
+                  }
+                },
               ),
-            ),
+              const SizedBox(height: VinkolSpace.lg),
+              VinkolPasswordField(
+                pill: true,
+                label: l10n.authConfirmPassword,
+                controller: vm.confirmPasswordController,
+                hint: l10n.authConfirmPasswordHint,
+                error: _confirmError,
+                autofillHint: AutofillHints.newPassword,
+                onChanged: (_) {
+                  if (_confirmError != null) {
+                    setState(() => _confirmError = null);
+                  }
+                },
+              ),
+            ],
           ),
         ),
+      ],
+      primaryAction: VinkolPrimaryButton(
+        label: l10n.authSavePassword,
+        loading: vm.isBusy,
+        onPressed: () => _submit(vm),
       ),
     );
   }

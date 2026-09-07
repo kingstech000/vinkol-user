@@ -1,152 +1,72 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
-import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
-class SecurityScreen extends StatefulWidget {
+/// **Security** — two rows, because two is what exists.
+///
+/// There is no two-factor sign-in, no biometric unlock, no device list and no session
+/// management: none has an endpoint (D-10), and a settings screen that offers a switch the
+/// server has never heard of is worse than one that offers nothing.
+///
+/// Changing a password goes through the same reset-by-email flow the login screen uses —
+/// there is no separate change-password endpoint, and the row says so rather than implying
+/// an in-place form.
+///
+/// **Transaction PIN is present but not actionable.** `transaction_pin_modal.dart` exists and
+/// collects the four digits a recipient reads out to confirm a delivery, but `ApiRoute` has
+/// no PIN endpoint at all — nothing sets one, changes one or verifies one, and the modal has
+/// no call site in the app today. The row is here because a user who has heard of the PIN
+/// will look for it; it states what the PIN actually is instead of opening a form that
+/// cannot save.
+class SecurityScreen extends StatelessWidget {
   const SecurityScreen({super.key});
 
   @override
-  State<SecurityScreen> createState() => _SecurityScreenState();
-}
-
-class _SecurityScreenState extends State<SecurityScreen> {
-  // bool _rememberMeEnabled = true;
-  // bool _authenticatedWithGoogle = false; // Simulating Google auth status
-  final String _password = '********'; // Placeholder for password
-
-  @override
   Widget build(BuildContext context) {
+    final v = context.vinkol;
+    final l10n = context.l10n;
+
     return Scaffold(
-      appBar: MiniAppBar(
-        icon: Icons.arrow_back_ios,
-        color: AppColors.black,
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.h1('Security'),
-            Gap.h24,
-            // _SecurityToggle(
-            //   title: 'Remember me',
-            //   value: _rememberMeEnabled,
-            //   onChanged: (bool newValue) {
-            //     setState(() {
-            //       _rememberMeEnabled = newValue;
-            //     });
-            //   },
-            // ),
-            // _SecurityOption(
-            //   title: 'Authenticated with',
-            //   trailingWidget: Row(
-            //     children: [
-            //       if (_authenticatedWithGoogle)
-            //         Icon(Icons.check, color: AppColors.primary, size: 20.w),
-            //       Gap.w4,
-            //       AppText.body('Google',
-            //           color: _authenticatedWithGoogle
-            //               ? AppColors.black
-            //               : Colors.grey),
-            //     ],
-            //   ),
-            //   onTap: () {
-            //     // Simulate linking/unlinking Google account
-            //     setState(() {
-            //       _authenticatedWithGoogle = !_authenticatedWithGoogle;
-            //     });
-            //     print(
-            //         'Toggled Google authentication: $_authenticatedWithGoogle');
-            //   },
-            // ),
-            _SecurityOption(
-              title: 'Change Password',
-              trailingWidget: AppText.body(_password),
-              onTap: () {
-                // Navigate to Change Password Screen
-                NavigationService.instance
-                    .navigateTo(NavigatorRoutes.resetPasswordScreen);
-                // NavigationService.instance.navigateTo(NavigatorRoutes.changePasswordScreen);
-              },
-            ),
-            Gap.h36,
-          ],
+      backgroundColor: v.canvas,
+      appBar: MiniAppBar(title: l10n.profileSecurity),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          VinkolSpace.pageMargin,
+          VinkolSpace.xs,
+          VinkolSpace.pageMargin,
+          VinkolSpace.xxl,
         ),
-      ),
-    );
-  }
-}
-
-// class _SecurityToggle extends StatelessWidget {
-//   final String title;
-//   final bool value;
-//   final ValueChanged<bool> onChanged;
-
-//   const _SecurityToggle({
-//     required this.title,
-//     required this.value,
-//     required this.onChanged,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: EdgeInsets.symmetric(vertical: 8.h),
-//       child: Row(
-//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//         children: [
-//           AppText.body(title, color: AppColors.black),
-//           Transform.scale(
-//             scale: 0.8,
-//             child: CupertinoSwitch(
-//               value: value,
-//               onChanged: onChanged,
-//               activeTrackColor: AppColors.primary,
-//               inactiveTrackColor: Colors.grey.shade300,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-class _SecurityOption extends StatelessWidget {
-  final String title;
-  final Widget? trailingWidget;
-  final VoidCallback? onTap;
-
-  const _SecurityOption({
-    required this.title,
-    this.trailingWidget,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.h),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            AppText.body(title, color: AppColors.black),
-            Row(
-              children: [
-                if (trailingWidget != null) trailingWidget!,
-                Gap.w8,
-                Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18.w),
-              ],
-            ),
-          ],
-        ),
+        children: <Widget>[
+          VinkolSectionHeader(label: l10n.profileSignInGroup),
+          VinkolRowGroup(
+            children: <VinkolRow>[
+              VinkolRow(
+                icon: Icons.lock_reset_outlined,
+                title: l10n.profileChangePassword,
+                meta: l10n.profileChangePasswordMeta,
+                metaMaxLines: 2,
+                onTap: () => NavigationService.instance
+                    .navigateTo(NavigatorRoutes.resetPasswordScreen),
+              ),
+            ],
+          ),
+          VinkolSectionHeader(label: l10n.profileTransactionsGroup),
+          VinkolRowGroup(
+            children: <VinkolRow>[
+              VinkolRow(
+                icon: Icons.pin_outlined,
+                title: l10n.profileTransactionPin,
+                meta: l10n.profileTransactionPinMeta,
+                metaMaxLines: 3,
+                enabled: false,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 
 class LocationInputField extends StatelessWidget {
   final ValueChanged<String>? onLocationChanged; // If you want to pass value up
@@ -21,7 +22,7 @@ class LocationInputField extends StatelessWidget {
           Expanded(
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Drop off location',
+                hintText: context.l10n.bookingDropOffLocation,
                 hintStyle: TextStyle(color: Colors.grey[600]),
                 border: InputBorder.none, // No default underline
                 isDense: true, // Reduces vertical space

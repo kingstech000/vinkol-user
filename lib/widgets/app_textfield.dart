@@ -135,7 +135,8 @@ class _AppTextFieldState extends State<AppTextField> {
                 : widget.suffixIcon,
             isDense: true,
             contentPadding: widget.contentPadding ??
-                EdgeInsets.only(top: 10.h, bottom: 15.h, left: 20.w),
+                EdgeInsetsDirectional.only(
+                    top: 10.h, bottom: 15.h, start: 20.w),
             hintText: widget.hint,
             hintStyle: widget.hintStyle ??
                 headingStyle6.copyWith(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 
 class LocationTags extends StatelessWidget {
   const LocationTags({super.key});
@@ -12,7 +13,7 @@ class LocationTags extends StatelessWidget {
           Axis.horizontal, // Allows horizontal scrolling if many tags
       child: Row(
         children: [
-          _buildAddButton(),
+          _buildAddButton(context),
           Gap.w6,
           _buildLocationTag('Home', Icons.home),
           Gap.w6,
@@ -24,15 +25,15 @@ class LocationTags extends StatelessWidget {
     );
   }
 
-  Widget _buildAddButton() {
+  Widget _buildAddButton(BuildContext context) {
     return OutlinedButton.icon(
       onPressed: () {
         // Handle add button press
       },
       icon: const Icon(Icons.add, color: AppColors.white),
-      label: const Text(
-        'Add',
-        style: TextStyle(color: AppColors.white),
+      label: Text(
+        context.l10n.bookingAdd,
+        style: const TextStyle(color: AppColors.white),
       ),
       style: OutlinedButton.styleFrom(
         backgroundColor: AppColors.primary,

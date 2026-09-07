@@ -1,100 +1,115 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/provider/user_provider.dart';
-import 'package:starter_codes/widgets/gap.dart'; // Assuming this provider exists and provides a User model
 import 'package:starter_codes/utils/guest_mode_utils.dart';
 
+/// The home identity header — the prototype's `top` with an avatar, an eyebrow and a name.
+///
+/// The hierarchy is inverted from the old version on purpose. The greeting is the bold line
+/// and the prompt is the eyebrow above it, because the name is the thing a user recognises
+/// and the prompt is context. That is what the prototype does, and it also keeps the header
+/// two lines tall instead of growing when the prompt is translated.
+///
+/// Public API unchanged (D-03).
 class NavAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  // Changed to ConsumerWidget
   const NavAppBar({
     super.key,
-    this.userRole = 'Where would you like to deliver to?', // Default user role
-    this.showNotificationBadge = true, // Whether to show the red dot
-    this.onNotificationTap, // Callback for notification bell tap
+    this.userRole = 'Where would you like to deliver to?',
+    this.showNotificationBadge = true,
+    this.onNotificationTap,
   });
 
-  // Removed userName as it will be fetched from userProvider
+  /// The eyebrow above the greeting.
   final String userRole;
+
+  /// Retained for source compatibility. There is no notifications inbox — `NotificationService`
+  /// is FCM push only, with no stored list — so nothing is drawn for it (D-10).
   final bool showNotificationBadge;
   final VoidCallback? onNotificationTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Added WidgetRef ref
-    // Watch the userProvider to get the user data
+    final v = context.vinkol;
     final user = ref.watch(userProvider);
-    final bool isGuestMode = GuestModeUtils.isGuestMode();
+    final isGuest = GuestModeUtils.isGuestMode();
+    final name = isGuest ? 'Guest' : (user?.firstname ?? 'there');
 
     return AppBar(
       scrolledUnderElevation: 0,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      foregroundColor: Colors.transparent,
-      shadowColor: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
       elevation: 0,
+      backgroundColor: v.canvas,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      toolbarHeight: preferredSize.height,
       title: Padding(
-        padding: EdgeInsets.only(left: 10.w, top: 5.h, bottom: 5.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppText.h1(
-              // Use user.firstName from the provider or show guest message
-              isGuestMode ? 'Hi Guest' : 'Hi ${user?.firstname ?? 'User'}',
-              color: AppColors.black,
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-            ),
-            Gap.h4,
-            AppText.body(
-              userRole,
-              color: AppColors.darkgrey,
-              fontSize: 14.sp,
+        padding: const EdgeInsets.symmetric(horizontal: VinkolSpace.xl),
+        child: Row(
+          children: <Widget>[
+            _Avatar(name: name, isGuest: isGuest),
+            const SizedBox(width: VinkolSpace.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    userRole,
+                    style: VinkolType.caption.copyWith(color: v.textTertiary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    'Hello, $name',
+                    style: VinkolType.h3.copyWith(color: v.textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
-      centerTitle: false,
-      // actions: [
-      //   GestureDetector(
-      //     onTap: onNotificationTap,
-      //     child: Padding(
-      //       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-      //       child: Stack(
-      //         children: [
-      //           Icon(
-      //             CupertinoIcons.bell,
-      //             color: AppColors.black,
-      //             size: 28.w,
-      //           ),
-      //           if (showNotificationBadge)
-      //             Positioned(
-      //               right: 0,
-      //               top: 0,
-      //               child: Container(
-      //                 padding: EdgeInsets.all(2.w),
-      //                 decoration: BoxDecoration(
-      //                   color: Colors.red,
-      //                   borderRadius: BorderRadius.circular(6.r),
-      //                 ),
-      //                 constraints: BoxConstraints(
-      //                   minWidth: 10.w,
-      //                   minHeight: 10.h,
-      //                 ),
-      //               ),
-      //             ),
-      //         ],
-      //       ),
-      //     ),
-      //   ),
-      // ],
-      automaticallyImplyLeading: false,
     );
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(55.h); // Adjust height as needed
+  Size get preferredSize => const Size.fromHeight(64);
+}
+
+/// The `.av` control: initials on a surface disc with a hairline. No photo — `Avatar` exists
+/// on the user model but a missing image must not collapse the header.
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.name, required this.isGuest});
+
+  final String name;
+  final bool isGuest;
+
+  @override
+  Widget build(BuildContext context) {
+    final v = context.vinkol;
+    final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
+
+    return Semantics(
+      label: isGuest ? 'Guest' : name,
+      child: Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: v.surfaceAlt,
+          shape: BoxShape.circle,
+          border: Border.fromBorderSide(BorderSide(color: v.borderSubtle)),
+        ),
+        child: Text(
+          initial,
+          style: VinkolType.h4.copyWith(color: v.textSecondary),
+        ),
+      ),
+    );
+  }
 }

@@ -99,10 +99,11 @@ class WalletService {
     }
   }
 
-  Future<Map<String, dynamic>> requestWithdrawal(
-    double amount, {
-    String? reason,
-  }) async {
+  /// Requests a withdrawal of [amount] to the user's saved bank account.
+  ///
+  /// The endpoint takes the amount and nothing else — the account is the one on the user's
+  /// profile, and there is no note field on the request.
+  Future<Map<String, dynamic>> requestWithdrawal(double amount) async {
     try {
       final response = await _apiClient.post(
         ApiRoute.withdraw,

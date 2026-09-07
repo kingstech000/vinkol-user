@@ -52,43 +52,55 @@ use `display.*`.
 
 ---
 
-## D-02 — Text/UI typeface · **RATIFIED 2026-09-02** · unblocks Phase 2
+## D-02 — Text/UI typeface · **RATIFIED 2026-09-02** · **SUPERSEDED 2026-09-07 (D-02a)**
 
-**Three faces, split by job.**
+Original ruling: three faces — Montserrat (display + `h1`), Inter (`h2` and below, all
+numerics), IBM Plex Mono (identifiers). Kept here for the reasoning, which still holds on every
+point except which families satisfy it. See D-02a.
+
+---
+
+## D-02a — One typeface: Geist · **RATIFIED 2026-09-07** · supersedes D-02
+
+**One superfamily, two cuts.**
 
 | Role | Face | Where |
 |------|------|-------|
-| Display / brand | **Montserrat** (retained) | `display.l`, `display.s`, `h1` — hero register and screen titles |
-| Text / UI / numeric | **Inter** | `h2` and below, all body, labels, captions, buttons, and all `num.*` styles |
-| Code / identifiers | **IBM Plex Mono** | tracking codes, reference and order IDs only |
+| Everything | **Geist** | `display.*`, `h1`–`h4`, all body, labels, captions, buttons, all `num.*` |
+| Code / identifiers | **Geist Mono** | tracking codes, reference and order IDs only |
 
-All three are confirmed present in `google_fonts` **6.3.3**, the version resolved in
-`pubspec.lock` (`GoogleFonts.montserrat`, `GoogleFonts.inter`, `GoogleFonts.ibmPlexMono`).
+Both confirmed present in `google_fonts` **8.2.1**, the version resolved in `pubspec.lock`
+(`GoogleFonts.geist`, `GoogleFonts.geistMono`). This required the bump from 6.3.3 — Geist
+landed in the package at 7.0.2. Weights w100–w900; **no italic cut exists**, so no style may
+ask for one.
 
-*Why Montserrat stays where it does:* it is the face users already associate with Vinkol, and
-brand identity is perceived at display sizes. It keeps every screen title and every hero moment.
+*What carried over from D-02:* every requirement the three-face split was built to satisfy.
+Geist is drawn for interfaces at small sizes, ships verified `tnum` tabular figures, is
+variable-weight, and covers Latin + Latin Extended including French. It meets the text-face
+brief that Inter met.
 
-*Why a companion below `h1`:* Montserrat has no tabular figures — money, ETAs and distances
-jitter as values update and columns will not align — and it widens and loosens at 13–15pt,
-which is where most of a logistics UI lives. It also costs horizontal space the product cannot
-spare under +40% translation growth.
+*Why collapse to one face:* Montserrat's job was brand recognition at display sizes. Under
+D-07 (Midnight) the brand is carried by the saturated blue object, the Line, flush numerics and
+status typography — not by a second typeface. A display face that only appears above 24pt earns
+one network fetch, one fallback-flash risk and one more thing to keep consistent, in exchange
+for a distinction most screens never show. Geist Mono replaces IBM Plex Mono for the same
+reason: same disambiguated 0/O and 1/l/I, drawn to sit against Geist rather than beside it.
 
-*Why Inter specifically:* it is drawn for UI at small sizes, ships verified `tnum` (tabular
-figures) plus broad Latin coverage including French, and is variable-weight. Its ubiquity is
-the point rather than a problem — the text face's job is to disappear. Distinctiveness comes
-from the signatures (the Line, the pod, flush numerics, status typography), not from a novelty
-body font; a distinctive body face would fight Montserrat's geometry and hurt legibility at
-the sizes that matter.
+*How hierarchy survives:* size, weight and tracking, not face. The display register runs
+tighter than the UI register (-0.03em vs -0.015em and looser) — that density is now what marks
+a hero moment. Geist is narrower than Montserrat, so display lines also gain headroom under
++40% translation growth.
 
-*Why a mono at all:* tracking codes and order IDs get read aloud, transcribed and compared.
-Disambiguated glyphs (0/O, 1/l/I) are a correctness feature, not a style choice. IBM Plex Mono
-is warmer and more legible at 13pt than the harder-edged alternatives, and its Plex heritage
-sits comfortably beside Inter.
+**Known limit — Nigerian orthographies.** Geist covers Latin and Latin Extended-A. The dot-below
+characters used by Yoruba and Igbo (ẹ ọ ṣ ṇ) live in Latin Extended Additional and are **not**
+in Geist; they will render from the platform fallback. Not blocking — the app ships English and
+French — but it forecloses Yoruba/Igbo localization on this face alone. Revisit if those
+locales enter scope.
 
-**Verify before shipping:** `FontFeature.tabularFigures()` must be confirmed rendering on
-device for Inter through `google_fonts` — the package fetches static instances at runtime and
-feature retention is worth proving once rather than assuming. If it does not hold, the fallback
-is bundling the Inter variable font as an asset.
+**Verify before shipping:** `FontFeature.tabularFigures()` must be confirmed rendering on device
+for Geist through `google_fonts` — the package fetches static instances at runtime and feature
+retention is worth proving once rather than assuming. If it does not hold, the fallback is
+bundling the Geist variable font as an asset.
 
 ---
 

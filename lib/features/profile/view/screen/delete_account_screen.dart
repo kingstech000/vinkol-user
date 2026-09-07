@@ -1,4 +1,4 @@
-// lib/features/profile/view/screens/delete_account_screen.dart
+// lib/features/profile/view/screen/delete_account_screen.dart
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

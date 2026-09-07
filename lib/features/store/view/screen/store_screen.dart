@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
+import 'package:starter_codes/features/store/model/store_response_model.dart';
 import 'package:starter_codes/features/store/view/widget/store_card.dart';
 import 'package:starter_codes/features/store/view_model/store_view_model.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 import 'package:starter_codes/provider/store_provider.dart';
-import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import 'dart:async';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
+/// The stores in a category.
+///
+/// Two filters and nothing more: a text search the API runs, and an "open now" toggle the app
+/// can answer from `isOpenToday()`. There is deliberately no sort-by-distance or sort-by-
+/// rating, because the store record carries neither and an invented ordering is a lie about
+/// which shop is closest.
 class StoresScreen extends ConsumerStatefulWidget {
   const StoresScreen({super.key});
 
@@ -21,370 +25,157 @@ class StoresScreen extends ConsumerStatefulWidget {
 }
 
 class _StoresScreenState extends ConsumerState<StoresScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce;
-  String? _previousTag;
-  bool _isFilteringByTag = false;
+  final TextEditingController _search = TextEditingController();
+  bool _openOnly = false;
+  String? _appliedTag;
 
   @override
   void initState() {
     super.initState();
+    // The category picked on the previous screen is consumed once, then cleared, so coming
+    // back here from a store does not re-filter.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final selectedTag = ref.read(selectedTagProvider);
-      if (selectedTag != null) {
-        _isFilteringByTag = true;
-        _previousTag = selectedTag;
-        ref.read(storesViewModelProvider.notifier).filterStoresByTag(selectedTag);
-        ref.read(selectedTagProvider.notifier).state = null;
-      } else {
-        ref.read(storesViewModelProvider.notifier).fetchStoresIfStale();
-      }
-    });
-    _searchController.addListener(_onSearchChanged);
-  }
-
-  void _onSearchChanged() {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      ref
-          .read(storesViewModelProvider.notifier)
-          .filterStoresBySearch(_searchController.text);
+      final String? tag = ref.read(selectedTagProvider);
+      if (tag == null) return;
+      _appliedTag = tag;
+      ref.read(storesViewModelProvider.notifier).filterStoresByTag(tag);
+      ref.read(selectedTagProvider.notifier).state = null;
     });
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose();
-    _debounce?.cancel();
+    _search.dispose();
     super.dispose();
   }
 
-  SliverGridDelegateWithFixedCrossAxisCount _getResponsiveGridDelegate() {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    if (screenWidth < 320) {
-      return const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 1,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 1.5,
-      );
-    }
-    else if (screenWidth < 480) {
-      return const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.9,
-      );
-    }
-    else if (screenWidth < 768) {
-      return const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.85,
-      );
-    }
-    else {
-      return const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 15,
-        mainAxisSpacing: 15,
-        childAspectRatio: 1.0,
-      );
-    }
-  }
+  List<Store> _visible(List<Store> stores) => _openOnly
+      ? stores
+          .where((Store s) => s.openingHours?.isOpenToday() ?? false)
+          .toList()
+      : stores;
 
   @override
   Widget build(BuildContext context) {
-    final storesAsyncValue = ref.watch(storesViewModelProvider);
-    final selectedTag = ref.watch(selectedTagProvider);
-
-    if (selectedTag != null && selectedTag != _previousTag) {
-      _previousTag = selectedTag;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          _isFilteringByTag = true;
-        });
-        ref.read(storesViewModelProvider.notifier).filterStoresByTag(selectedTag);
-        ref.read(selectedTagProvider.notifier).state = null;
-      });
-    }
+    final v = context.vinkol;
+    final l10n = context.l10n;
+    final AsyncValue<StoreResponse> stores = ref.watch(storesViewModelProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: v.canvas,
+      appBar: AppBar(
+        backgroundColor: v.canvas,
+        surfaceTintColor: v.canvas,
+        elevation: 0,
+        title: Text(_appliedTag ?? l10n.storeStores,
+            style: VinkolType.h3.copyWith(color: v.textPrimary)),
+      ),
       body: SafeArea(
+        top: false,
         child: Column(
-          children: [
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.only(
-                  left: 20, right: 20, bottom: 20, top: 10),
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: VinkolSpace.pageMargin),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  InkWell(
-                    onTap: () {
-                      NavigationService.instance.goBack();
-                    },
-                    child: Icon(Icons.arrow_back_ios_new,
-                        color: AppColors.primary, size: 20.w),
+                children: <Widget>[
+                  VinkolFormField(
+                    label: l10n.storeSearchStores,
+                    hint: l10n.storeSearchStoresHint,
+                    controller: _search,
+                    leading:
+                        Icon(Icons.search, size: 19, color: v.textTertiary),
+                    textInputAction: TextInputAction.search,
+                    onChanged: (String query) => ref
+                        .read(storesViewModelProvider.notifier)
+                        .filterStoresBySearch(query),
                   ),
-                  Gap.h16,
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(12.w),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary,
-                              AppColors.primary.withOpacity(0.8),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.store,
-                          color: Colors.white,
-                          size: 20.w,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            AppText.h1(
-                              'Stores Around You',
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.black87,
-                            ),
-                            Text(
-                              'Find nearby stores and shops',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  Gap.h20,
-
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search for stores, shops, markets...',
-                        hintStyle: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 14,
-                        ),
-                        prefixIcon: Container(
-                          padding: const EdgeInsets.only(top: 12, bottom: 12),
-                          child: Icon(
-                            Icons.search,
-                            color: Colors.grey[400],
-                            size: 20,
-                          ),
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.clear,
-                                  color: Colors.grey[400],
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  _searchController.clear();
-                                },
-                              )
-                            : null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              width: .5, color: AppColors.black),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              width: .5, color: AppColors.black),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 20,
-                        ),
-                      ),
+                  const SizedBox(height: VinkolSpace.md),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: VinkolChipRow(
+                      labels: <String>[l10n.storeAll, l10n.storeOpenNow],
+                      selectedIndex: _openOnly ? 1 : 0,
+                      onSelected: (int index) =>
+                          setState(() => _openOnly = index == 1),
                     ),
                   ),
                 ],
               ),
             ),
-
             Expanded(
-              child: storesAsyncValue.when(
-                data: (storeResponse) {
-                  if (_isFilteringByTag) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      setState(() {
-                        _isFilteringByTag = false;
-                        _previousTag = null;
-                      });
-                    });
-                  }
-                  final List<Store> stores = storeResponse.stores;
-                  if (stores.isEmpty) {
-                    return RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: () => ref
-                          .read(storesViewModelProvider.notifier)
-                          .refreshStores(),
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        child: Container(
-                          height: MediaQuery.of(context).size.height * 0.6,
-                          child: _buildEmptyState(),
-                        ),
+              child: stores.when(
+                loading: () => const Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: VinkolSpace.pageMargin),
+                  child: VinkolSkeletonList(count: 5),
+                ),
+                error: (Object error, StackTrace stack) =>
+                    VinkolStateView.error(
+                  title: l10n.storeCouldNotLoadStores,
+                  message: error.toString(),
+                  action: VinkolStateAction(
+                    label: l10n.commonTryAgain,
+                    onPressed: () => ref
+                        .read(storesViewModelProvider.notifier)
+                        .refreshStores(),
+                  ),
+                ),
+                data: (StoreResponse response) {
+                  final List<Store> visible = _visible(response.stores);
+
+                  if (visible.isEmpty) {
+                    return VinkolStateView.empty(
+                      icon: Icons.storefront_outlined,
+                      title: _openOnly
+                          ? l10n.storeNothingOpenNow
+                          : l10n.storeNoStoresHere,
+                      message: _openOnly
+                          ? l10n.storeNothingOpenNowBody
+                          : l10n.storeNoStoresHereBody,
+                      action: VinkolStateAction(
+                        label: _openOnly
+                            ? l10n.storeShowAllStores
+                            : l10n.commonTryAgain,
+                        onPressed: () => _openOnly
+                            ? setState(() => _openOnly = false)
+                            : ref
+                                .read(storesViewModelProvider.notifier)
+                                .refreshStores(),
                       ),
                     );
                   }
+
                   return RefreshIndicator(
-                    color: AppColors.primary,
+                    color: v.brand,
                     onRefresh: () => ref
                         .read(storesViewModelProvider.notifier)
                         .refreshStores(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${stores.length} store${stores.length != 1 ? 's' : ''} found',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          Gap.h16,
-
-                          Expanded(
-                            child: GridView.builder(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              gridDelegate: _getResponsiveGridDelegate(),
-                              itemCount: stores.length,
-                              itemBuilder: (context, index) {
-                                final store = stores[index];
-                                return StoreCard(
-                                  store: store,
-                                  onTap: () {
-                                    ref
-                                        .read(currentStoreProvider.notifier)
-                                        .state = store;
-                                    NavigationService.instance.navigateTo(
-                                      NavigatorRoutes.productListScreen,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(
+                        VinkolSpace.pageMargin,
+                        VinkolSpace.lg,
+                        VinkolSpace.pageMargin,
+                        VinkolSpace.xxl,
                       ),
-                    ),
-                  );
-                },
-                loading: () {
-                  if (_isFilteringByTag) {
-                    return _buildLoadingState();
-                  }
-                  if (storesAsyncValue.hasValue &&
-                      storesAsyncValue.value!.stores.isNotEmpty) {
-                    return RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: () => ref
-                          .read(storesViewModelProvider.notifier)
-                          .refreshStores(),
-                      child: Padding(
-                        padding: EdgeInsets.all(
-                            MediaQuery.of(context).size.width < 320
-                                ? 8.0
-                                : 16.0),
-                        child: GridView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          gridDelegate: _getResponsiveGridDelegate(),
-                          itemCount: storesAsyncValue.value!.stores.length,
-                          itemBuilder: (context, index) {
-                            final store = storesAsyncValue.value!.stores[index];
-                            return StoreCard(
-                              store: store,
-                              onTap: () {
-                                ref.read(currentStoreProvider.notifier).state =
-                                    store;
-                                NavigationService.instance.navigateTo(
-                                  NavigatorRoutes.productListScreen,
-                                );
-                              },
-                            );
+                      itemCount: visible.length + 1,
+                      itemBuilder: (BuildContext context, int index) {
+                        if (index == 0) {
+                          return VinkolSectionHeader(
+                            label: l10n.storeStoreCount(visible.length),
+                          );
+                        }
+                        final Store store = visible[index - 1];
+                        return StoreCard(
+                          store: store,
+                          onTap: () {
+                            ref.read(currentStoreProvider.notifier).state =
+                                store;
+                            NavigationService.instance
+                                .navigateTo(NavigatorRoutes.productListScreen);
                           },
-                        ),
-                      ),
-                    );
-                  }
-                  return _buildLoadingState();
-                },
-                error: (error, stack) {
-                  if (_isFilteringByTag) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      setState(() {
-                        _isFilteringByTag = false;
-                        _previousTag = null;
-                      });
-                    });
-                  }
-                  return RefreshIndicator(
-                    color: AppColors.primary,
-                    onRefresh: () => ref
-                        .read(storesViewModelProvider.notifier)
-                        .refreshStores(),
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Container(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: _buildErrorState(error),
-                      ),
+                        );
+                      },
                     ),
                   );
                 },
@@ -392,179 +183,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Container(
-      color: Colors.grey[50],
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const DotSpinningIndicator(
-              color: AppColors.primary,
-            ),
-            Gap.h16,
-            const Text(
-              'Finding stores near you...',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.store_outlined,
-              color: Colors.grey[400],
-              size: 40,
-            ),
-          ),
-          Gap.h20,
-          Text(
-            'No stores found',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[700],
-            ),
-          ),
-          Gap.h8,
-          Text(
-            'Try adjusting your search or check back later',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          Gap.h24,
-          TextButton.icon(
-            onPressed: () {
-              ref.read(storesViewModelProvider.notifier).refreshStores();
-            },
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Refresh'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(dynamic error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.red[50],
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.red[100]!,
-                width: 2,
-              ),
-            ),
-            child: Icon(
-              Icons.wifi_off,
-              color: Colors.red[400],
-              size: 40,
-            ),
-          ),
-
-          Gap.h20,
-
-          Text(
-            'Connection Problem',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          Gap.h8,
-
-          Text(
-            'Unable to load stores. Please check your\ninternet connection and try again.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          Gap.h24,
-
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                ref.read(storesViewModelProvider.notifier).refreshStores();
-              },
-              icon: const Icon(
-                Icons.refresh,
-                size: 18,
-                color: Colors.white,
-              ),
-              label: const Text(
-                'Try Again',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

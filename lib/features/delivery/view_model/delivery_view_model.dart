@@ -44,7 +44,8 @@ class DeliveryViewModel extends BaseViewModel {
   // --- New: Stale Time Logic ---
   DateTime? _lastFetchedPackageDeliveries;
   DateTime? _lastFetchedStoreDeliveries;
-  final Duration staleTime = const Duration(minutes: 5); // Data considered stale after 5 minutes
+  final Duration staleTime =
+      const Duration(minutes: 5); // Data considered stale after 5 minutes
 
   List<DeliveryModel> get packageDeliveries => _packageDeliveries;
   List<DeliveryModel> get storeDeliveries => _storeDeliveries;
@@ -65,10 +66,13 @@ class DeliveryViewModel extends BaseViewModel {
   /// Fetches package deliveries.
   /// Set [forceRefresh] to true to bypass stale time check.
   Future<void> fetchPackageDeliveries({bool forceRefresh = false}) async {
-    if (_isLoadingPackageDeliveries && !forceRefresh) return; // Prevent re-fetching if already loading unless forced
+    if (_isLoadingPackageDeliveries && !forceRefresh)
+      return; // Prevent re-fetching if already loading unless forced
 
     // Only fetch if data is stale or forceRefresh is true
-    if (!forceRefresh && !_isDataStale(_lastFetchedPackageDeliveries) && _packageDeliveries.isNotEmpty) {
+    if (!forceRefresh &&
+        !_isDataStale(_lastFetchedPackageDeliveries) &&
+        _packageDeliveries.isNotEmpty) {
       _logger.i('Package deliveries data is not stale. Using cached data.');
       return;
     }
@@ -80,10 +84,12 @@ class DeliveryViewModel extends BaseViewModel {
     try {
       final data = await _deliveryService.getOrders(orderType: 'Delivery');
       _packageDeliveries = data;
-      _lastFetchedPackageDeliveries = DateTime.now(); // Update last fetched time
+      _lastFetchedPackageDeliveries =
+          DateTime.now(); // Update last fetched time
       _logger.i('Successfully fetched package deliveries.');
     } catch (e) {
-      _packageDeliveryError = 'Failed to load package deliveries: ${e.toString()}';
+      _packageDeliveryError =
+          'Failed to load package deliveries: ${e.toString()}';
       _logger.e(_packageDeliveryError);
     } finally {
       _isLoadingPackageDeliveries = false;
@@ -94,10 +100,13 @@ class DeliveryViewModel extends BaseViewModel {
   /// Fetches store deliveries.
   /// Set [forceRefresh] to true to bypass stale time check.
   Future<void> fetchStoreDeliveries({bool forceRefresh = false}) async {
-    if (_isLoadingStoreDeliveries && !forceRefresh) return; // Prevent re-fetching if already loading unless forced
+    if (_isLoadingStoreDeliveries && !forceRefresh)
+      return; // Prevent re-fetching if already loading unless forced
 
     // Only fetch if data is stale or forceRefresh is true
-    if (!forceRefresh && !_isDataStale(_lastFetchedStoreDeliveries) && _storeDeliveries.isNotEmpty) {
+    if (!forceRefresh &&
+        !_isDataStale(_lastFetchedStoreDeliveries) &&
+        _storeDeliveries.isNotEmpty) {
       _logger.i('Store deliveries data is not stale. Using cached data.');
       return;
     }
@@ -135,22 +144,22 @@ class DeliveryViewModel extends BaseViewModel {
     changeState(const ViewModelState.busy());
     try {
       await _deliveryService.downloadReport(startDate, endDate);
-      
+
       // Handle success through DialogService
       _dialogService.showSuccess(
-        'Download Successful', 
+        'Download Successful',
         'The report for $startDate to $endDate has been downloaded and opened.',
       );
-      
+
       changeState(const ViewModelState.idle());
     } catch (e) {
       _logger.e('Failed to request report download: $e');
-      
+
       final errorMessage = e.toString().replaceAll('Exception: ', '');
-      
+
       // Handle failure through DialogService
       _dialogService.showError('Request Failed', errorMessage);
-      
+
       changeState(ViewModelState.error(FailureModel(message: errorMessage)));
     }
   }
@@ -159,7 +168,7 @@ class DeliveryViewModel extends BaseViewModel {
 final deliveryViewModelProvider = ChangeNotifierProvider((ref) {
   final deliveryService = ref.watch(deliveryServiceProvider);
   return DeliveryViewModel(
-    deliveryService, 
+    deliveryService,
     locator<DialogService>(),
     const AppLogger(DeliveryViewModel),
   );

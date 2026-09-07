@@ -79,9 +79,9 @@
   --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
 
   /* --- Type --- */
-  --font-display: 'Montserrat', system-ui, sans-serif;
-  --font-text: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-display: 'Geist', system-ui, sans-serif;
+  --font-text: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
 }
 
 /* --- Semantic layer: light --- */

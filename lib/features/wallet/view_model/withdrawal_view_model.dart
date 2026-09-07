@@ -4,14 +4,9 @@ import '../model/bank_model.dart';
 import '../model/withdrawal_model.dart';
 import '../data/bank_service.dart';
 import 'package:starter_codes/core/utils/network_client.dart';
-import 'package:starter_codes/core/utils/app_logger.dart';
 
 final bankServiceProvider = Provider((ref) {
   return BankService(NetworkClient());
-});
-
-final walletServiceProvider = Provider((ref) {
-  return WalletService(NetworkClient(), const AppLogger(WalletService));
 });
 
 class WithdrawalState {
@@ -171,15 +166,12 @@ class WithdrawalNotifier extends StateNotifier<WithdrawalState> {
     }
   }
 
-  Future<void> requestWithdrawal(double amount, {String? reason}) async {
+  Future<void> requestWithdrawal(double amount) async {
     state = state.copyWith(isLoading: true);
     try {
       final userBankValue = state.userBank;
       if (userBankValue is AsyncData<UserBank?>) {
-        await walletService.requestWithdrawal(
-          amount,
-          reason: reason,
-        );
+        await walletService.requestWithdrawal(amount);
         await _fetchWithdrawalHistory();
       }
     } finally {

@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import '../../view_model/withdrawal_view_model.dart';
-import '../widget/bank_account_card.dart';
-import 'add_bank_screen.dart';
+import 'package:starter_codes/core/design/design.dart';
+import 'package:starter_codes/core/extensions/currency_formatter.dart';
+import 'package:starter_codes/core/market/market_format.dart';
+import 'package:starter_codes/core/market/market_scope.dart';
+import 'package:starter_codes/features/wallet/model/bank_model.dart';
+import 'package:starter_codes/features/wallet/view/screen/add_bank_screen.dart';
+import 'package:starter_codes/features/wallet/view/widget/bank_account_card.dart';
+import 'package:starter_codes/features/wallet/view/widget/wallet_amount_field.dart';
+import 'package:starter_codes/features/wallet/view/widget/withdrawal_confirmation_sheet.dart';
+import 'package:starter_codes/features/wallet/view_model/wallet_history_view_model.dart';
+import 'package:starter_codes/features/wallet/view_model/withdrawal_view_model.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
-import '../../view_model/wallet_history_view_model.dart';
-import '../widget/withdrawal_confirmation_sheet.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
+/// Move money out of the wallet, to the one bank account on the profile.
+///
+/// There is no note field. The endpoint takes an amount and nothing else, and a box whose
+/// contents the server discards is worse than no box at all (D-10).
 class WithdrawScreen extends ConsumerStatefulWidget {
   const WithdrawScreen({super.key});
 
@@ -18,12 +27,13 @@ class WithdrawScreen extends ConsumerStatefulWidget {
 }
 
 class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
-  final amountController = TextEditingController();
-  final reasonController = TextEditingController();
-  final formKey = GlobalKey<FormState>();
+  final TextEditingController _amount = TextEditingController();
+  bool _touched = false;
+
   @override
   void initState() {
     super.initState();
+    _amount.addListener(() => setState(() => _touched = true));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(walletOverviewViewModelProvider.notifier).refreshData();
     });
@@ -31,467 +41,176 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
 
   @override
   void dispose() {
-    amountController.dispose();
-    reasonController.dispose();
+    _amount.dispose();
     super.dispose();
   }
 
-  void _showConfirmationDialog(double amount, String? reason) {
-    final withdrawalState = ref.read(withdrawalProvider);
-    final userBank = withdrawalState.userBank.value;
+  double get _value => CurrencyFormatter.parseAmount(_amount.text);
 
-    if (userBank == null) return;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => WithdrawalConfirmationSheet(
-        amount: amount,
-        reason: reason,
-        userBank: userBank,
-        onConfirm: () {
-          Navigator.pop(context);
-          _submitWithdrawal(amount, reason);
-        },
-      ),
-    );
+  String? _errorFor(BuildContext context, double? balance) {
+    if (!_touched || _amount.text.isEmpty) return null;
+    final l10n = context.l10n;
+    final num minimum = MarketScope.market.minimumTransfer;
+    if (_value < minimum) {
+      return l10n.walletMinimumWithdrawal(MarketFormat.money(minimum));
+    }
+    if (balance != null && _value > balance) {
+      return l10n.walletNotEnoughBalance(MarketFormat.moneyPrecise(balance));
+    }
+    return null;
   }
 
-  Future<void> _submitWithdrawal(double amount, String? reason) async {
+  Future<void> _openBankEditor() async {
+    final bool? saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) => const AddBankScreen()),
+    );
+    if (saved == true && mounted) {
+      await ref.read(withdrawalProvider.notifier).refreshData();
+    }
+  }
+
+  Future<void> _confirm(UserBank bank) async {
+    final l10n = context.l10n;
+    final bool? go = await WithdrawalConfirmationSheet.show(
+      context,
+      amount: _value,
+      userBank: bank,
+    );
+    if (go != true || !mounted) return;
+
     try {
-      await ref.read(withdrawalProvider.notifier).requestWithdrawal(
-            amount,
-            reason: reason,
-          );
-
+      await ref.read(withdrawalProvider.notifier).requestWithdrawal(_value);
+      if (!mounted) return;
+      await ref.read(walletOverviewViewModelProvider.notifier).refreshData();
+      if (!mounted) return;
+      AppStatusDialogs.showSuccess(
+        context,
+        l10n.walletWithdrawalRequested,
+        l10n.walletWithdrawalRequestedBody,
+      );
+      Navigator.of(context).pop();
+    } catch (error) {
       if (mounted) {
-        amountController.clear();
-        reasonController.clear();
-        AppStatusDialogs.showSuccess(
-            context, 'Success', 'Withdrawal request submitted successfully');
-
-        // Refresh wallet balance
-        await ref.read(walletOverviewViewModelProvider.notifier).refreshData();
-
-        // Refresh withdrawal history
-        await ref.read(withdrawalProvider.notifier).refreshData();
-      }
-    } catch (e) {
-      if (mounted) {
-        AppStatusDialogs.showError(context, 'Error', 'Error: ${e.toString()}');
+        AppStatusDialogs.showError(
+            context, l10n.walletCouldNotWithdraw, error.toString());
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final withdrawalState = ref.watch(withdrawalProvider);
-    final walletOverviewState = ref.watch(walletOverviewViewModelProvider);
-    final walletBalanceValue = walletOverviewState.walletBalance.valueOrNull;
+    final v = context.vinkol;
+    final l10n = context.l10n;
+    final WithdrawalState state = ref.watch(withdrawalProvider);
+    final double? balance =
+        ref.watch(walletOverviewViewModelProvider).walletBalance.valueOrNull;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: v.canvas,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: v.canvas,
+        surfaceTintColor: v.canvas,
         elevation: 0,
-        title: Text(
-          'Withdraw Funds',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.black),
+        title: Text(l10n.walletWithdraw,
+            style: VinkolType.h3.copyWith(color: v.textPrimary)),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await ref.read(withdrawalProvider.notifier).refreshData();
-          await ref
-              .read(walletOverviewViewModelProvider.notifier)
-              .refreshData();
-        },
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(20.w),
-          child: Form(
-            key: formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Wallet Balance Card
-                // if (walletBalanceValue != null)
-                //   Container(
-                //     padding: EdgeInsets.all(20.w),
-                //     decoration: BoxDecoration(
-                //       gradient: LinearGradient(
-                //         colors: [
-                //           AppColors.blue,
-                //           AppColors.blue.withOpacity(0.8)
-                //         ],
-                //         begin: Alignment.topLeft,
-                //         end: Alignment.bottomRight,
-                //       ),
-                //       borderRadius: BorderRadius.circular(16.r),
-                //       boxShadow: [
-                //         BoxShadow(
-                //           color: AppColors.blue.withOpacity(0.3),
-                //           blurRadius: 12,
-                //           offset: Offset(0, 4),
-                //         ),
-                //       ],
-                //     ),
-                //     child: Row(
-                //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //       children: [
-                //         Column(
-                //           crossAxisAlignment: CrossAxisAlignment.start,
-                //           children: [
-                //             Text(
-                //               'Available Balance',
-                //               style: TextStyle(
-                //                 fontSize: 14.sp,
-                //                 color: Colors.white.withOpacity(0.9),
-                //               ),
-                //             ),
-                //             Gap.h8,
-                //             Text(
-                //               walletBalanceValue.toMoney(),
-                //               style: TextStyle(
-                //                 fontSize: 28.sp,
-                //                 fontWeight: FontWeight.bold,
-                //                 color: Colors.white,
-                //               ),
-                //             ),
-                //           ],
-                //         ),
-                //         Icon(
-                //           Icons.account_balance_wallet,
-                //           color: Colors.white,
-                //           size: 40.sp,
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                Gap.h24,
-                withdrawalState.userBank.when(
-                  data: (userBank) {
-                    if (userBank == null) {
-                      return _buildNoBankAccountState();
-                    }
-                    return _buildWithdrawalForm(
-                        userBank, withdrawalState, walletBalanceValue);
-                  },
-                  loading: () => Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 100.h),
-                      child: const CircularProgressIndicator(
-                        color: AppColors.blue,
-                      ),
-                    ),
-                  ),
-                  error: (error, stack) => _buildErrorState(error.toString()),
-                ),
-              ],
+      body: SafeArea(
+        top: false,
+        child: state.userBank.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.all(VinkolSpace.pageMargin),
+            child: VinkolSkeletonList(count: 2, padding: EdgeInsets.zero),
+          ),
+          error: (Object error, StackTrace _) => Padding(
+            padding: const EdgeInsets.all(VinkolSpace.pageMargin),
+            child: VinkolStateView.error(
+              title: l10n.walletCouldNotLoadAccount,
+              message: error.toString(),
+              action: VinkolStateAction(
+                label: l10n.commonTryAgain,
+                onPressed: () =>
+                    ref.read(withdrawalProvider.notifier).refreshData(),
+              ),
             ),
           ),
+          data: (UserBank? bank) {
+            if (bank == null) {
+              return Padding(
+                padding: const EdgeInsets.all(VinkolSpace.pageMargin),
+                child: VinkolStateView.empty(
+                  icon: Icons.account_balance_outlined,
+                  title: l10n.walletNoBankAccount,
+                  message: l10n.walletNoBankAccountBody,
+                  action: VinkolStateAction(
+                    label: l10n.walletAddBankAccount,
+                    onPressed: _openBankEditor,
+                  ),
+                ),
+              );
+            }
+            return _form(context, bank, balance, state.isLoading);
+          },
         ),
       ),
     );
   }
 
-  Widget _buildNoBankAccountState() {
-    return Container(
-      padding: EdgeInsets.all(32.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 80.w,
-            height: 80.h,
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.account_balance_outlined,
-              size: 40.sp,
-              color: AppColors.blue,
-            ),
-          ),
-          Gap.h24,
-          Text(
-            'No Bank Account Added',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          Gap.h8,
-          Text(
-            'Add a bank account to start withdrawing funds from your wallet',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey.shade600,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          Gap.h32,
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () async {
-                final result = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AddBankScreen(),
-                  ),
-                );
-                if (result == true && mounted) {
-                  await ref.read(withdrawalProvider.notifier).refreshData();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.blue,
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Add Bank Account',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _form(
+    BuildContext context,
+    UserBank bank,
+    double? balance,
+    bool busy,
+  ) {
+    final l10n = context.l10n;
+    final String? error = _errorFor(context, balance);
+    final bool ready = error == null && _value > 0;
 
-  Widget _buildWithdrawalForm(
-      userBank, withdrawalState, double? walletBalance) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        BankAccountCard(
-          bank: userBank,
-          onChangeBank: () async {
-            final result = await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const AddBankScreen(),
+      children: <Widget>[
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              VinkolSpace.pageMargin,
+              VinkolSpace.sm,
+              VinkolSpace.pageMargin,
+              VinkolSpace.xxl,
+            ),
+            children: <Widget>[
+              WalletAmountField(
+                label: l10n.walletAmount,
+                controller: _amount,
+                autofocus: true,
+                enabled: !busy,
+                error: error,
+                hint: balance == null
+                    ? null
+                    : l10n.walletAvailableAmount(
+                        MarketFormat.moneyPrecise(balance)),
               ),
-            );
-            if (result == true && mounted) {
-              await ref.read(withdrawalProvider.notifier).refreshData();
-            }
-          },
-        ),
-        Gap.h24,
-        Text(
-          'Withdrawal Amount',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        Gap.h12,
-        TextFormField(
-          controller: amountController,
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
-          enabled: !withdrawalState.isLoading,
-          decoration: InputDecoration(
-            hintText: '0.00',
-            prefixText: '₦ ',
-            prefixStyle: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.blue, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 16.h,
-            ),
-          ),
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter an amount';
-            }
-            final amount = double.tryParse(value);
-            if (amount == null || amount <= 0) {
-              return 'Please enter a valid amount';
-            }
-            if (amount < 100) {
-              return 'Minimum withdrawal is ₦100';
-            }
-            if (walletBalance != null && amount > walletBalance) {
-              return 'Insufficient balance. Available: ₦${walletBalance.toStringAsFixed(2)}';
-            }
-            return null;
-          },
-        ),
-        if (walletBalance != null) ...[
-          Gap.h8,
-          Text(
-            'Available: ₦${walletBalance.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
-        Gap.h24,
-        Text(
-          'Reason (Optional)',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        Gap.h12,
-        TextFormField(
-          controller: reasonController,
-          maxLines: 3,
-          enabled: !withdrawalState.isLoading,
-          decoration: InputDecoration(
-            hintText: 'Add a note for this withdrawal...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.blue, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 16.h,
-            ),
-          ),
-          style: TextStyle(
-            fontSize: 14.sp,
-          ),
-        ),
-        Gap.h32,
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: withdrawalState.isLoading
-                ? null
-                : () {
-                    if (formKey.currentState!.validate()) {
-                      final amount = double.parse(amountController.text);
-                      final reason = reasonController.text.trim().isEmpty
-                          ? null
-                          : reasonController.text.trim();
-                      _showConfirmationDialog(amount, reason);
-                    }
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.blue,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
+              VinkolSectionHeader(
+                label: l10n.walletToAccount,
+                action: (label: l10n.walletChange, onTap: _openBankEditor),
               ),
-              elevation: 0,
-            ),
-            child: withdrawalState.isLoading
-                ? SizedBox(
-                    height: 20.h,
-                    width: 20.w,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'Request Withdrawal',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
+              BankAccountCard(bank: bank, onChangeBank: _openBankEditor),
+              const SizedBox(height: VinkolSpace.lg),
+              VinkolNotice(
+                headline: l10n.walletWithdrawalsAreFinal,
+                body: l10n.walletWithdrawalsAreFinalBody,
+                icon: Icons.warning_amber_rounded,
+                tone: VinkolNoticeTone.warning,
+              ),
+            ],
           ),
+        ),
+        VinkolDock(
+          label: l10n.walletWithdrawing,
+          value: _value > 0 ? MarketFormat.moneyPrecise(_value) : null,
+          detail: ready ? null : (error ?? l10n.walletEnterAnAmount),
+          actionLabel: l10n.walletConfirmWithdrawal,
+          loading: busy,
+          onAction: ready && !busy ? () => _confirm(bank) : null,
         ),
       ],
-    );
-  }
-
-  Widget _buildErrorState(String error) {
-    return Container(
-      padding: EdgeInsets.all(32.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.red.shade200),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 48.sp,
-            color: Colors.red,
-          ),
-          Gap.h16,
-          Text(
-            'Error Loading Data',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          Gap.h8,
-          Text(
-            error,
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey.shade600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 }

@@ -13,7 +13,8 @@ class DownloadReportScreen extends ConsumerStatefulWidget {
   const DownloadReportScreen({super.key});
 
   @override
-  ConsumerState<DownloadReportScreen> createState() => _DownloadReportScreenState();
+  ConsumerState<DownloadReportScreen> createState() =>
+      _DownloadReportScreenState();
 }
 
 class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
@@ -23,7 +24,9 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
   Future<void> _selectDate(BuildContext context, bool isStart) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isStart ? (_startDate ?? DateTime.now()) : (_endDate ?? DateTime.now()),
+      initialDate: isStart
+          ? (_startDate ?? DateTime.now())
+          : (_endDate ?? DateTime.now()),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (context, child) {
@@ -58,8 +61,8 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('Please select both start and end dates.')),
+            behavior: SnackBarBehavior.floating,
+            content: Text('Please select both start and end dates.')),
       );
       return;
     }
@@ -68,9 +71,11 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
     final startDateStr = dateFormat.format(_startDate!);
     final endDateStr = dateFormat.format(_endDate!);
 
-    // The ViewModel now handles its own state (busy/idle/error) 
+    // The ViewModel now handles its own state (busy/idle/error)
     // and triggers the appropriate dialogs via DialogService.
-    await ref.read(deliveryViewModelProvider).downloadReport(startDateStr, endDateStr);
+    await ref
+        .read(deliveryViewModelProvider)
+        .downloadReport(startDateStr, endDateStr);
   }
 
   void _showErrorDialog(String message) {
@@ -162,7 +167,8 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
               AppButton.primary(
                 title: 'Done',
                 onTap: () {
-                  Navigator.of(context).pop(true); // Close dialog and pass success
+                  Navigator.of(context)
+                      .pop(true); // Close dialog and pass success
                 },
               ),
             ],
@@ -204,7 +210,9 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
                 ),
                 Gap.h4,
                 AppText.body(
-                  date != null ? DateFormat('MMM dd, yyyy').format(date) : 'Select Date',
+                  date != null
+                      ? DateFormat('MMM dd, yyyy').format(date)
+                      : 'Select Date',
                   fontWeight: FontWeight.w500,
                 ),
               ],
@@ -281,7 +289,10 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
                 title: 'Download Report',
                 loading: ref.watch(deliveryViewModelProvider).isBusy,
                 onTap: _handleDownload,
-              ).animate().fadeIn(delay: 500.ms).scale(begin: const Offset(0.9, 0.9)),
+              )
+                  .animate()
+                  .fadeIn(delay: 500.ms)
+                  .scale(begin: const Offset(0.9, 0.9)),
               Gap.h12,
             ],
           ),

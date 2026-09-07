@@ -1,163 +1,204 @@
-// lib/features/profile/view/screens/settings_screen.dart
-// For CupertinoSwitch
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/constants/link_routes.dart';
+import 'package:starter_codes/core/design/design.dart';
+import 'package:starter_codes/core/market/market.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/features/profile/view/widget/profile_widgets.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
-class SettingsScreen extends StatefulWidget {
+/// **Settings** — preferences, legal, and the one destructive action.
+///
+/// Country is the important row and it is new. Choosing a market sets the currency and its
+/// decimal count, whether a tax line is displayed and what it is called, the word for an
+/// administrative region, the address fields and their order, the dial code and the support
+/// contacts (D-09). It opens the same picker onboarding uses, so there is one place that
+/// knowledge lives.
+///
+/// Language offers only what the active market ships: English in Nigeria, English and
+/// Français in Canada. Offering French where there is no French copy is precisely the Quebec
+/// compliance failure the market layer exists to prevent.
+///
+/// Dark mode is not here. The theme follows the device, as Midnight intends — an in-app
+/// override is a preference the app would have to store and nothing asked for it.
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final v = context.vinkol;
+    final l10n = context.l10n;
+    final Market market = ref.watch(currentMarketProvider);
+    final Region region = ref.watch(currentRegionProvider);
+    final String languageCode = ref.watch(appLocaleProvider).languageCode;
+    final MarketLanguage active = market.languages.firstWhere(
+      (MarketLanguage l) => l.code == languageCode,
+      orElse: () => market.languages.first,
+    );
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  final bool _darkModeEnabled = false; // Initial state for Dark Mode
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MiniAppBar(
-        title: "Setting",
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppText.h1(
-                'Notification'), // Title as per image, even though it's "Settings"
-            Gap.h24,
-            _SettingsRow(
-              title: 'Language',
-              trailingWidget: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(5.r),
-                ),
-                child: AppText.caption('EN',
-                    color: Colors.white, fontWeight: FontWeight.bold),
+      backgroundColor: v.canvas,
+      appBar: MiniAppBar(title: l10n.profileSettings),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          VinkolSpace.pageMargin,
+          VinkolSpace.xs,
+          VinkolSpace.pageMargin,
+          VinkolSpace.xxl,
+        ),
+        children: <Widget>[
+          VinkolSectionHeader(label: l10n.profilePreferences),
+          VinkolRowGroup(
+            children: <VinkolRow>[
+              VinkolRow(
+                icon: Icons.notifications_none,
+                title: l10n.profileNotifications,
+                meta: l10n.profileNotificationsMeta,
+                onTap: () => NavigationService.instance
+                    .navigateTo(NavigatorRoutes.notificationSettingsScreen),
               ),
-              onTap: () {
-                print('Change Language');
-              },
-            ),
-            // _SettingsRow(
-            //   title: 'Dark Mode',
-            //   trailingWidget: Transform.scale(
-            //     scale: 0.8,
-            //     child: CupertinoSwitch(
-            //       value: _darkModeEnabled,
-            //       onChanged: (bool newValue) {
-            //         setState(() {
-            //           _darkModeEnabled = newValue;
-            //         });
-            //         print('Dark Mode: $_darkModeEnabled');
-            //         // Implement theme change logic here
-            //       },
-            //       activeColor: AppColors.primary,
-            //       trackColor: Colors.grey.shade300,
-            //     ),
-            //   ),
-            //   onTap: () {
-            //     // Tapping the row should also toggle the switch
-            //     setState(() {
-            //       _darkModeEnabled = !_darkModeEnabled;
-            //     });
-            //     print('Dark Mode row tapped! $_darkModeEnabled');
-            //   },
-            // ),
-            Gap.h16,
-            // _SettingsLink(
-            //   title: 'Term & Condition',
-            //   onTap: () {
-            //     print('Navigate to Terms & Conditions');
-            //     // NavigationService.instance.navigateTo(NavigatorRoutes.termsAndConditionsScreen);
-            //   },
-            // ),
-            // _SettingsLink(
-            //   title: 'Privacy & Policy',
-            //   onTap: () {
-            //     print('Navigate to Privacy & Policy');
-            //     // NavigationService.instance.navigateTo(NavigatorRoutes.privacyPolicyScreen);
-            //   },
-            // ),
-            _SettingsLink(
-              title: 'Delete Account',
-              onTap: () {
-                launchUrlString(LinkRoutes.deleteAccount);
-                // NavigationService.instance
-                //     .navigateTo(NavigatorRoutes.deleteAccountScreen);
-              },
-              color: Colors.red, // Make delete account text red
-            ),
-          ],
-        ),
+              VinkolRow(
+                icon: Icons.translate,
+                title: l10n.profileLanguage,
+                meta: l10n.profileLanguageMeta(
+                  market.languages.length,
+                  active.nativeName,
+                ),
+                onTap: () => _pickLanguage(context, ref, market, active),
+              ),
+              VinkolRow(
+                icon: Icons.public,
+                title: l10n.profileCountry,
+                meta: l10n.profileCountryMeta(
+                  market.displayName,
+                  region.name,
+                  market.currency.code,
+                ),
+                metaMaxLines: 2,
+                onTap: () => NavigationService.instance.navigateTo(
+                  NavigatorRoutes.marketSelectScreen,
+                  argument: <String, dynamic>{'fromSettings': true},
+                ),
+              ),
+            ],
+          ),
+          VinkolSectionHeader(label: l10n.profileLegal),
+          VinkolRowGroup(
+            children: <VinkolRow>[
+              VinkolRow(
+                icon: Icons.description_outlined,
+                title: l10n.profileTerms,
+                onTap: () =>
+                    profileLaunch(context, LinkRoutes.termsAndCondition),
+              ),
+              VinkolRow(
+                icon: Icons.privacy_tip_outlined,
+                title: l10n.profilePrivacy,
+                onTap: () => profileLaunch(context, LinkRoutes.privacyPolicy),
+              ),
+            ],
+          ),
+          VinkolSectionHeader(label: l10n.profileDangerZone),
+          ProfileGroup(
+            children: <Widget>[
+              ProfileDangerRow(
+                icon: Icons.person_remove_outlined,
+                title: l10n.profileDeleteAccount,
+                meta: l10n.profileDeleteAccountMeta,
+                // Deletion is a web form, not an endpoint the app can call. The dialog says
+                // where the tap leads and what it costs, because leaving the app for a
+                // browser with no warning is how a user loses an account by accident.
+                onTap: () => AppStatusDialogs.showConfirmation(
+                  context,
+                  title: l10n.profileDeleteTitle,
+                  message: l10n.profileDeleteBody,
+                  confirmText: l10n.profileDeleteContinue,
+                  cancelText: l10n.commonCancel,
+                  onConfirm: () =>
+                      profileLaunch(context, LinkRoutes.deleteAccount),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
-}
 
-class _SettingsRow extends StatelessWidget {
-  final String title;
-  final Widget trailingWidget;
-  final VoidCallback? onTap;
+  void _pickLanguage(
+    BuildContext context,
+    WidgetRef ref,
+    Market market,
+    MarketLanguage active,
+  ) {
+    final v = context.vinkol;
+    final l10n = context.l10n;
 
-  const _SettingsRow({
-    required this.title,
-    required this.trailingWidget,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            AppText.body(title, color: AppColors.black),
-            trailingWidget,
-          ],
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext sheetContext) => Container(
+        padding: const EdgeInsetsDirectional.fromSTEB(
+          VinkolSpace.xl,
+          VinkolSpace.md,
+          VinkolSpace.xl,
+          VinkolSpace.xl,
         ),
-      ),
-    );
-  }
-}
-
-class _SettingsLink extends StatelessWidget {
-  final String title;
-  final VoidCallback onTap;
-  final Color color;
-
-  const _SettingsLink({
-    required this.title,
-    required this.onTap,
-    this.color = AppColors.black, // Default color for links
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            AppText.body(title, color: color),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18.w),
-          ],
+        decoration: BoxDecoration(
+          color: v.surface,
+          borderRadius: VinkolRadius.brSheet,
+          border: BorderDirectional(top: BorderSide(color: v.borderSubtle)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: v.borderStrong,
+                    borderRadius: VinkolRadius.brFull,
+                  ),
+                ),
+              ),
+              const SizedBox(height: VinkolSpace.xl),
+              Text(
+                l10n.profileChooseLanguage,
+                style: VinkolType.h3.copyWith(color: v.textPrimary),
+              ),
+              const SizedBox(height: VinkolSpace.xs),
+              Text(
+                l10n.profileLanguageNote(market.displayName),
+                style: VinkolType.bodyS.copyWith(color: v.textTertiary),
+              ),
+              const SizedBox(height: VinkolSpace.lg),
+              VinkolRowGroup(
+                children: <VinkolRow>[
+                  for (final MarketLanguage language in market.languages)
+                    VinkolRow(
+                      title: language.nativeName,
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        ref
+                            .read(localeNotifierProvider.notifier)
+                            .select(language.code);
+                      },
+                      trailing: language.code == active.code
+                          ? Icon(Icons.check, size: 18, color: v.brand)
+                          : null,
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

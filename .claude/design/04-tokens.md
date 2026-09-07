@@ -10,8 +10,8 @@ object per screen** — always the live thing (the open order, the wallet balanc
 reward). Everything else is quiet near-black surface with hairline borders. Light mode is a
 full peer, not a tint.
 
-**Typefaces (D-02):** Montserrat for display and `h1`; Inter for `h2` down including all
-numerics; IBM Plex Mono for tracking codes and reference IDs.
+**Typeface (D-02a):** Geist, everywhere. Geist Mono for tracking codes and reference IDs.
+One family; hierarchy comes from size, weight and tracking, never from a second face.
 
 > **Live values live in `prototype/public/app/css/app.css`.** That file is the token source of
 > truth until `lib/core/design/` is reworked to match (WP1 in `10-build-plan.md`) — the Dart
@@ -128,24 +128,28 @@ users to ignore red.
 
 ## 2. Typography
 
-Three faces, split by job (D-02):
+One superfamily, two cuts (D-02a):
 
-- **Montserrat** — `display.l`, `display.s`, `h1`. The brand voice, retained.
-- **Inter** — `h2` and everything below it, including all `num.*`. Drawn for UI at small sizes,
-  ships `tnum`, broad Latin coverage, variable weight.
-- **IBM Plex Mono** — tracking codes and order/reference IDs only. Disambiguated 0/O and 1/l/I
-  is a correctness feature for strings people transcribe and read aloud.
+- **Geist** — everything: `display.*`, `h1`–`h4`, all body, labels, captions, buttons, all
+  `num.*`. Drawn for UI at small sizes, ships `tnum`, Latin + Latin Extended-A including
+  French, weights w100–w900. **No italic cut exists.**
+- **Geist Mono** — tracking codes and order/reference IDs only. Disambiguated 0/O and 1/l/I is
+  a correctness feature for strings people transcribe and read aloud.
+
+The brand register is no longer a face. It is tighter tracking at display sizes, plus the
+saturated object, the Line and flush numerics. Latin Extended Additional (Yoruba/Igbo dot-below
+ẹ ọ ṣ) is outside Geist's coverage — see D-02a.
 
 Scale (pt, unscaled; `.sp` is banned for text — see rules):
 
 | Token | Size / leading | Weight | Tracking | Use |
 |-------|---------------|--------|----------|-----|
-| `display.l` | 34 / 40 | 700 | -0.02em | one per screen, max |
-| `display.s` | 28 / 34 | 700 | -0.02em | screen titles in hero contexts |
-| `h1` | 24 / 30 | 700 | -0.015em | screen title |
-| `h2` | 20 / 26 | 600 | -0.01em | section |
-| `h3` | 17 / 24 | 600 | -0.005em | card title, sheet title |
-| `h4` | 15 / 22 | 600 | 0 | list row title |
+| `display.l` | 34 / 40 | 700 | -0.03em | one per screen, max |
+| `display.s` | 28 / 34 | 700 | -0.03em | screen titles in hero contexts |
+| `h1` | 24 / 30 | 700 | -0.025em | screen title |
+| `h2` | 20 / 26 | 600 | -0.015em | section |
+| `h3` | 17 / 24 | 600 | -0.01em | card title, sheet title |
+| `h4` | 15 / 22 | 600 | -0.005em | list row title |
 | `body.l` | 17 / 26 | 400 | 0 | reading copy |
 | `body` | 15 / 22 | 400 | 0 | default |
 | `body.s` | 13 / 20 | 400 | 0 | supporting |
@@ -153,8 +157,8 @@ Scale (pt, unscaled; `.sp` is banned for text — see rules):
 | `label.s` | 11 / 14 | 600 | +0.04em | uppercase eyebrow, status |
 | `caption` | 12 / 16 | 400 | 0 | timestamps, helper |
 | `button` | 15 / 20 | 600 | +0.01em | |
-| `num.xl` | 32 / 36 | 700 | tabular | wallet balance, order total |
-| `num.l` | 22 / 26 | 600 | tabular | price, ETA |
+| `num.xl` | 32 / 36 | 700 | -0.02em, tabular | wallet balance, order total |
+| `num.l` | 22 / 26 | 600 | -0.015em, tabular | price, ETA |
 | `num` | 15 / 20 | 500 | tabular | inline money, distances |
 | `mono` | 13 / 18 | 500 | +0.02em | tracking codes, reference IDs |
 

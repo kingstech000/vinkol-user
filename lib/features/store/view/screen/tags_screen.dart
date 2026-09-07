@@ -1,220 +1,220 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_tag_model.dart';
+import 'package:starter_codes/features/store/view/widget/shop_widgets.dart';
+import 'package:starter_codes/l10n/l10n.dart';
+import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/provider/store_provider.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
-import 'package:starter_codes/widgets/app_button.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
-class TagsScreen extends ConsumerStatefulWidget {
+/// The entry point to shopping: browse stores by category.
+///
+/// The first of four browse steps — categories, stores, products, product. Each one narrows,
+/// and none of them promises anything the API cannot answer: there are no ratings here, no
+/// distances and no delivery estimates, because StoreModel has none of those fields.
+class TagsScreen extends ConsumerWidget {
   const TagsScreen({super.key});
 
   @override
-  ConsumerState<TagsScreen> createState() => _TagsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final v = context.vinkol;
+    final l10n = context.l10n;
+    final AsyncValue<List<StoreTag>> tags = ref.watch(storeTagsProvider);
+    final int cartCount = ref.watch(cartProvider.select((CartState c) => c
+        .products
+        .fold<int>(0, (int sum, item) => sum + (item.quantity ?? 0))));
 
-class _TagsScreenState extends ConsumerState<TagsScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final ref = this.ref;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: v.canvas,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
+          children: <Widget>[
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
-              child: Column(
+              padding: const EdgeInsets.fromLTRB(
+                VinkolSpace.pageMargin,
+                VinkolSpace.lg,
+                VinkolSpace.pageMargin,
+                VinkolSpace.lg,
+              ),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.h1(
-                    'Shop by Category',
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.black,
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(l10n.storeShop,
+                            style:
+                                VinkolType.h1.copyWith(color: v.textPrimary)),
+                        const SizedBox(height: VinkolSpace.xs),
+                        Text(l10n.storeBrowseStoresByCategory,
+                            style: VinkolType.bodyS
+                                .copyWith(color: v.textTertiary)),
+                      ],
+                    ),
                   ),
-                  Gap.h8,
-                  AppText.body(
-                    'Browse stores by category',
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  _CartButton(count: cartCount),
                 ],
               ),
             ),
-
-            // Tags Grid
             Expanded(
-              child: ref.watch(storeTagsProvider).when(
-                    data: (tags) => Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24.w),
-                      child: GridView.builder(
-                        padding: EdgeInsets.only(bottom: 20.h),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16.w,
-                          mainAxisSpacing: 16.h,
-                          childAspectRatio: 0.85,
-                        ),
-                        itemCount: tags.length,
-                        itemBuilder: (context, index) {
-                          final tag = tags[index];
-                          return _buildTagCard(context, ref, tag);
-                        },
-                      ),
-                    ),
-                    loading: () => const Center(
-                      child: DotSpinningIndicator(),
-                    ),
-                    error: (error, stackTrace) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48.w,
-                            color: Colors.red,
-                          ),
-                          Gap.h16,
-                          AppText.body(
-                            'Failed to load categories',
-                            color: Colors.grey.shade600,
-                            fontSize: 14.sp,
-                          ),
-                          Gap.h16,
-                          AppButton.primary(
-                            title: 'Retry',
-                            onTap: () {
-                              ref.invalidate(storeTagsProvider);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
+              child: tags.when(
+                loading: () => const Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: VinkolSpace.pageMargin),
+                  child: VinkolSkeletonList(count: 6),
+                ),
+                error: (Object error, StackTrace stack) =>
+                    VinkolStateView.error(
+                  title: l10n.storeFailedToLoadCategories,
+                  message: error.toString(),
+                  action: VinkolStateAction(
+                    label: l10n.commonTryAgain,
+                    onPressed: () => ref.invalidate(storeTagsProvider),
                   ),
+                ),
+                data: (List<StoreTag> items) {
+                  if (items.isEmpty) {
+                    return VinkolStateView.empty(
+                      icon: Icons.category_outlined,
+                      title: l10n.storeNoCategoriesYet,
+                      message: l10n.storeNoCategoriesYetBody,
+                      action: VinkolStateAction(
+                        label: l10n.commonTryAgain,
+                        onPressed: () => ref.invalidate(storeTagsProvider),
+                      ),
+                    );
+                  }
+
+                  return GridView.builder(
+                    padding: EdgeInsets.fromLTRB(
+                      VinkolSpace.pageMargin,
+                      0,
+                      VinkolSpace.pageMargin,
+                      VinkolPod.bodyInsetOf(context),
+                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: VinkolSpace.md,
+                      mainAxisSpacing: VinkolSpace.md,
+                      // Tall enough for a two-line category name at a 1.3x text scale.
+                      mainAxisExtent: 132,
+                    ),
+                    itemCount: items.length,
+                    itemBuilder: (BuildContext context, int index) =>
+                        _CategoryTile(tag: items[index]),
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildTagCard(BuildContext context, WidgetRef ref, StoreTag tag) {
-    return InkWell(
-      onTap: () {
-        ref.read(selectedTagProvider.notifier).state = tag.tagValue;
-        NavigationService.instance.navigateTo(
-          NavigatorRoutes.storesScreen,
-        );
-      },
-      borderRadius: BorderRadius.circular(16.r),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Tag Image
-            Flexible(
-              child: Container(
-                width: 130.w,
-                height: 130.h,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: CachedNetworkImage(
-                    imageUrl: tag.imageUrl,
-                    fit: BoxFit.cover,
-                    width: 130.w,
-                    height: 130.h,
-                    placeholder: (context, url) => Container(
-                      color: AppColors.primary.withOpacity(0.1),
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.primary,
-                          ),
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) {
-                      // Fallback icon if image not found
-                      return Container(
-                        color: AppColors.primary.withOpacity(0.1),
-                        child: Icon(
-                          _getTagIcon(tag.tagValue),
-                          size: 40.w,
-                          color: AppColors.primary,
-                        ),
-                      );
-                    },
-                  ),
-                ),
+class _CategoryTile extends ConsumerWidget {
+  const _CategoryTile({required this.tag});
+
+  final StoreTag tag;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final v = context.vinkol;
+
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          ref.read(selectedTagProvider.notifier).state = tag.tagValue;
+          NavigationService.instance.navigateTo(NavigatorRoutes.storesScreen);
+        },
+        child: Container(
+          padding: const EdgeInsets.all(VinkolSpace.cardPadding),
+          decoration: BoxDecoration(
+            color: v.surface,
+            borderRadius: VinkolRadius.brMd,
+            border: VinkolElevation.hairline(v),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              ShopImageBlock(
+                imageUrl: tag.imageUrl,
+                width: 42,
+                height: 42,
+                icon: Icons.storefront_outlined,
               ),
-            ),
-            Gap.h12,
-            // Tag Name
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              child: Text(
+              const Spacer(),
+              Text(
                 tag.name,
-                textAlign: TextAlign.center,
+                style: VinkolType.h4.copyWith(color: v.textPrimary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.montserrat(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  IconData _getTagIcon(String tagValue) {
-    switch (tagValue) {
-      case 'supermarket':
-        return Icons.shopping_cart;
-      case 'beauty':
-        return Icons.face;
-      case 'fashion':
-        return Icons.checkroom;
-      case 'electronics':
-        return Icons.devices;
-      case 'food':
-        return Icons.restaurant;
-      case 'bakery':
-        return Icons.cake;
-      case 'pharmacy':
-        return Icons.local_pharmacy;
-      default:
-        return Icons.store;
-    }
+/// The cart, reachable from every browse screen. The count is the point — a cart icon that
+/// does not say how much is in it makes the user open it to find out.
+class _CartButton extends StatelessWidget {
+  const _CartButton({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final v = context.vinkol;
+
+    return Semantics(
+      button: true,
+      label: context.l10n.storeInCart(count),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () =>
+            NavigationService.instance.navigateTo(NavigatorRoutes.cartScreen),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              Icon(Icons.shopping_bag_outlined, size: 22, color: v.textPrimary),
+              if (count > 0)
+                PositionedDirectional(
+                  top: 2,
+                  end: 2,
+                  child: Container(
+                    constraints:
+                        const BoxConstraints(minWidth: 18, minHeight: 18),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: v.brand,
+                      borderRadius: VinkolRadius.brFull,
+                    ),
+                    child: Text(
+                      '$count',
+                      style: VinkolType.labelS.copyWith(color: v.onBrand),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

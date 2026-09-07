@@ -218,6 +218,16 @@ class AuthService {
 
   Future<void> sendFcmTokenToBackend() async {
     try {
+      // A user who switched push off in Settings must stay off across logins — this runs on
+      // every sign-in and at startup, and re-registering the device here would quietly
+      // undo their choice.
+      if (_localCache
+              .getFromLocalCache(NotificationService.pushEnabledCacheKey) ==
+          false) {
+        logger.i('Push notifications are off by user choice; not registering.');
+        return;
+      }
+
       String? fcmToken = await NotificationService.instance.getToken();
 
       if (fcmToken.isNotEmpty) {

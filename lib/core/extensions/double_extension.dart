@@ -1,32 +1,17 @@
-import 'package:intl/intl.dart';
+import 'package:starter_codes/core/market/market_format.dart';
 
+/// Money on a `double`. This is the app's most-used money path — 34 call sites — so it is
+/// where the market layer earns most of its keep.
+///
+/// Symbol, symbol position, decimal count and grouping all come from the active market. Under
+/// Nigeria the output is byte-identical to before (`₦2,500`); under Canada the same call
+/// renders `CA$2,500.00` with no call site changed.
 extension DoubleX on double {
-  String toMoney() {
-    var f = NumberFormat.currency(
-        symbol: '',
-        decimalDigits: 0,
-        locale: 'en_US',
-        customPattern: '#,##0.00');
-    return '₦${f.format(this)}'; // 'this' refers to the double value itself
-  }
+  String toMoney() => MarketFormat.money(this);
 
-  String toMoneyShowFree() {
-    if (this == 0.0) {
-      return "Free";
-    }
-    return toMoney(); // Returns ₦2,000.00 or similar
-  }
+  String toMoneyShowFree() => this == 0.0 ? "Free" : toMoney();
 
-  String toMoneyWithoutSymbol() {
-    var f = NumberFormat.currency(
-        symbol: '',
-        decimalDigits: 0,
-        locale: 'en_US',
-        customPattern: '#,##0.00');
-    return f.format(this);
-  }
+  String toMoneyWithoutSymbol() => MarketFormat.amount(this);
 
-  String toMoneyWithSymbol() {
-    return toMoney();
-  }
+  String toMoneyWithSymbol() => toMoney();
 }

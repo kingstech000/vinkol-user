@@ -1,7 +1,16 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-/// Defines precise boundaries for Nigerian states
-/// These boundaries are more accurate and should properly contain locations within each state
+/// Geographic bounding boxes for Nigerian states, used by the map picker to keep a pin
+/// inside the user's state.
+///
+/// **This file is geometry only.** The *list* of administrative regions now lives in the
+/// market layer (`lib/core/market/regions.dart`, `Market.regions`); the 37 keys below match
+/// `nigerianStates` name-for-name and are looked up by that name.
+///
+/// Nigeria is the only market with boundary data, and the enforcement in
+/// `map_picker_screen.dart` has no equivalent for Canadian provinces — a market whose regions
+/// have no bounds here simply gets no clamping. Deciding what map confinement means outside
+/// Nigeria is map work, not market config.
 class StateBoundaries {
   static const Map<String, StateBoundary> boundaries = {
     'FCT': StateBoundary(

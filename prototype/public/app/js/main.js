@@ -9,13 +9,16 @@ import booking from './screens/booking.js';
 import multistop from './screens/multistop.js';
 import shop from './screens/shop.js';
 import rewards from './screens/rewards.js';
+import rewardsGift from './screens/rewards_gift.js';
+import rewardsCompact from './screens/rewards_compact.js';
+import rewardsLively from './screens/rewards_lively.js';
 import marketSel from './screens/market.js';
 import records from './screens/records.js';
 import wallet from './screens/wallet.js';
 import profile from './screens/profile.js';
 
 const SCREENS = { ...onboarding, ...marketSel, ...auth, ...booking, ...multistop, ...shop,
-  ...rewards, ...records, ...wallet, ...profile };
+  ...rewards, ...rewardsGift, ...rewardsCompact, ...rewardsLively, ...records, ...wallet, ...profile };
 
 const SECTIONS = [
   'Onboarding', 'Authentication', 'Home & booking', 'Shop',

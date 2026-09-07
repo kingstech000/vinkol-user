@@ -1,16 +1,15 @@
-// lib/features/auth/screens/enter_otp_code_screen.dart
+// lib/features/auth/view/screen/enter_otp_screen.dart
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/features/auth/view_model/enter_otp_view_model.dart';
-import 'package:starter_codes/provider/user_provider.dart'; // Assuming this provides User?
-import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
-import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/app_textfield.dart'; // Ensure PinCodeField is defined or imported from here
-import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/l10n/l10n.dart';
+import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
+/// The password-reset code. Verifying advances to setting a new password.
 class EnterOTPCodeScreen extends ConsumerStatefulWidget {
   const EnterOTPCodeScreen({super.key});
 
@@ -19,148 +18,128 @@ class EnterOTPCodeScreen extends ConsumerStatefulWidget {
 }
 
 class _EnterOTPCodeScreenState extends ConsumerState<EnterOTPCodeScreen> {
-  final TextEditingController _otpController = TextEditingController();
+  final TextEditingController _otp = TextEditingController();
 
-  int _resendCountdown = 30;
-  bool _canResend = false;
-  // Make _displayedEmail nullable initially or ensure it has a fallback
-  late String _displayedEmail;
+  static const int _resendSeconds = 30;
+  int _remaining = _resendSeconds;
+  Timer? _timer;
+  String? _error;
+  late String _email;
 
   @override
   void initState() {
     super.initState();
-    final email = ref.read(resetEmailProvider);
-    _displayedEmail = email;
-
-    // Delay provider modification until after the build phase is complete
+    _email = ref.read(resetEmailProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final otpViewModel = ref.read(otpViewModelProvider);
-      otpViewModel.setEmail(_displayedEmail);
+      ref.read(otpViewModelProvider).setEmail(_email);
     });
-
-    _startResendTimer();
+    _startCountdown();
   }
 
-  // Timer logic for resend button countdown
-  void _startResendTimer() {
-    _resendCountdown = 30;
-    _canResend = false;
-    // Use a Timer instead of Future.delayed for better control over cancellation
-    // However, since it's a simple countdown, Future.delayed is acceptable if managed correctly.
-    // For simplicity, sticking to Future.delayed as in original, but added mounted check.
-    _tickTimer(); // Start ticking immediately
-    setState(() {}); // Rebuild to show initial countdown
-  }
-
-  void _tickTimer() {
-    if (_resendCountdown > 0) {
-      if (mounted) {
-        // Check if the widget is still mounted before calling setState
-        Future.delayed(const Duration(seconds: 1), () {
-          if (mounted) {
-            // Double-check mounted after delay
-            setState(() {
-              _resendCountdown--;
-            });
-            _tickTimer(); // Call itself to continue the countdown
-          }
-        });
+  /// A real [Timer], not a chain of `Future.delayed` calls that keeps ticking after the
+  /// screen is popped and cannot be cancelled.
+  void _startCountdown() {
+    _timer?.cancel();
+    setState(() => _remaining = _resendSeconds);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
       }
-    } else {
-      if (mounted) {
-        setState(() {
-          _canResend = true;
-        });
-      }
-    }
+      setState(() => _remaining--);
+      if (_remaining <= 0) timer.cancel();
+    });
   }
 
   @override
   void dispose() {
-    _otpController.dispose();
+    _timer?.cancel();
+    _otp.dispose();
     super.dispose();
+  }
+
+  void _verify(OtpViewModel vm) {
+    if (_otp.text.length < 4) {
+      setState(() => _error = context.l10n.authOtpIncomplete);
+      return;
+    }
+    setState(() => _error = null);
+    vm.verifyOtp(otp: _otp.text, context: context);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Watch the ViewModel to rebuild when its state changes (e.g., isBusy updates)
-    final otpViewModel = ref.watch(otpViewModelProvider);
-    final bool isBusy =
-        otpViewModel.isBusy; // Access the isBusy state from the ViewModel
+    final l10n = context.l10n;
+    final vm = ref.watch(otpViewModelProvider);
+    final canResend = _remaining <= 0 && !vm.isBusy;
 
-    return Scaffold(
-      appBar: MiniAppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: AutofillGroup(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.h2('Enter OTP code'),
-              Gap.h8,
-              AppText.free('We have sent a code to $_displayedEmail'),
-              Gap.h32,
-              // PinCodeField is assumed to be a custom widget that takes an otpController
-              // and has onCompleted/onSubmitted callbacks.
-              PinCodeField(
-                otpController: _otpController,
-                length: 4,
-                onCompleted: (v) {
-                  // Trigger verification automatically when OTP is completed
-                  if (!isBusy) {
-                    // Prevent multiple calls if already busy
-                    otpViewModel.verifyOtp(otp: v, context: context);
-                  }
-                },
-                onSubmitted: (v) {
-                  // Optional: You can also use onSubmitted, ensure it's not redundant
-                  // with onCompleted if both trigger verification.
-                  if (!isBusy) {
-                    otpViewModel.verifyOtp(otp: v, context: context);
-                  }
-                },
-              ),
-              Gap.h16,
-              Align(
-                alignment: Alignment.centerLeft,
-                child: _canResend
-                    ? GestureDetector(
-                        onTap:
-                            isBusy // Disable resend button if ViewModel is busy
-                                ? null
-                                : () {
-                                    otpViewModel.resendOtp(context: context);
-                                    _startResendTimer(); // Restart timer after resend
-                                  },
-                        child: AppText.caption(
-                          'Resend Code',
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    : AppText.caption('Resend code in ${_resendCountdown}s'),
-              ),
-              Gap.h32,
-              SizedBox(
-                width: double.infinity,
-                child: AppButton.primary(
-                  title: 'Next',
-                  loading: isBusy,
-                  onTap: isBusy // Disable "Next" button if ViewModel is busy
-                      ? null
-                      : () {
-                          otpViewModel.verifyOtp(
-                            otp: _otpController.text,
-                            context: context,
-                          );
-                        },
-                ),
-              ),
-              Gap.h32,
-            ],
+    return VinkolAuthScaffold(
+      title: l10n.authEnterOtpCode,
+      // One whole sentence with the address interpolated, not two spans glued together:
+      // French puts the placeholder somewhere else, and a split sentence cannot follow it.
+      body: l10n.authOtpSentTo(_email),
+      fields: <Widget>[
+        AutofillGroup(
+          // The reset code is 4 digits, matching what the API sends.
+          child: VinkolOtpField(
+            controller: _otp,
+            length: 4,
+            error: _error,
+            enabled: !vm.isBusy,
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+            onCompleted: (code) {
+              if (!vm.isBusy) vm.verifyOtp(otp: code, context: context);
+            },
           ),
         ),
+      ],
+      below: _ResendRow(
+        canResend: canResend,
+        remaining: _remaining,
+        onResend: () {
+          vm.resendOtp(context: context);
+          _startCountdown();
+        },
       ),
+      primaryAction: VinkolPrimaryButton(
+        label: l10n.authNext,
+        loading: vm.isBusy,
+        onPressed: () => _verify(vm),
+      ),
+    );
+  }
+}
+
+/// "Didn't get it? Resend code" — or the countdown while resending is blocked.
+class _ResendRow extends StatelessWidget {
+  const _ResendRow({
+    required this.canResend,
+    required this.remaining,
+    required this.onResend,
+  });
+
+  final bool canResend;
+  final int remaining;
+  final VoidCallback onResend;
+
+  @override
+  Widget build(BuildContext context) {
+    final v = context.vinkol;
+    final l10n = context.l10n;
+
+    return Center(
+      child: canResend
+          ? VinkolFooterLink(
+              lead: l10n.authOtpDidntGet,
+              action: l10n.authOtpResend,
+              onTap: onResend,
+            )
+          : Text(
+              l10n.authOtpResendIn(remaining),
+              style: VinkolType.bodyS.copyWith(color: v.textTertiary),
+            ),
     );
   }
 }

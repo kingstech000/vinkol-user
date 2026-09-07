@@ -1,8 +1,10 @@
 class NavigatorRoutes {
   /// Routing constants for authentication view
-  static const String onboardingScreen = "/onboarding-screen";
   static const String splashScreen = 'splash-screen';
   // AUTH
+  /// Country and region picker. The first screen after splash on a fresh install, and
+  /// reachable again from Settings.
+  static const String marketSelectScreen = '/market-select-screen';
   static const String authChoiceScreen = '/auth-choice-screen';
   static const String loginScreen = '/login-screen';
   static const String signupScreen = '/signup-screen';
@@ -34,8 +36,20 @@ class NavigatorRoutes {
   static const String supportAndHelpScreen = 'support-and-help-screen';
   static const String deleteAccountScreen = 'delete-account-screen';
 
+  /// Reached from Profile as well as from Records and Withdraw. Both screens already
+  /// existed and were only pushed inline; Profile needs a named route to them.
+  static const String downloadReportScreen = 'download-report-screen';
+  static const String bankAccountScreen = 'bank-account-screen';
+
   // BOOKING
   static const String packageInfoScreen = 'package-info-screen';
+
+  /// Where a Single Drop booking picks its pickup and drop-off, after the home card has
+  /// established which service is being booked.
+  static const String bookingComposerScreen = 'booking-composer-screen';
+
+  /// Reward progress and the earned discount. Reached from the home reward card.
+  static const String rewardsScreen = 'rewards-screen';
   static const String mapWithQuoteScreen = 'map-with-quote-screen';
   static const String bookingOrderScreen = 'booking-order-screen';
 
@@ -52,7 +66,8 @@ class NavigatorRoutes {
   // ADD THESE NEW CONSTANTS:
   static const paymentWebViewScreen = 'payment-webview-screen';
   static const paymentVerificationScreen = 'payment-verification-screen';
+  static const String multidropStopsScreen = 'multidrop-stops-screen';
+  static const String batchStopsScreen = 'batch-stops-screen';
   static const String bulkMapWithQuoteScreen = 'bulk-map-with-quote-screen';
   static const String multiMapWithQuoteScreen = 'multi-map-with-quote-screen';
-  
 }

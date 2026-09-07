@@ -1,15 +1,16 @@
 // lib/features/store/model/product_model.dart
 // (Confirming your provided model structure)
 
-import 'package:intl/intl.dart'; // Import the intl package
 import 'package:starter_codes/features/store/model/store_model.dart'; // For StoreAvatar
+import 'package:starter_codes/core/market/market_format.dart';
 
 class Product {
   final String id;
   final String title;
   final int price;
   final String? description;
-  final ProductStore? store; // Changed to ProductStore object, made nullable for flexibility
+  final ProductStore?
+      store; // Changed to ProductStore object, made nullable for flexibility
   final ProductImage? image; // Made nullable for flexibility
   final String category;
   final String? createdAt; // Nullable
@@ -33,14 +34,9 @@ class Product {
     this.quantity = 0, // Set default value to 0
   });
 
-  String get formattedPrice {
-    final formatCurrency = NumberFormat.currency(
-      locale: 'en_NG', // English, Nigeria for Naira symbol
-      symbol: '₦', // Explicitly set Naira symbol
-      decimalDigits: 2, // Ensure 2 decimal places
-    );
-    return formatCurrency.format(price.toDouble());
-  }
+  /// The price as the active market writes it. Nigeria still renders `₦1,200.00`; the symbol,
+  /// its position, the decimals and the grouping are all market config now.
+  String get formattedPrice => MarketFormat.moneyPrecise(price);
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
@@ -59,7 +55,8 @@ class Product {
       updatedAt: json['updatedAt'] as String?,
       slug: json['slug'] as String,
       v: json['__v'] as int?,
-      quantity: json['quantity'] as int? ?? 0, // Parse from JSON or default to 0
+      quantity:
+          json['quantity'] as int? ?? 0, // Parse from JSON or default to 0
     );
   }
 

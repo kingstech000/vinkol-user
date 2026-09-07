@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 
 class MapDisplay extends ConsumerStatefulWidget {
   const MapDisplay({
@@ -35,7 +37,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
     if (!mounted) return;
 
     setState(() {
-      _isLoading = true; 
+      _isLoading = true;
       _currentAddress = "Fetching location...";
     });
 
@@ -51,7 +53,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
         Marker(
           markerId: const MarkerId('currentLocation'),
           position: _currentPosition!,
-          infoWindow: const InfoWindow(title: 'My Location'),
+          infoWindow: InfoWindow(title: context.l10n.bookingMyLocation),
         ),
       };
 
@@ -74,7 +76,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
         Marker(
           markerId: const MarkerId('defaultLocation'),
           position: _currentPosition!,
-          infoWindow: const InfoWindow(title: 'Default Location'),
+          infoWindow: InfoWindow(title: context.l10n.bookingDefaultLocation),
         ),
       };
     }
@@ -89,14 +91,13 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
   @override
   Widget build(BuildContext context) {
     final CameraPosition initialCameraPosition = CameraPosition(
-      target: _currentPosition ??
-          const LatLng(6.3361, 5.6125),
+      target: _currentPosition ?? const LatLng(6.3361, 5.6125),
       zoom: 14,
     );
 
     return Container(
-      height: 200, 
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      height: 200,
+      margin: const EdgeInsets.symmetric(horizontal: VinkolSpace.pageMargin),
       decoration: BoxDecoration(
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(12),
@@ -110,7 +111,6 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                   zoomControlsEnabled: false,
                   markers: _markers,
                 ),
-
           Positioned(
             bottom: 16,
             left: 16,
@@ -127,9 +127,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _currentAddress
-                          .split(',')
-                          .first,
+                      _currentAddress.split(',').first,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -167,7 +165,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                     const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: _fetchAndSetLocation,
-                      child: const Text('Retry Location'),
+                      child: Text(context.l10n.bookingRetryLocation),
                     ),
                   ],
                 ),

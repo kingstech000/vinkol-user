@@ -1,145 +1,95 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_codes/core/utils/colors.dart'; // Assuming AppColors is defined here
-import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/provider/user_provider.dart'; // For verifyEmailProvider
-import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
-import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/app_textfield.dart'; // Assuming PinCodeField is from app_textfield.dart or similar
-import 'package:starter_codes/widgets/gap.dart';
-import 'package:starter_codes/features/auth/view_model/verify_email_otp_view_model.dart'; // Import your ViewModel
+import 'package:starter_codes/core/design/design.dart';
+import 'package:starter_codes/features/auth/view_model/verify_email_otp_view_model.dart';
+import 'package:starter_codes/l10n/l10n.dart';
+import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
+/// Email verification after sign-up. The code lands by email, so the field carries the
+/// `oneTimeCode` autofill hint and the platform can fill it without a copy-paste round trip.
 class VerifyEmailOtpScreen extends ConsumerStatefulWidget {
-  // Changed to ConsumerStatefulWidget
   const VerifyEmailOtpScreen({super.key});
 
   @override
   ConsumerState<VerifyEmailOtpScreen> createState() =>
-      _VerifyEmailOtpScreenState(); // Changed to ConsumerState
+      _VerifyEmailOtpScreenState();
 }
 
 class _VerifyEmailOtpScreenState extends ConsumerState<VerifyEmailOtpScreen> {
-  final TextEditingController _otpController = TextEditingController();
-  final GlobalKey<FormState> _formKey =
-      GlobalKey<FormState>(); // Added form key for validation
+  final TextEditingController _otp = TextEditingController();
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    // Use addPostFrameCallback to defer provider modifications until after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Get the email from the provider and set it in the ViewModel
-      final emailFromProvider = ref.read(verifyEmailProvider);
-      ref.read(verifyEmailOtpViewModelProvider).setEmail(emailFromProvider);
-      // Start cooldown if it was active previously (e.g. if the user navigated back)
-      ref.read(verifyEmailOtpViewModelProvider).startResendCooldown();
+      final vm = ref.read(verifyEmailOtpViewModelProvider);
+      vm.setEmail(ref.read(verifyEmailProvider));
+      vm.startResendCooldown();
     });
   }
 
   @override
   void dispose() {
-    _otpController.dispose();
+    _otp.dispose();
     super.dispose();
+  }
+
+  void _verify(VerifyEmailOtpViewModel vm) {
+    if (_otp.text.length < 4) {
+      setState(() => _error = context.l10n.authOtpIncomplete);
+      return;
+    }
+    setState(() => _error = null);
+    vm.verifyEmailOtp(otp: _otp.text, context: context);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Watch the ViewModel to react to state changes (busy, error, idle, and countdown)
-    final verifyEmailOtpViewModel = ref.watch(verifyEmailOtpViewModelProvider);
-    // Watch the email provider to display the email
+    final v = context.vinkol;
+    final l10n = context.l10n;
+    final vm = ref.watch(verifyEmailOtpViewModelProvider);
     final email = ref.watch(verifyEmailProvider);
+    final canResend = vm.secondsRemaining == 0 && !vm.isBusy;
 
-    // Determine if the resend button should be active
-    final bool canResend = verifyEmailOtpViewModel.secondsRemaining == 0 &&
-        verifyEmailOtpViewModel.state.maybeWhen(
-          busy: () => false, // Also disable if the ViewModel is generally busy
-          orElse: () => true,
-        );
-
-    return Scaffold(
-      appBar: MiniAppBar(),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Form(
-              // Wrap with Form for validation
-              key: _formKey,
-              child: AutofillGroup(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText.h2('Enter OTP code'),
-                    Gap.h8,
-                    AppText.free('We have sent a code to $email'),
-                    Gap.h32,
-                    PinCodeField(
-                      otpController: _otpController,
-                      length: 4,
-                      onCompleted: (v) {
-                        // Optionally trigger verification on completion
-                        if (_formKey.currentState?.validate() ?? false) {
-                          verifyEmailOtpViewModel.verifyEmailOtp(
-                            otp: _otpController.text,
-                            context: context,
-                          );
-                        }
-                      },
-                      onSubmitted: (v) {
-                        // Optionally trigger verification on submission
-                        if (_formKey.currentState?.validate() ?? false) {
-                          verifyEmailOtpViewModel.verifyEmailOtp(
-                            otp: _otpController.text,
-                            context: context,
-                          );
-                        }
-                      },
-                    ),
-                    Gap.h16,
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: GestureDetector(
-                        onTap: canResend
-                            ? () {
-                                verifyEmailOtpViewModel.resendEmailOtp(
-                                    context: context);
-                              }
-                            : null, // Disable onTap if not ready to resend
-                        child: AppText.caption(
-                          canResend
-                              ? 'Resend code'
-                              : 'Resend code in ${verifyEmailOtpViewModel.secondsRemaining}s', // Show countdown
-                          color: canResend
-                              ? AppColors.primary
-                              : AppColors
-                                  .darkgrey, // Change color based on availability
-                        ),
-                      ),
-                    ),
-                    Gap.h32,
-                    AppButton.primary(
-                      title: 'Next',
-                      loading: verifyEmailOtpViewModel.isBusy,
-                      onTap: verifyEmailOtpViewModel.state.maybeWhen(
-                        busy: () => null, // Disable button if busy
-                        orElse: () => () {
-                          // Validate form before calling verifyEmailOtp
-                          if (_formKey.currentState?.validate() ?? false) {
-                            verifyEmailOtpViewModel.verifyEmailOtp(
-                              otp: _otpController.text,
-                              context: context,
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                    Gap.h32,
-                  ],
-                ),
-              ),
-            ),
+    return VinkolAuthScaffold(
+      title: l10n.authOtpTitle,
+      body: l10n.authOtpSentTo(email),
+      fields: <Widget>[
+        AutofillGroup(
+          child: VinkolOtpField(
+            controller: _otp,
+            length: 4,
+            error: _error,
+            enabled: !vm.isBusy,
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+            onCompleted: (code) {
+              if (!vm.isBusy) {
+                vm.verifyEmailOtp(otp: code, context: context);
+              }
+            },
           ),
-        ],
+        ),
+      ],
+      below: Center(
+        child: canResend
+            ? VinkolFooterLink(
+                lead: l10n.authOtpDidntGet,
+                action: l10n.authOtpResend,
+                onTap: () => vm.resendEmailOtp(context: context),
+              )
+            : Text(
+                l10n.authOtpResendIn(vm.secondsRemaining),
+                style: VinkolType.bodyS.copyWith(color: v.textTertiary),
+              ),
+      ),
+      primaryAction: VinkolPrimaryButton(
+        label: l10n.authOtpVerify,
+        loading: vm.isBusy,
+        onPressed: () => _verify(vm),
       ),
     );
   }

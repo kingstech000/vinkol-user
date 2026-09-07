@@ -10,6 +10,7 @@ import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/text_action_modal.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 
 class ResetPasswordViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -32,7 +33,7 @@ class ResetPasswordViewModel extends BaseViewModel {
 
   /// Sends a password reset email.
   Future<void> sendPasswordResetEmail({required BuildContext context}) async {
-       FocusScope.of(context).unfocus();
+    FocusScope.of(context).unfocus();
     try {
       changeState(const ViewModelState.busy()); // Indicate busy state
       await _authService.forgotPassword(email: _email);
@@ -52,7 +53,7 @@ class ResetPasswordViewModel extends BaseViewModel {
         context,
         onPressed: () => NavigationService.instance.goBack(),
         dialogText: e.message,
-        buttonText: "Dismiss",
+        buttonText: context.l10n.authDismiss,
       );
     }
   }

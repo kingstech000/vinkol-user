@@ -1,0 +1,1282 @@
+{
+  "@@locale": "en",
+  "commonWelcomeToVinkol": "Welcome to Vinkol",
+  "@commonWelcomeToVinkol": {
+    "description": "A list of this localizations delegate along with the default localizations delegates.  Returns a list of localizations delegates containing this delegate along with GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate, and GlobalWidgetsLocalizations.delegate.  Additional delegates can be added by appending to this list in MaterialApp. This list does not have to be used at all if a custom list of delegates is preferred or required. static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[ delegate, GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate, GlobalWidgetsLocalizations.delegate, ];  A list of this localizations delegate's supported locales. static const List<Locale> supportedLocales = <Locale>[ Locale('en'), Locale('fr') ];  No description provided for @commonWelcomeToVinkol."
+  },
+  "onboardingYourTrustedDeliveryPartnerFor": "Your trusted delivery partner for all your needs",
+  "onboardingFastReliable": "Fast & Reliable",
+  "onboardingGetYourItemsDeliveredQuickly": "Get your items delivered quickly and safely",
+  "onboardingTrackYourOrders": "Track Your Orders",
+  "onboardingRealTimeTrackingForAll": "Real-time tracking for all your deliveries",
+  "onboardingSkip": "Skip",
+  "@onboardingSkip": {
+    "description": "Verb. Skips the onboarding carousel."
+  },
+  "authEnterOtpCode": "Enter OTP code",
+  "authResendCode": "Resend Code",
+  "authNext": "Next",
+  "@authNext": {
+    "description": "Verb/adverb. Advances to the next step of a form."
+  },
+  "authLoginTitle": "Login ",
+  "authWelcomeBack": "Welcome Back",
+  "authEmailAddress": "Email Address",
+  "authEmailHint": "sample@gmail.com",
+  "@authEmailHint": {
+    "description": "Placeholder shown in the email field. Not user-visible copy to translate."
+  },
+  "authPassword": "Password",
+  "authLoginAction": "Login",
+  "authCanTRememberYourPassword": "Can't remember your password? ",
+  "authResetIt": "Reset it. ",
+  "authPasswordResetSuccessfully": "Password Reset Successfully",
+  "authBackToLogin": "Back to Login",
+  "authCompleteProfile": "Complete Profile",
+  "authCompleteDetailsToCompleteProfile": "Complete details to complete profile",
+  "authFirstName": "First name",
+  "authFirstNameHint": "Sarah",
+  "@authFirstNameHint": {
+    "description": "Placeholder shown in the first-name field. A sample given name; substitute one common in the target locale."
+  },
+  "authLastName": "Last Name",
+  "authLastNameHint": "Osato",
+  "@authLastNameHint": {
+    "description": "Placeholder shown in the last-name field. A sample family name; substitute one common in the target locale."
+  },
+  "authPhoneNumber": "Phone number",
+  "authSubmit": "Submit",
+  "@authSubmit": {
+    "description": "Verb. Submits the profile form."
+  },
+  "authResetPassword": "Reset Password",
+  "authLetSResetYourPassword": "Let's reset your password quickly",
+  "authEMailAddress": "E-mail Address",
+  "authSend": "Send",
+  "@authSend": {
+    "description": "Verb. Sends a password-reset email."
+  },
+  "authSetNewPassword": "Set New Password",
+  "authCreateNewPassword": "Create New Password",
+  "authConfirmPassword": "Confirm Password",
+  "authReset": "Reset",
+  "@authReset": {
+    "description": "Verb. Confirms a new password."
+  },
+  "authSignUp": "Sign up",
+  "authCreateAnAccountWithFew": "Create an account with few steps",
+  "authIAgreeToTheTerms": "I agree to the terms & conditions",
+  "authHaveAnAccount": "Have an account? ",
+  "authChooseHowYouDLike": "Choose how you'd like to get started",
+  "authContinueAsGuest": "Continue as Guest",
+  "authOr": "or",
+  "@authOr": {
+    "description": "Separator between two sign-in options."
+  },
+  "authCreateAccount": "Create Account",
+  "authByContinuingYouAgreeTo": "By continuing, you agree to our Terms of Service and Privacy Policy",
+  "authVerifyEmail": "Verify Email",
+  "authDismiss": "Dismiss",
+  "@authDismiss": {
+    "description": "Verb. Dismisses an error."
+  },
+  "authOk": "OK",
+  "@authOk": {
+    "description": "Dismisses a dialog."
+  },
+  "commonTryAgain": "Try Again",
+  "@commonTryAgain": {
+    "description": "Verb phrase. Retries a failed action."
+  },
+  "authOkay": "Okay",
+  "@authOkay": {
+    "description": "Dismisses a dialog."
+  },
+  "authRestart": "Restart",
+  "@authRestart": {
+    "description": "Verb. Restarts the OTP flow."
+  },
+  "bookingPickup": "Pickup",
+  "@bookingPickup": {
+    "description": "Noun. The collection point of a delivery."
+  },
+  "bookingNoBulkQuoteAvailable": "No bulk quote available.",
+  "bookingRouteDetails": "Route Details",
+  "commonPaymentMethod": "Payment Method",
+  "commonSelectPaymentMethod": "Select Payment Method",
+  "bookingConfirmBulkBooking": "Confirm Bulk Booking",
+  "bookingSearchForAnAddress": "Search for an address",
+  "bookingSearchingLocations": "Searching locations...",
+  "bookingNoResultsFound": "No results found",
+  "bookingTrySearchingWithADifferent": "Try searching with a different keyword or address",
+  "bookingStartSearching": "Start searching",
+  "bookingTypeAnAddressOrLocation": "Type an address or location name to find places",
+  "bookingGoToCurrentLocation": "Go to current location",
+  "bookingSelectedLocation": "Selected Location",
+  "bookingGettingAddress": "Getting address...",
+  "bookingConfirmThisLocation": "Confirm This Location",
+  "bookingNoDeliveryOptionsAvailable": "No delivery options available.",
+  "bookingSelectDeliveryRequest": "Select Delivery Request",
+  "bookingPackageType": "Package Type",
+  "bookingSelectItemType": "Select Item Type",
+  "bookingAddRecipientDetails": "Add Recipient Details",
+  "bookingRecipientName": "Recipient Name",
+  "bookingRecipientPhoneNumber": "Recipient Phone Number",
+  "bookingPaymentSource": "Payment Source",
+  "bookingPaySecurelyWithCard": "Pay securely with card",
+  "bookingConfirmBooking": "Confirm Booking",
+  "bookingTwentyPercentOff": "20% off",
+  "bookingNoMultiOrderQuoteAvailable": "No multi-order quote available.",
+  "bookingOrdersBreakdown": "Orders Breakdown",
+  "bookingDropOff": "Drop-off",
+  "@bookingDropOff": {
+    "description": "Noun. The destination of a delivery."
+  },
+  "bookingConfirmMultiOrderBooking": "Confirm Multi-Order Booking",
+  "bookingSender": "Sender",
+  "@bookingSender": {
+    "description": "Noun. The person sending a package."
+  },
+  "bookingPackageInfo": "Package Info",
+  "bookingGeneralInformation": "General Information",
+  "bookingPickupDate": "Pickup Date",
+  "bookingPickupTime": "Pickup Time",
+  "bookingEnterPackageName": "Enter package name",
+  "bookingName": "Name",
+  "@bookingName": {
+    "description": "Noun. A person’s name field label."
+  },
+  "commonPhone": "Phone",
+  "@commonPhone": {
+    "description": "Noun. A phone number field label."
+  },
+  "bookingAddAnySpecialInstructionsOr": "Add any special instructions or notes...",
+  "bookingPackageDetails": "Package Details",
+  "bookingTellUsAboutYourPackage": "Tell us about your package",
+  "bookingGetQuote": "Get Quote",
+  "bookingLastDelivery": "Last Delivery",
+  "bookingSeeAll": "See all",
+  "bookingDropOffLocation": "Drop off location",
+  "bookingAdd": "Add",
+  "@bookingAdd": {
+    "description": "Verb. Adds another drop-off stop."
+  },
+  "bookingMyLocation": "My Location",
+  "bookingDefaultLocation": "Default Location",
+  "bookingRetryLocation": "Retry Location",
+  "rewardTitle": "Rewards",
+  "@rewardTitle": {
+    "description": "The rewards screen title, and the section heading on home."
+  },
+  "rewardDetails": "Details",
+  "@rewardDetails": {
+    "description": "Trailing action on the home section heading. Opens the rewards screen."
+  },
+  "rewardYourProgress": "Your progress",
+  "rewardHowItWorks": "How it works",
+  "rewardCountOfTarget": "{done} of {target}",
+  "@rewardCountOfTarget": {
+    "description": "Running count beside a section heading: \"2 of 3\".",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardNextReward": "Your next reward",
+  "@rewardNextReward": {
+    "description": "Eyebrow on the reward card while the reward is still being earned. Uppercased by the widget."
+  },
+  "rewardEarnedEyebrow": "Reward earned",
+  "@rewardEarnedEyebrow": {
+    "description": "Eyebrow on the reward card once the discount is unlocked. Uppercased by the widget."
+  },
+  "rewardReady": "Ready",
+  "@rewardReady": {
+    "description": "Pill on the earned reward card. Must stay short enough for a pill."
+  },
+  "rewardPercentOffShort": "{percent}% off",
+  "@rewardPercentOffShort": {
+    "description": "The prize, as a pill. Keep it short; French uses the discount form -20 %.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardPercentNumber": "{percent}%",
+  "@rewardPercentNumber": {
+    "description": "The prize as a large figure. French puts a space before the percent sign.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardOff": "off",
+  "@rewardOff": {
+    "description": "The unit beside the large percentage figure: \"20% off\"."
+  },
+  "rewardEarning": "In progress",
+  "@rewardEarning": {
+    "description": "Status chip on the reward card while the reward is still being earned. Must stay short enough for a pill."
+  },
+  "rewardStopsLabel": "Deliveries",
+  "@rewardStopsLabel": {
+    "description": "Eyebrow over the delivery count at the start of the reward rail. One or two words."
+  },
+  "rewardGoalLabel": "Your reward",
+  "@rewardGoalLabel": {
+    "description": "Eyebrow over the prize at the end of the reward rail. One or two words."
+  },
+  "rewardShortLabel": "Reward",
+  "@rewardShortLabel": {
+    "description": "Eyebrow on the compact reward card while the reward is being earned. One short word — it shares a line with the count."
+  },
+  "rewardStopDone": "Done",
+  "@rewardStopDone": {
+    "description": "Label under a completed stop on the reward route. One short word — it sits under a 22pt disc."
+  },
+  "rewardStopNext": "Next",
+  "@rewardStopNext": {
+    "description": "Label under the stop the user is standing on. One short word."
+  },
+  "rewardStopGoal": "Reward",
+  "@rewardStopGoal": {
+    "description": "Label under the destination diamond while the reward is still locked. One short word."
+  },
+  "rewardStopYours": "Yours",
+  "@rewardStopYours": {
+    "description": "Label under the destination diamond once the reward is unlocked. One short word."
+  },
+  "rewardRemaining": "{count, plural, =0{Your reward is on its way} =1{One more delivery unlocks it} other{{count} more deliveries unlock it}}",
+  "@rewardRemaining": {
+    "description": "Headline on the in-progress reward card. The zero case covers a counted delivery whose reward the server has not granted yet.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardStoreOrdersCount": "Store orders count too.",
+  "rewardAppliedAutomatically": "Applied to your next booking automatically.",
+  "rewardReadyHeadline": "Your {percent}% off is ready",
+  "@rewardReadyHeadline": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardUseOnBooking": "Use it on a booking",
+  "rewardStopDone": "Done",
+  "@rewardStopDone": {
+    "description": "Label under a completed stop on the reward route."
+  },
+  "rewardStopNext": "Next",
+  "@rewardStopNext": {
+    "description": "Label under the stop the user is on."
+  },
+  "rewardStopToGo": "To go",
+  "@rewardStopToGo": {
+    "description": "Label under a stop not reached yet."
+  },
+  "rewardStopGoal": "Reward",
+  "@rewardStopGoal": {
+    "description": "Label under the destination while it is still locked."
+  },
+  "rewardStopYours": "Yours",
+  "@rewardStopYours": {
+    "description": "Label under the destination once the reward is earned."
+  },
+  "rewardProgressSemantics": "{done} of {target} deliveries done",
+  "@rewardProgressSemantics": {
+    "description": "Screen-reader label for the whole reward route. The route is drawn, so this is the only way it is announced.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardEarnedSemantics": "All deliveries done. Your reward is ready.",
+  "@rewardEarnedSemantics": {
+    "description": "Screen-reader label for the reward route once it is complete."
+  },
+  "rewardHowDeliveriesTitle": "Complete {count} deliveries",
+  "@rewardHowDeliveriesTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardHowDeliveriesBody": "Courier bookings and store orders both count.",
+  "rewardHowUnlockTitle": "Unlock {percent}% off",
+  "@rewardHowUnlockTitle": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardHowUnlockBody": "It applies to your next booking automatically.",
+  "rewardHowAgainTitle": "Then it starts again",
+  "rewardHowAgainBody": "The count restarts once your reward is used.",
+  "rewardSignedOutTitle": "Rewards need an account",
+  "rewardSignedOutBody": "Sign in to count your deliveries toward {percent}% off.",
+  "@rewardSignedOutBody": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingBookYourRide": "Book Your Ride",
+  "bookingSetYourStopsBelow": "Set your stops below",
+  "bookingPleaseSelectAllStopLocations": "Please select all stop locations.",
+  "bookingFindRider": "Find Rider",
+  "bookingSearchForAPlace": "Search for a place",
+  "bookingTypeAnAddressOrLandmark": "Type an address or landmark",
+  "bookingPickOnMap": "Pick on map",
+  "bookingDropAPinAnywhere": "Drop a pin anywhere",
+  "storeShoppingCart": "Shopping Cart",
+  "storeClearCart": "Clear Cart",
+  "@storeClearCart": {
+    "description": "Verb. Button that empties the shopping cart."
+  },
+  "storeAreYouSureYouWant": "Are you sure you want to remove all items?",
+  "storeCancel": "Cancel",
+  "@storeCancel": {
+    "description": "Verb. Dismisses a confirmation dialog."
+  },
+  "storeClear": "Clear",
+  "@storeClear": {
+    "description": "Verb. Confirms emptying the shopping cart."
+  },
+  "storeYourCartIsEmpty": "Your cart is empty",
+  "storeAddItemsToGetStarted": "Add items to get started",
+  "storeDeliveryOptions": "Delivery Options",
+  "storeNoDeliveryOptionsAvailable": "No delivery options available",
+  "storeDeliveryFee": "Delivery Fee",
+  "storeTotal": "Total",
+  "@storeTotal": {
+    "description": "Noun. The order total on the cart summary."
+  },
+  "storeProceedToCheckout": "Proceed to Checkout",
+  "storeUnavailable": "Unavailable",
+  "@storeUnavailable": {
+    "description": "Adjective, describing a product that cannot be ordered."
+  },
+  "storeDescription": "Description",
+  "@storeDescription": {
+    "description": "Noun. Section heading for a product description."
+  },
+  "storeStoreInformation": "Store Information",
+  "storeAddress": "Address",
+  "@storeAddress": {
+    "description": "Noun. A postal address."
+  },
+  "storeState": "State",
+  "@storeState": {
+    "description": "The administrative region of a store address. Note: this label should come from the market layer (Market.regionLabel) — \"State\" in Nigeria, \"Province\" in Canada."
+  },
+  "storeAddToCart": "Add To Cart",
+  "storeNoStoreSelected": "No Store Selected",
+  "storePleaseSelectAStoreTo": "Please select a store to view\navailable products",
+  "storeGoBack": "Go Back",
+  "storeSearchForProducts": "Search for products...",
+  "storeNoProductsFound": "No Products Found",
+  "storeNoProductsMatch": "No products match ",
+  "storeTryADifferentSearchTerm": "\nTry a different search term",
+  "storeClearSearch": "Clear Search",
+  "@storeClearSearch": {
+    "description": "Verb. Clears the product search box."
+  },
+  "storeAvailableProducts": "Available Products",
+  "storeLoadingProducts": "Loading products...",
+  "storePleaseWait": "Please wait",
+  "storeNoProductsAvailable": "No Products Available",
+  "storeThisStoreDoesnTHave": "This store doesn't have any products\navailable at the moment",
+  "storeRefresh": "Refresh",
+  "@storeRefresh": {
+    "description": "Verb. Reloads the product list."
+  },
+  "storeFailedToLoadProducts": "Failed to Load Products",
+  "storeUnableToFetchProductsFrom": "Unable to fetch products from the store.\nPlease check your connection and try again.",
+  "storeLoadingMore": "Loading more...",
+  "storeViewCart": "View Cart",
+  "storeStoresAroundYou": "Stores Around You",
+  "storeFindNearbyStoresAndShops": "Find nearby stores and shops",
+  "storeSearchForStoresShopsMarkets": "Search for stores, shops, markets...",
+  "storeFindingStoresNearYou": "Finding stores near you...",
+  "storeNoStoresFound": "No stores found",
+  "storeTryAdjustingYourSearchOr": "Try adjusting your search or check back later",
+  "storeConnectionProblem": "Connection Problem",
+  "storeUnableToLoadStoresPlease": "Unable to load stores. Please check your\ninternet connection and try again.",
+  "storeShopByCategory": "Shop by Category",
+  "storeBrowseStoresByCategory": "Browse stores by category",
+  "storeFailedToLoadCategories": "Failed to load categories",
+  "storeRetry": "Retry",
+  "@storeRetry": {
+    "description": "Verb. Retries a failed request."
+  },
+  "onboardingSendTitle": "Send anything,\nanywhere.",
+  "onboardingSendBody": "Book a rider in under a minute. Bike, car or van — priced before you commit.",
+  "onboardingTrackTitle": "Know where\nit stands.",
+  "onboardingTrackBody": "A named rider you can call, a tracking ID, and every status change as it happens.",
+  "onboardingTrustTitle": "Covered if\nit goes wrong.",
+  "onboardingTrustBodyCovered": "Vinkol carries retention coverage of up to {amount} on a verified loss, and support mediates every claim.",
+  "@onboardingTrustBodyCovered": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingTrustBodyPlain": "If a delivery goes wrong, support mediates the claim with the delivery partner on your behalf.",
+  "onboardingContinue": "Continue",
+  "onboardingGetStarted": "Get Started",
+  "onboardingStepOf": "Step {step} of {total}",
+  "@onboardingStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "authChoiceTitle": "Welcome to Vinkol",
+  "authChoiceBody": "Join Vinkol today and be able to send package anyday anytime also shop from closest store and get it delivered to your door steps",
+  "authChoiceHaveOne": "I already have one",
+  "authLoginHeading": "Welcome back",
+  "authLoginBody": "Use the email address on your account.",
+  "authForgotPassword": "Forgot password?",
+  "authRememberMe": "Remember me",
+  "@authRememberMe": {
+    "description": "Login checkbox. Saves the email address on this device so the field comes back filled next time."
+  },
+  "authNewHere": "New here? ",
+  "authSignupHeading": "Create your account",
+  "authFullName": "Full name",
+  "authFullNameHint": "Emeka Obi",
+  "authPasswordHint": "At least 8 characters",
+  "authPasswordHelper": "Use 8 or more characters with a number.",
+  "authAcceptTerms": "I agree to the Terms of Service and Privacy Policy.",
+  "authContinueAction": "Continue",
+  "authOtpTitle": "Verify your email",
+  "authOtpSentTo": "We sent a 6-digit code to {email}.",
+  "@authOtpSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authOtpDidntGet": "Didn't get it? ",
+  "authOtpResend": "Resend code",
+  "authOtpResendIn": "Resend in {seconds}s",
+  "@authOtpResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "authOtpVerify": "Verify",
+  "authOtpIncomplete": "Enter all 6 digits to continue.",
+  "authResetRequestTitle": "Reset password",
+  "authResetRequestBody": "Tell us the email on your account and we'll send a code to reset it.",
+  "authSendCode": "Send code",
+  "authNewPasswordTitle": "New password",
+  "authNewPasswordBody": "Choose something you haven't used here before.",
+  "authNewPassword": "New password",
+  "authConfirmPasswordHint": "Repeat it",
+  "authSavePassword": "Save password",
+  "authPasswordSavedTitle": "Password saved",
+  "authPasswordSavedBody": "You can log in with your new password now.",
+  "marketSelectTitle": "Where are you?",
+  "marketSelectBody": "Select the country you are sending from. You can change it later in Settings.",
+  "marketAvailable": "Available markets",
+  "marketNoSeparateTax": "no separate tax",
+  "marketTaxShown": "{label} shown",
+  "@marketTaxShown": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "marketSameRateNationwide": "same rate nationwide",
+  "marketSetsYourTaxRate": "sets your tax rate",
+  "marketWhatChanges": "What changes",
+  "marketCurrency": "Currency",
+  "marketDecimals": "Decimals",
+  "marketTax": "Tax",
+  "marketNotShownSeparately": "Not shown separately",
+  "marketPhone": "Phone",
+  "marketLanguages": "Languages",
+  "marketPayment": "Payment",
+  "marketSupport": "Support",
+  "marketAddressFieldsInOrder": "ADDRESS FIELDS, IN ORDER",
+  "marketMoreFollow": "More markets follow the same layer — a new country is configuration, not a new build.",
+  "marketContinueIn": "Continue in {country}",
+  "@marketContinueIn": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "marketTaxExplainer": "{region} charges {label} at {rate}. Rates differ by {regionLabel}, so tax cannot be one number per country.",
+  "@marketTaxExplainer": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      },
+      "label": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      },
+      "regionLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "marketCountry": "Country",
+  "bookingWalletBalance": "Balance {amount}",
+  "@bookingWalletBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingWalletNotEnough": "Not enough in your wallet",
+  "bookingCouldNotBookTitle": "Booking failed",
+  "bookingBatchBookedTitle": "Batch booked",
+  "bookingBatchBookedBody": "{count, plural, =1{One delivery is booked and matched to a rider.} other{{count} deliveries are booked, each matched to its own rider.}}",
+  "@bookingBatchBookedBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingMissingRideDetails": "Some of the trip details are missing. Go back and check your stops.",
+  "bookingNoDeliveryOptionsBody": "No rider can serve this route right now. Changing a stop usually fixes it.",
+  "bookingChangeTheStops": "Change the stops",
+  "bookingStopNumber": "Stop {number}",
+  "@bookingStopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingDeliveryPickup": "Delivery {number} · pickup",
+  "@bookingDeliveryPickup": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingDeliveryDropOff": "Delivery {number} · drop-off",
+  "@bookingDeliveryDropOff": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingMultiDrop": "Multi-drop",
+  "bookingBatch": "Batch",
+  "bookingMultiDropHeadline": "{count, plural, =1{1 pickup · 1 drop-off} other{1 pickup · {count} drop-offs}}",
+  "@bookingMultiDropHeadline": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingMultiDropBody": "One rider, one route. Stops run in the order below, and that order sets the price.",
+  "bookingBatchHeadline": "{count, plural, =1{1 delivery} other{{count} separate deliveries}}",
+  "@bookingBatchHeadline": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingBatchBody": "Each one gets its own rider and its own price. One failing does not affect the others.",
+  "bookingDropOffs": "Drop-offs",
+  "bookingDeliveries": "Deliveries",
+  "bookingOr": "Or",
+  "bookingAddADropOff": "Add a drop-off",
+  "bookingAddADelivery": "Add a delivery",
+  "bookingSwitchToBatchTitle": "These come from different places",
+  "bookingSwitchToBatchMeta": "Switch to Batch — separate pickups, separate riders",
+  "bookingSwitchToMultiDropTitle": "These all leave from one place",
+  "bookingSwitchToMultiDropMeta": "Switch to Multi-drop — one rider, cheaper per stop",
+  "bookingGetQuotes": "Get quotes",
+  "bookingDropOffCount": "{count, plural, =1{1 drop-off} other{{count} drop-offs}}",
+  "@bookingDropOffCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingDeliveryCount": "{count, plural, =1{1 delivery} other{{count} deliveries}}",
+  "@bookingDeliveryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingStopsStillNeedDetails": "{count, plural, =1{1 stop still needs details} other{{count} stops still need details}}",
+  "@bookingStopsStillNeedDetails": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingDeliveriesStillNeedDetails": "{count, plural, =1{1 delivery is incomplete} other{{count} deliveries are incomplete}}",
+  "@bookingDeliveriesStillNeedDetails": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingDeliveryNumber": "Delivery {number}",
+  "@bookingDeliveryNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingWhereAreWeCollectingFrom": "Where are we collecting from?",
+  "bookingWhereIsItGoing": "Where is it going?",
+  "bookingCollectEverythingHere": "Collect everything here",
+  "bookingAddRecipientAndPackage": "Add a recipient and a package",
+  "bookingRemoveStop": "Remove this stop",
+  "bookingRemoveDelivery": "Remove this delivery",
+  "bookingReorderStops": "Drag to reorder",
+  "bookingWhatIsInThePackage": "What is in the package?",
+  "bookingNoteForTheRider": "Note for the rider",
+  "bookingNoteForTheRiderHelper": "Optional. A gate code, a floor, a landmark.",
+  "bookingSaveStop": "Save this stop",
+  "bookingRoute": "Route",
+  "bookingInThisOrder": "In this order",
+  "bookingPrice": "Price",
+  "bookingStops": "Stops",
+  "bookingDistance": "Distance",
+  "bookingRiders": "Riders",
+  "bookingRider": "Rider",
+  "bookingTotal": "Total",
+  "bookingSubtotal": "Subtotal",
+  "bookingCollectAll": "{count, plural, =1{Pickup · collect 1 parcel} other{Pickup · collect all {count}}}",
+  "@bookingCollectAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingQuotedAsOneRoute": "Quoted as one route. Reordering the stops changes this price.",
+  "bookingPricedSeparately": "Priced separately",
+  "bookingEachTrackedSeparately": "Each delivery is matched to its own rider and tracked separately.",
+  "bookingReviewAndPay": "Review and pay",
+  "bookingOneDropOff": "One drop-off",
+  "storeShop": "Shop",
+  "storeStores": "Stores",
+  "storeAll": "All",
+  "storeOpenNow": "Open now",
+  "storeOpen": "Open",
+  "storeClosed": "Closed",
+  "storeItems": "Items",
+  "storeMenu": "Menu",
+  "storeQuantity": "Quantity",
+  "storePayment": "Payment",
+  "storeSubtotal": "Subtotal",
+  "storeChange": "Change",
+  "storeDirections": "Directions",
+  "storeSoldBy": "Sold by",
+  "storeDeliveringTo": "Delivering to",
+  "storePlaceOrder": "Place order",
+  "storeBrowseStores": "Browse stores",
+  "storeShowAllStores": "Show all stores",
+  "storeClearFilters": "Clear the filters",
+  "storeThisStore": "This store",
+  "storeOneStorePerOrder": "One store per order. Items from another store start a new cart.",
+  "storeCollectedFromHere": "Collected from here",
+  "storeVinkolRider": "Vinkol rider",
+  "storePartnerCourier": "Partner courier",
+  "storeCarriedByVinkol": "Carried by a Vinkol rider",
+  "storeCarriedByPartner": "Carried by a partner courier",
+  "storeNotQuotedYet": "Not quoted yet",
+  "storeAddDeliveryAddress": "Add a delivery address",
+  "storeNeededToQuoteDelivery": "Needed before we can quote delivery",
+  "storeSetOnThisOrder": "Set on this order",
+  "storeAddAnAddressToContinue": "Add an address to continue",
+  "storeChooseADeliveryOption": "Choose a delivery option",
+  "storeAddAnAddressToSeeOptions": "Add a delivery address and we will quote the options.",
+  "storeCouldNotGetDeliveryOptions": "We could not get delivery options for this address.",
+  "storeCouldNotPlaceOrder": "The order could not be placed. Nothing has been charged.",
+  "storeCannotDetermineStore": "We could not tell which store this cart belongs to.",
+  "storeCouldNotLoadStores": "Stores did not load",
+  "storeCouldNotLoadProducts": "This menu did not load",
+  "storeSearchStores": "Search",
+  "storeSearchStoresHint": "Store name",
+  "storeSearchThisStore": "Search",
+  "storeSearchThisStoreHint": "Search this menu",
+  "storeNoStoresHere": "No stores here yet",
+  "storeNoStoresHereBody": "Nothing is listed in this category for your area. Another category may have what you want.",
+  "storeNothingOpenNow": "Nothing open right now",
+  "storeNothingOpenNowBody": "Every store in this category is closed. You can still browse a closed store's menu.",
+  "storeNoCategoriesYet": "No categories yet",
+  "storeNoCategoriesYetBody": "Shopping is not set up for your area yet.",
+  "storeNoMatches": "Nothing matches",
+  "storeNoMatchesBody": "No item on this menu matches what you typed.",
+  "storeNothingForSale": "Nothing on the menu",
+  "storeNothingForSaleBody": "This store has not listed anything yet.",
+  "storeNoStoreSelectedBody": "Pick a store first and its menu will open here.",
+  "storeHowMany": "How many?",
+  "storeInYourCart": "In your cart",
+  "storeFewer": "Fewer",
+  "storeMore": "More",
+  "storeRemoveItem": "Remove this item",
+  "storeEachPrice": "{amount} each",
+  "@storeEachPrice": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "storeInCart": "{count, plural, =0{Cart is empty} =1{1 item in cart} other{{count} items in cart}}",
+  "@storeInCart": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storeStoreCount": "{count, plural, =1{1 store} other{{count} stores}}",
+  "@storeStoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storeTimesPrice": "{quantity} × {amount}",
+  "@storeTimesPrice": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "statusPending": "Pending",
+  "statusWithRider": "With rider",
+  "statusWithShopper": "With shopper",
+  "statusDelivered": "Delivered",
+  "statusCancelled": "Cancelled",
+  "statusUnattended": "Unattended",
+  "deliveryRecords": "Delivery records",
+  "deliveryDeliveries": "Deliveries",
+  "deliveryStoreOrders": "Store orders",
+  "deliveryAll": "All",
+  "deliveryEarlier": "Earlier",
+  "deliveryAllOrders": "All orders",
+  "deliveryDownloadReport": "Download a report",
+  "deliveryShowAll": "Show all",
+  "deliveryOrder": "Order",
+  "deliveryTrackingId": "Tracking ID",
+  "deliveryCopyTrackingId": "Copy the tracking ID",
+  "deliveryInProgress": "In progress",
+  "deliveryFrom": "From",
+  "deliveryFromStore": "Store",
+  "deliveryTo": "To",
+  "deliveryPackageDetail": "Package detail",
+  "deliveryStoreOrder": "Store order",
+  "deliveryService": "Service",
+  "deliveryVehicle": "Vehicle",
+  "deliveryContents": "Contents",
+  "deliveryPlaced": "Placed",
+  "deliveryStore": "Store",
+  "deliveryPickupFrom": "Pickup from",
+  "deliveryDeliverTo": "Deliver to",
+  "deliveryRider": "Rider",
+  "deliveryShopper": "Shopper",
+  "deliveryYourRider": "Your rider",
+  "deliveryCallRider": "Call",
+  "deliveryNotAssignedYet": "Not assigned yet",
+  "deliveryStatusHistory": "Status history",
+  "deliveryOrderCreated": "Order created",
+  "deliveryNotYet": "Not yet",
+  "deliveryPayment": "Payment",
+  "deliveryDeliveryFee": "Delivery fee",
+  "deliveryPaidWith": "Paid with",
+  "deliveryDirections": "Directions",
+  "deliveryGetHelp": "Get help",
+  "deliveryCancelOrder": "Cancel this order",
+  "deliveryCancelOrderBody": "The amount will be returned to your wallet. This cannot be undone.",
+  "deliveryCancelConfirm": "Cancel it",
+  "deliveryCancelKeep": "Keep it",
+  "deliveryCancelledTitle": "Order cancelled",
+  "deliveryCancelledBody": "The amount has been returned to your wallet.",
+  "deliveryCancelFailedTitle": "Could not cancel",
+  "deliveryCancelFailedBody": "The order could not be cancelled. Nothing has changed.",
+  "deliveryCouldNotLoad": "Your orders did not load",
+  "deliveryCouldNotLoadBody": "The server did not respond. Your orders are safe — this screen just could not reach them.",
+  "deliveryCouldNotLoadOrder": "This order did not load",
+  "deliveryOrderNotFound": "Order not found",
+  "deliveryOrderNotFoundBody": "This order is no longer available. It may have been removed.",
+  "deliveryBackToRecords": "Back to records",
+  "deliveryNoDeliveriesYet": "No deliveries yet",
+  "deliveryNoDeliveriesYetBody": "Packages you send will show up here, with their status and tracking ID.",
+  "deliveryNoStoreOrdersYet": "No store orders yet",
+  "deliveryNoStoreOrdersYetBody": "Orders you place from a store will show up here once they are on their way.",
+  "deliveryNoneWithThatStatus": "Nothing with that status",
+  "deliveryNoneWithThatStatusBody": "No order here is in that state right now.",
+  "deliverySendAPackage": "Send a package",
+  "deliveryItemCount": "{count, plural, =1{1 item} other{{count} items}}",
+  "@deliveryItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveryRatingSummary": "{count, plural, =0{No ratings yet} =1{{rating} ★ · 1 rating} other{{rating} ★ · {count} ratings}}",
+  "@deliveryRatingSummary": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "walletTitle": "Wallet",
+  "walletAvailableBalance": "Available balance",
+  "walletAddMoney": "Add money",
+  "@walletAddMoney": {
+    "description": "Verb. Puts money into the Vinkol wallet."
+  },
+  "walletWithdraw": "Withdraw",
+  "@walletWithdraw": {
+    "description": "Verb. Moves money out to a bank account."
+  },
+  "walletHistory": "History",
+  "walletTabPayments": "Payments",
+  "walletTabWithdrawals": "Withdrawals",
+  "walletBalanceUnavailable": "Balance unavailable",
+  "walletBalanceUnavailableBody": "Pull down to try again.",
+  "walletNoPayments": "No payments yet",
+  "walletNoPaymentsBody": "Money you add to your wallet, and every delivery it pays for, is listed here.",
+  "walletNoWithdrawals": "No withdrawals yet",
+  "walletNoWithdrawalsBody": "Money you move from your wallet to your bank account shows up here.",
+  "walletCouldNotLoadPayments": "Could not load your payments",
+  "walletCouldNotLoadWithdrawals": "Could not load your withdrawals",
+  "walletTopUp": "Wallet top-up",
+  "@walletTopUp": {
+    "description": "Title of a credit row: money added to the wallet."
+  },
+  "walletPayment": "Payment",
+  "@walletPayment": {
+    "description": "Title of a debit row with no narration from the server."
+  },
+  "walletWithdrawal": "Withdrawal",
+  "walletBankTransfer": "Bank transfer",
+  "walletAmount": "Amount",
+  "walletBalanceAfterTopUp": "Balance after top-up: {amount}",
+  "@walletBalanceAfterTopUp": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletPayWith": "Pay with",
+  "walletAdding": "Adding",
+  "@walletAdding": {
+    "description": "Dock caption on Add money: what the amount below is for."
+  },
+  "walletEnterAnAmount": "Enter an amount",
+  "walletMinimumTopUp": "The smallest top-up is {amount}",
+  "@walletMinimumTopUp": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletCouldNotStartPayment": "We could not start that payment. Try again in a moment.",
+  "walletAvailableAmount": "Available: {amount}",
+  "@walletAvailableAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletToAccount": "To account",
+  "walletChange": "Change",
+  "@walletChange": {
+    "description": "Verb. Opens the bank account picker."
+  },
+  "walletWithdrawalsAreFinal": "Withdrawals are final",
+  "walletWithdrawalsAreFinalBody": "Once it is sent we cannot reverse it. Check the account number before you confirm.",
+  "walletWithdrawing": "Withdrawing",
+  "@walletWithdrawing": {
+    "description": "Dock caption on Withdraw: what the amount below is for."
+  },
+  "walletConfirmWithdrawal": "Confirm withdrawal",
+  "walletMinimumWithdrawal": "The smallest withdrawal is {amount}",
+  "@walletMinimumWithdrawal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletNotEnoughBalance": "That is more than your balance of {amount}",
+  "@walletNotEnoughBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "walletNoBankAccount": "No bank account yet",
+  "walletNoBankAccountBody": "Add the account your withdrawals should land in. You only do this once.",
+  "walletAddBankAccount": "Add bank account",
+  "walletCouldNotLoadAccount": "Could not load your bank account",
+  "walletWithdrawalRequested": "Withdrawal requested",
+  "walletWithdrawalRequestedBody": "We will move it to your bank account shortly.",
+  "walletCouldNotWithdraw": "Could not request that withdrawal",
+  "walletNoteOptional": "Note (optional)",
+  "walletNoteHint": "What is this withdrawal for?",
+  "walletReviewWithdrawal": "Review this withdrawal",
+  "walletTransaction": "Transaction",
+  "walletReference": "Reference",
+  "@walletReference": {
+    "description": "The payment's identifier, quoted to support."
+  },
+  "walletDate": "Date",
+  "walletMethod": "Method",
+  "@walletMethod": {
+    "description": "How the money moved: the wallet, a card."
+  },
+  "walletType": "Type",
+  "@walletType": {
+    "description": "Debit or credit."
+  },
+  "walletVinkolWallet": "Vinkol wallet",
+  "walletDebit": "Debit",
+  "walletCredit": "Credit",
+  "walletCopyReference": "Copy reference",
+  "walletReferenceCopied": "Reference copied",
+  "walletViewDelivery": "View delivery",
+  "walletStatusSuccessful": "Successful",
+  "@walletStatusSuccessful": {
+    "description": "Payment status. The money moved."
+  },
+  "walletStatusPending": "Pending",
+  "@walletStatusPending": {
+    "description": "Payment status. Not settled yet."
+  },
+  "walletStatusFailed": "Failed",
+  "@walletStatusFailed": {
+    "description": "Payment status. The money did not move."
+  },
+  "walletStatusApproved": "Approved",
+  "@walletStatusApproved": {
+    "description": "Withdrawal status. Sent to the bank."
+  },
+  "walletStatusRejected": "Rejected",
+  "@walletStatusRejected": {
+    "description": "Withdrawal status. Refused, money stays in the wallet."
+  },
+  "walletBankAccount": "Bank account",
+  "walletBankAccountBody": "Withdrawals land in this account.",
+  "walletSelectBank": "Select bank",
+  "walletBank": "Bank",
+  "walletAccountNumber": "Account number",
+  "walletAccountNumberHint": "{digits} digits",
+  "@walletAccountNumberHint": {
+    "placeholders": {
+      "digits": {
+        "type": "int"
+      }
+    }
+  },
+  "walletAccountName": "Account name",
+  "walletCheckingAccount": "Checking the account…",
+  "walletAccountVerified": "Account verified",
+  "walletAccountNotVerified": "We could not verify that account",
+  "walletAccountNotVerifiedBody": "Check the number and the bank, then try again.",
+  "walletSelectBankFirst": "Choose a bank first",
+  "walletSaveAccount": "Save account",
+  "walletUpdateAccount": "Update account",
+  "walletSearchBanks": "Search banks",
+  "walletNoBanksFound": "No banks match that",
+  "walletNoBanksFoundBody": "Check the spelling, or clear the search to see the whole list.",
+  "walletCouldNotLoadBanks": "Could not load the bank list",
+  "walletPrimaryAccount": "Primary account",
+  "profileTitle": "Profile",
+  "profileGuestName": "Guest",
+  "profileGuestBody": "Sign in to book deliveries, use your wallet and keep your order history.",
+  "profileSignIn": "Sign in",
+  "profileSignInRequired": "Sign in required",
+  "profileSignInRequiredBody": "Sign in or create an account to use this.",
+  "profileAccountSection": "Account",
+  "profileAppSection": "App",
+  "profilePersonalInfo": "Personal info",
+  "profilePersonalInfoMeta": "Name, phone and location",
+  "profileSecurity": "Security",
+  "profileSecurityMeta": "Password and transaction PIN",
+  "profileBankAccount": "Bank account",
+  "profileBankAccountMeta": "Where wallet withdrawals are paid",
+  "profileSettings": "Settings",
+  "profileSettingsMeta": "Country, language and notifications",
+  "profileDownloadReport": "Download report",
+  "profileDownloadReportMeta": "Your order history as a file",
+  "profileSupport": "Support & help",
+  "profileSupportMeta": "Call, email, or read the FAQ",
+  "profileLogOut": "Log out",
+  "profileVersion": "Vinkol {version}",
+  "@profileVersion": {
+    "description": "App version line at the foot of the profile screen.",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "profileChangePhoto": "Change photo",
+  "profileTakePhoto": "Take a photo",
+  "profileChooseFromGallery": "Choose from gallery",
+  "profilePhotoFailed": "Could not open that image.",
+  "profileEmailHelper": "Your email is your sign-in and cannot be changed here.",
+  "profilePhoneHelper": "Example: {example}",
+  "@profilePhoneHelper": {
+    "description": "Sample national phone number for the active market.",
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "profileRegionHelper": "Used to price deliveries and match riders near you.",
+  "profileSelectRegion": "Select {region}",
+  "@profileSelectRegion": {
+    "description": "Picker title. {region} is the market's word for its administrative region, e.g. State or Province.",
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSave": "Save",
+  "profileNameRequired": "Enter your first and last name.",
+  "profilePhoneRequired": "Enter a phone number with {digits} digits.",
+  "@profilePhoneRequired": {
+    "placeholders": {
+      "digits": {
+        "type": "int"
+      }
+    }
+  },
+  "profileRegionRequired": "Choose where you are.",
+  "profileSaved": "Profile updated",
+  "profileSaveFailed": "Could not save your profile",
+  "profileSignInGroup": "Sign in",
+  "profileChangePassword": "Change password",
+  "profileChangePasswordMeta": "Sends a reset code to your email",
+  "profileTransactionsGroup": "Transactions",
+  "profileTransactionPin": "Transaction PIN",
+  "profileTransactionPinMeta": "Not available yet — a delivery is confirmed with the code shown on the order",
+  "profilePreferences": "Preferences",
+  "profileNotifications": "Notifications",
+  "profileNotificationsMeta": "Delivery updates",
+  "profileLanguage": "Language",
+  "profileLanguageMeta": "{count, plural, =1{{language} only} other{{language} · {count} available}}",
+  "@profileLanguageMeta": {
+    "description": "Language row summary. One language means the market ships nothing else.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "profileChooseLanguage": "Choose a language",
+  "profileLanguageNote": "These are the languages Vinkol ships in {market}.",
+  "@profileLanguageNote": {
+    "placeholders": {
+      "market": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCountry": "Country",
+  "profileCountryMeta": "{market} · {region} · {currency}",
+  "@profileCountryMeta": {
+    "placeholders": {
+      "market": {
+        "type": "String"
+      },
+      "region": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "profileLegal": "Legal",
+  "profileTerms": "Terms of service",
+  "profilePrivacy": "Privacy policy",
+  "profileDangerZone": "Danger zone",
+  "profileDeleteAccount": "Delete account",
+  "profileDeleteAccountMeta": "Permanently removes your data",
+  "profileDeleteTitle": "Delete your account?",
+  "profileDeleteBody": "This opens the deletion form on vinkol.ng. Once it is processed, your orders, wallet balance and saved details are removed and cannot be restored.",
+  "profileDeleteContinue": "Open the form",
+  "commonCancel": "Cancel",
+  "profilePush": "Push notifications",
+  "profilePushMeta": "Order updates sent to this device",
+  "profileNotificationsNote": "Vinkol sends a push notification when an order changes status. Nothing is stored, so there is no inbox to come back to — switching this off unregisters this device rather than muting a list.",
+  "supportContactGroup": "Contact",
+  "supportCall": "Call support",
+  "supportCallAlt": "Second line",
+  "supportEmailAction": "Email us",
+  "supportWhatsapp": "Chat on WhatsApp",
+  "supportHeadline": "{market} support",
+  "@supportHeadline": {
+    "placeholders": {
+      "market": {
+        "type": "String"
+      }
+    }
+  },
+  "supportHoursNote": "Phone and email are answered {hours}. There is no in-app chat.",
+  "@supportHoursNote": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "supportLinkFailed": "Could not open that link.",
+  "supportFaqGroup": "Frequently asked questions",
+  "supportAboutGroup": "About",
+  "supportWebsite": "Official website",
+  "supportAboutVinkol": "About Vinkol",
+  "supportFollowGroup": "Follow Vinkol",
+  "supportInstagram": "Instagram",
+  "supportX": "X",
+  "supportLinkedIn": "LinkedIn",
+  "supportFaqQ1": "What is Vinkol?",
+  "supportFaqA1": "Vinkol is a digital platform that connects customers with professional delivery partners for fast, secure and reliable logistics.",
+  "supportFaqQ2": "How does Vinkol work?",
+  "supportFaqA2": "Book a delivery in the app, give the pickup and drop-off details, pay, and follow the order's status until it is delivered.",
+  "supportFaqQ3": "Is my parcel insured during delivery?",
+  "supportFaqA3Covered": "Vinkol provides retention coverage of up to {amount} for theft or damage to goods during delivery, provided the loss is verified and happened without negligence by the rider or logistics company.",
+  "@supportFaqA3Covered": {
+    "description": "Coverage figure comes from the market; the amount is already formatted in the market's currency.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "supportFaqA3Uncovered": "Coverage for theft or damage during delivery depends on the delivery partner. Contact Vinkol support to open a claim and we will mediate where applicable.",
+  "supportFaqQ4": "Who is responsible if my parcel is damaged or lost?",
+  "supportFaqA4": "Vinkol facilitates the booking, and each delivery partner is directly responsible for carrying out the delivery. Claims should be directed to the partner involved; Vinkol will help mediate the dispute where necessary.",
+  "supportFaqQ5": "How do I make sure my item is safe to send?",
+  "supportFaqA5": "Package it so it cannot be damaged in transit. Fragile or high-value items should be wrapped and labelled clearly before pickup.",
+  "supportFaqQ6": "How do I follow my delivery?",
+  "supportFaqA6": "Open the order under Records. Its status moves from pending, to with a rider or shopper, to delivered. Statuses are for information and are not a legal or financial record.",
+  "supportFaqQ7": "What should I do if something goes wrong with a delivery?",
+  "supportFaqA7": "Report it through the app or contact support within 48 hours of the delivery attempt. Vinkol will review and mediate your case where applicable.",
+  "supportFaqQ8": "Can I cancel or change a delivery request?",
+  "supportFaqA8": "You can cancel or change a request before a rider accepts it. Once a delivery is under way, cancellation terms depend on the stage it has reached.",
+  "supportFaqQ9": "Can I contact the rider?",
+  "supportFaqA9": "Yes. Once a rider is assigned, the order shows their number and you can call them. There is no in-app chat.",
+  "supportFaqQ10": "How will I hear about delivery updates?",
+  "supportFaqA10": "Vinkol sends a push notification when your order changes status. Notifications are not stored, so there is no inbox to go back to.",
+  "supportFaqQ11": "Does Vinkol store my personal data?",
+  "supportFaqA11": "Vinkol collects only what it needs to complete your delivery, and handles it in line with data-protection law and our privacy policy.",
+  "supportFaqQ12": "How often do the terms change?",
+  "supportFaqA12": "Vinkol may update its terms and conditions from time to time. Continuing to use the platform after an update means you accept the new terms.",
+  "supportFaqQ13": "How do I contact support?",
+  "supportFaqA13": "Use the contact options at the top of this screen. Phone and email are answered {hours}.",
+  "@supportFaqA13": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingServiceSingleDrop": "Single Drop",
+  "bookingServiceSingleDropMeta": "1 pickup · 1 drop-off",
+  "bookingServiceMultiDrop": "Multi-Drop",
+  "bookingServiceMultiDropMeta": "1 pickup · several drop-offs",
+  "bookingServiceBatchRun": "Batch Run",
+  "bookingServiceBatchRunMeta": "Several deliveries · a rider each",
+  "bookingChooseService": "Choose your service",
+  "bookingServiceSingleDropBadge": "Most Popular",
+  "bookingServiceMultiDropBadge": "Up to 5 stops",
+  "bookingServiceBatchRunBadge": "Volume discount",
+  "bookingBookNow": "Book Now",
+  "bookingWhenShouldWeCollect": "When should we collect it?",
+  "bookingPickupNow": "Now",
+  "bookingPickupNowMeta": "We start looking for a rider straight away",
+  "bookingScheduleForLater": "Schedule for later",
+  "bookingScheduleForLaterMeta": "Pick the day and the time",
+  "bookingPickupToday": "Today, {time}",
+  "@bookingPickupToday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingPickupOnDate": "{date}, {time}",
+  "@bookingPickupOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingSetYourStops": "Set your stops"
+}

@@ -168,8 +168,6 @@ class _ReverseLocationStringMapState
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final LatLng initialTarget = _pickupCoordinates ??
@@ -177,7 +175,6 @@ class _ReverseLocationStringMapState
         const LatLng(6.5244, 3.3792);
     final double initialZoom =
         (_pickupCoordinates != null && _dropoffCoordinates != null) ? 12 : 14;
-
 
     return Stack(
       children: [
@@ -211,7 +208,6 @@ class _ReverseLocationStringMapState
           },
         ),
         // Google Maps Directions Button
-      
       ],
     );
   }

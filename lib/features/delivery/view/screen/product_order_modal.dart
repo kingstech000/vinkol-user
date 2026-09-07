@@ -16,7 +16,9 @@ class ProductsOrderedModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MiniAppBar(title: 'Cart',),
+      appBar: MiniAppBar(
+        title: 'Cart',
+      ),
       body: products.isEmpty
           ? Center(
               child: AppText.body('No products found for this order.',
@@ -28,8 +30,8 @@ class ProductsOrderedModal extends StatelessWidget {
               itemBuilder: (context, index) {
                 final product = products[index];
                 return Card(
-                  elevation: 2
-                  ,color: AppColors.white,
+                  elevation: 2,
+                  color: AppColors.white,
                   margin: EdgeInsets.only(bottom: 12.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.r),
@@ -40,11 +42,12 @@ class ProductsOrderedModal extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Product Image (if available)
-                        if (product.imageUrl != null && product.imageUrl!.isNotEmpty)
+                        if (product.imageUrl != null &&
+                            product.imageUrl!.isNotEmpty)
                           Container(
                             width: 60.w,
                             height: 60.w,
-                            margin: EdgeInsets.only(right: 12.w),
+                            margin: EdgeInsetsDirectional.only(end: 12.w),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8.r),
                               color: AppColors.greyLight,
@@ -58,12 +61,13 @@ class ProductsOrderedModal extends StatelessWidget {
                           Container(
                             width: 60.w,
                             height: 60.w,
-                            margin: EdgeInsets.only(right: 12.w),
+                            margin: EdgeInsetsDirectional.only(end: 12.w),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8.r),
                               color: AppColors.white,
                             ),
-                            child: Icon(Icons.image_not_supported, size: 30.w, color: AppColors.greyLight),
+                            child: Icon(Icons.image_not_supported,
+                                size: 30.w, color: AppColors.greyLight),
                           ),
                         Expanded(
                           child: Column(
@@ -79,7 +83,6 @@ class ProductsOrderedModal extends StatelessWidget {
                               Gap.h4,
                               AppText.caption(
                                 'Quantity: ${product.quantity ?? 0}',
-                              
                                 fontSize: 14.sp,
                               ),
                               Gap.h4,

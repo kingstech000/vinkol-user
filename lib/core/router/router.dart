@@ -8,22 +8,27 @@ import 'package:starter_codes/features/auth/view/screen/reset_password_screen.da
 import 'package:starter_codes/features/auth/view/screen/set_new_password_screen.dart';
 import 'package:starter_codes/features/auth/view/screen/signup_screen.dart';
 import 'package:starter_codes/features/auth/view/screen/verify_email_otp_screen.dart';
-import 'package:starter_codes/features/auth/view/screens/auth_choice_screen.dart';
+import 'package:starter_codes/features/auth/view/screen/auth_choice_screen.dart';
 import 'package:starter_codes/features/delivery/view/screen/booking_order_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/map_with_quote_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/bulk_map_with_quote_screen.dart';
+import 'package:starter_codes/features/booking/view/screen/batch_stops_screen.dart';
+import 'package:starter_codes/features/booking/view/screen/multidrop_stops_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/multi_map_with_quote_screen.dart';
+import 'package:starter_codes/features/booking/view/screen/booking_composer_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/package_info_screen.dart';
+import 'package:starter_codes/features/booking/view/screen/rewards_screen.dart';
 import 'package:starter_codes/features/dashboard/view/screen/dashboard_screen.dart';
-import 'package:starter_codes/features/onboarding/view/screen/onboarding_screen.dart';
-import 'package:starter_codes/features/payment/view/payment_veification_screen.dart';
+import 'package:starter_codes/features/payment/view/payment_verification_screen.dart';
 import 'package:starter_codes/features/payment/view/payment_webview.dart';
-import 'package:starter_codes/features/profile/view/screen/SupportAndHelpScreen.dart';
+import 'package:starter_codes/features/profile/view/screen/support_help_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/delete_account_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/notification_settings_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/personal_info_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/security_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/settings_screen.dart';
+import 'package:starter_codes/features/delivery/view/screen/download_report_screen.dart';
+import 'package:starter_codes/features/wallet/view/screen/add_bank_screen.dart';
 import 'package:starter_codes/features/splash/view/screen/splash_screen.dart';
 import 'package:starter_codes/features/store/view/screen/cart_screen.dart';
 import 'package:starter_codes/features/store/view/screen/product_list_screen.dart';
@@ -31,6 +36,7 @@ import 'package:starter_codes/features/store/view/screen/product_detail_screen.d
 import 'package:starter_codes/features/store/view/screen/store_screen.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/features/delivery/view/screen/store_order_screen.dart';
+import 'package:starter_codes/features/market/view/screen/market_select_screen.dart';
 
 enum TransitionType { SlideUp, Side, Breeze }
 
@@ -93,10 +99,15 @@ class AppRouter {
             settings: settings,
             viewToShow: const SplashScreen(),
             transition: transition);
-      case NavigatorRoutes.onboardingScreen:
+      case NavigatorRoutes.marketSelectScreen:
+        // `fromSettings` decides whether Continue pops or replaces the stack.
         return _getPageRoute(
             settings: settings,
-            viewToShow: const OnboardingScreen(),
+            viewToShow: (settings.arguments
+                        as Map<String, dynamic>?)?['fromSettings'] ==
+                    true
+                ? const MarketSelectScreen.fromSettings()
+                : const MarketSelectScreen(),
             transition: transition);
       case NavigatorRoutes.authChoiceScreen:
         return _getPageRoute(
@@ -182,8 +193,23 @@ class AppRouter {
             settings: settings,
             viewToShow: const DeleteAccountScreen(),
             transition: transition);
+      case NavigatorRoutes.downloadReportScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const DownloadReportScreen(),
+            transition: transition);
+      case NavigatorRoutes.bankAccountScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const AddBankScreen(),
+            transition: transition);
 
       //BOOKING
+      case NavigatorRoutes.bookingComposerScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const BookingComposerScreen(),
+            transition: transition);
       case NavigatorRoutes.packageInfoScreen:
         return _getPageRoute(
             settings: settings,
@@ -194,6 +220,16 @@ class AppRouter {
             settings: settings,
             viewToShow: const MapWithQuotesScreen(),
             transition: transition);
+      case NavigatorRoutes.multidropStopsScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const MultidropStopsScreen(),
+            transition: transition);
+      case NavigatorRoutes.batchStopsScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const BatchStopsScreen(),
+            transition: transition);
       case NavigatorRoutes.bulkMapWithQuoteScreen:
         return _getPageRoute(
             settings: settings,
@@ -203,6 +239,11 @@ class AppRouter {
         return _getPageRoute(
             settings: settings,
             viewToShow: const MultiMapWithQuoteScreen(),
+            transition: transition);
+      case NavigatorRoutes.rewardsScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const RewardsScreen(),
             transition: transition);
       case NavigatorRoutes.bookingOrderScreen:
         return _getPageRoute(

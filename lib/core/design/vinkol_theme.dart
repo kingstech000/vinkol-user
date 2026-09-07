@@ -10,6 +10,9 @@ import 'vinkol_type.dart';
 /// `lib/core/theme/{light,dark}_theme.dart` at all, so `Theme.of(context)` returned Material
 /// defaults everywhere. These replace that: `context.vinkol` resolves through the
 /// [VinkolColors] extension attached here.
+///
+/// Direction A · Midnight (D-07): [dark] is the primary register and carries no shadows;
+/// [light] is a full peer with the two soft shadows from `--sh` / `--sh2`.
 abstract final class VinkolTheme {
   static ThemeData light() => _build(VinkolColors.light, Brightness.light);
   static ThemeData dark() => _build(VinkolColors.dark, Brightness.dark);
@@ -32,13 +35,16 @@ abstract final class VinkolTheme {
         onError: VinkolPalette.white,
         surface: v.surface,
         onSurface: v.textPrimary,
-        surfaceContainerHighest: v.surfaceSunken,
-        outline: v.borderDefault,
+        surfaceContainerLow: v.canvas,
+        surfaceContainerHighest: v.surfaceStrong,
+        outline: v.borderStrong,
         outlineVariant: v.borderSubtle,
-        shadow: v.shadowE2,
+        shadow: v.shadowLift,
       ),
       textTheme: _textTheme(v),
-      dividerTheme: DividerThemeData(color: v.borderSubtle, thickness: 1, space: 1),
+      iconTheme: IconThemeData(color: v.textSecondary, size: 24),
+      dividerTheme:
+          DividerThemeData(color: v.borderSubtle, thickness: 1, space: 1),
       appBarTheme: AppBarTheme(
         backgroundColor: v.canvas,
         surfaceTintColor: Colors.transparent,
@@ -54,24 +60,24 @@ abstract final class VinkolTheme {
         elevation: 0,
         shape: const RoundedRectangleBorder(borderRadius: VinkolRadius.brSheet),
         showDragHandle: true,
-        dragHandleColor: v.borderDefault,
+        dragHandleColor: v.borderStrong,
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: v.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: const RoundedRectangleBorder(borderRadius: VinkolRadius.brMd),
+        shape: const RoundedRectangleBorder(borderRadius: VinkolRadius.brLg),
         titleTextStyle: VinkolType.h3.copyWith(color: v.textPrimary),
         contentTextStyle: VinkolType.body.copyWith(color: v.textSecondary),
       ),
-      // e0 by default: a hairline border and no shadow.
+      // e0 by default: a hairline border and no shadow. Cards are --r-lg in the prototype.
       cardTheme: CardThemeData(
         color: v.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: VinkolRadius.brMd,
+          borderRadius: VinkolRadius.brLg,
           side: BorderSide(color: v.borderSubtle),
         ),
       ),
@@ -79,14 +85,14 @@ abstract final class VinkolTheme {
         filled: true,
         fillColor: v.surface,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: VinkolSpace.md,
-          vertical: VinkolSpace.md,
+          horizontal: VinkolSpace.lg,
+          vertical: VinkolSpace.lg,
         ),
-        border: _inputBorder(v.borderDefault),
-        enabledBorder: _inputBorder(v.borderDefault),
-        focusedBorder: _inputBorder(v.focusRing, width: 2),
-        errorBorder: _inputBorder(v.dangerFill),
-        focusedErrorBorder: _inputBorder(v.dangerFill, width: 2),
+        border: _inputBorder(v.borderSubtle),
+        enabledBorder: _inputBorder(v.borderSubtle),
+        focusedBorder: _inputBorder(v.brand, width: 2),
+        errorBorder: _inputBorder(v.danger),
+        focusedErrorBorder: _inputBorder(v.danger, width: 2),
         disabledBorder: _inputBorder(v.borderSubtle),
         hintStyle: VinkolType.body.copyWith(color: v.textTertiary),
         labelStyle: VinkolType.label.copyWith(color: v.textSecondary),
@@ -96,17 +102,22 @@ abstract final class VinkolTheme {
         backgroundColor: v.surfaceInverse,
         contentTextStyle: VinkolType.body.copyWith(color: v.textInverse),
         behavior: SnackBarBehavior.floating,
-        shape: const RoundedRectangleBorder(borderRadius: VinkolRadius.brSm),
+        shape: const RoundedRectangleBorder(borderRadius: VinkolRadius.brMd),
         elevation: 0,
       ),
-      // No bounce anywhere: the platform default page transition is replaced with a fade
-      // through, matching VinkolMotion.emphasized in feel.
-      splashFactory: InkSparkle.splashFactory,
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: v.brand,
+        linearTrackColor: v.borderStrong,
+        circularTrackColor: v.borderStrong,
+      ),
+      // A plain ripple, not InkSparkle: nothing in this product animates decoratively.
+      splashFactory: InkRipple.splashFactory,
       visualDensity: VisualDensity.standard,
     );
   }
 
-  static OutlineInputBorder _inputBorder(Color color, {double width = 1}) => OutlineInputBorder(
+  static OutlineInputBorder _inputBorder(Color color, {double width = 1}) =>
+      OutlineInputBorder(
         borderRadius: VinkolRadius.brSm,
         borderSide: BorderSide(color: color, width: width),
       );

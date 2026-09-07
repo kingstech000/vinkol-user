@@ -11,6 +11,7 @@ import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
 import 'dart:async'; // Import for Timer
+import 'package:starter_codes/l10n/l10n.dart';
 
 class VerifyEmailOtpViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -102,7 +103,7 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
         context,
         onPressed: () => {},
         dialogText: e.message,
-        buttonText: "Try Again",
+        buttonText: context.l10n.commonTryAgain,
       );
     }
   }
@@ -119,7 +120,7 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
         onPressed: () => {},
         dialogText:
             'Please wait $_secondsRemaining seconds before resending OTP.',
-        buttonText: "Okay",
+        buttonText: context.l10n.authOkay,
       );
       return;
     }
@@ -138,7 +139,7 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
         context,
         onPressed: () => {},
         dialogText: 'A new OTP has been sent to $_email.',
-        buttonText: "Okay",
+        buttonText: context.l10n.authOkay,
       );
     } on Failure catch (e) {
       logger.e('Email OTP resend failed: ${e.message}');
@@ -147,7 +148,7 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
         context,
         onPressed: () => {},
         dialogText: e.message,
-        buttonText: "Try Again",
+        buttonText: context.l10n.commonTryAgain,
       );
     }
   }

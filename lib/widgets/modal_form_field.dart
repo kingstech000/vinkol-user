@@ -121,8 +121,8 @@ class _ModalFormFieldState extends State<ModalFormField> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.r),
-                              borderSide: const BorderSide(
-                                  color: AppColors.darkgrey),
+                              borderSide:
+                                  const BorderSide(color: AppColors.darkgrey),
                             ),
                             contentPadding: EdgeInsets.symmetric(
                                 vertical: 10.h, horizontal: 12.w),
@@ -182,13 +182,12 @@ class _ModalFormFieldState extends State<ModalFormField> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.options.isEmpty
-          ? null
-          : _showOptionsModal,
+      onTap: widget.options.isEmpty ? null : _showOptionsModal,
       child: Container(
         height: 45.h,
         width: double.infinity,
-        padding: EdgeInsets.only(top: 12.h, bottom: 12.w, left: 12.w),
+        padding:
+            EdgeInsetsDirectional.only(top: 12.h, bottom: 12.w, start: 12.w),
         decoration: BoxDecoration(
           color: AppColors.formWhite,
           border: Border.fromBorderSide(

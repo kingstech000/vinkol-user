@@ -1,9 +1,7 @@
-
 // Custom Dot Spinning Indicator
 import 'package:flutter/material.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'dart:math' as math; // For math.pi
-
 
 class DotSpinningIndicator extends StatefulWidget {
   const DotSpinningIndicator({
@@ -59,7 +57,9 @@ class _DotSpinningIndicatorState extends State<DotSpinningIndicator>
                     left: (widget.size - widget.dotSize) / 2,
                     top: widget.size * 0.2, // Adjust position
                     child: Opacity(
-                      opacity: 1.0 - _controller.value * 2 > 0 ? 1.0 - _controller.value * 2 : 0,
+                      opacity: 1.0 - _controller.value * 2 > 0
+                          ? 1.0 - _controller.value * 2
+                          : 0,
                       child: _buildDot(widget.color.withOpacity(0.7)),
                     ),
                   ),
@@ -67,7 +67,9 @@ class _DotSpinningIndicatorState extends State<DotSpinningIndicator>
                     left: (widget.size - widget.dotSize) / 2,
                     top: widget.size * 0.4, // Adjust position
                     child: Opacity(
-                      opacity: 1.0 - _controller.value * 1.5 > 0 ? 1.0 - _controller.value * 1.5 : 0,
+                      opacity: 1.0 - _controller.value * 1.5 > 0
+                          ? 1.0 - _controller.value * 1.5
+                          : 0,
                       child: _buildDot(widget.color.withOpacity(0.4)),
                     ),
                   ),

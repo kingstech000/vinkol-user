@@ -14,6 +14,7 @@ import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
 import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 
 class LoginViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -87,7 +88,7 @@ class LoginViewModel extends BaseViewModel {
               }
             },
             dialogText: message,
-            buttonText: "Verify Email",
+            buttonText: context.l10n.authVerifyEmail,
           );
 
           changeState(const ViewModelState.idle());
@@ -119,7 +120,7 @@ class LoginViewModel extends BaseViewModel {
           context,
           onPressed: () {},
           dialogText: responseData['message'] ?? 'Login failed',
-          buttonText: "Dismiss",
+          buttonText: context.l10n.authDismiss,
         );
       }
     } on Failure catch (e) {
@@ -129,7 +130,7 @@ class LoginViewModel extends BaseViewModel {
         context,
         onPressed: () {},
         dialogText: e.message,
-        buttonText: "Dismiss",
+        buttonText: context.l10n.authDismiss,
       );
     }
   }

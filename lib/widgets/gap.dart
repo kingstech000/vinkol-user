@@ -60,7 +60,7 @@ class Gap extends StatelessWidget {
   static Gap get w30 => const Gap.w(30);
   static Gap get w32 => const Gap.w(32);
 
-  // Height const 
+  // Height const
   static Gap get h2 => const Gap.h(2);
   static Gap get h4 => const Gap.h(4);
   static Gap get h6 => const Gap.h(6);

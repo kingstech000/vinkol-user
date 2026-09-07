@@ -1,23 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import '../../model/bank_model.dart';
-import '../../view_model/withdrawal_view_model.dart';
-import 'bank_selection_screen.dart';
+import 'package:starter_codes/core/design/design.dart';
+import 'package:starter_codes/core/market/market_scope.dart';
+import 'package:starter_codes/features/wallet/model/bank_model.dart';
+import 'package:starter_codes/features/wallet/view/screen/bank_selection_screen.dart';
+import 'package:starter_codes/features/wallet/view_model/withdrawal_view_model.dart';
+import 'package:starter_codes/l10n/l10n.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
+/// Add or replace the bank account withdrawals are paid into.
+///
+/// Three steps, in the order the API enforces them: choose the bank, type the account number,
+/// and let `banks/validate` return the name on the account. **The name is never typed** — it
+/// comes back from the bank, and it is the whole point of the check: it is how someone
+/// notices they are about to send money to the wrong account.
+///
+/// The account number's length is market config, not a constant here. Nigeria's NUBAN is ten
+/// digits; a market whose accounts are not one fixed-length number leaves it null.
 class AddBankScreen extends ConsumerStatefulWidget {
-  const AddBankScreen({Key? key}) : super(key: key);
+  const AddBankScreen({super.key});
 
   @override
   ConsumerState<AddBankScreen> createState() => _AddBankScreenState();
 }
 
 class _AddBankScreenState extends ConsumerState<AddBankScreen> {
-  final accountNumberController = TextEditingController();
-  final formKey = GlobalKey<FormState>();
-  Bank? selectedBank;
+  final TextEditingController _accountNumber = TextEditingController();
+  Bank? _bank;
+
+  int? get _digits => MarketScope.market.bankAccountDigits;
+
+  bool get _numberComplete {
+    final String text = _accountNumber.text.trim();
+    if (text.isEmpty) return false;
+    return _digits == null ? true : text.length == _digits;
+  }
 
   @override
   void initState() {
@@ -25,14 +43,13 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(withdrawalProvider.notifier).clearSession();
     });
-    accountNumberController.addListener(_onAccountNumberChanged);
-    ref.listenManual(
-      withdrawalProvider.select((state) => state.selectedBank),
-      (previous, next) {
+    _accountNumber.addListener(_onNumberChanged);
+    ref.listenManual<Bank?>(
+      withdrawalProvider.select((WithdrawalState s) => s.selectedBank),
+      (Bank? previous, Bank? next) {
         if (next != previous && mounted) {
-          setState(() {
-            selectedBank = next;
-          });
+          setState(() => _bank = next);
+          _onNumberChanged();
         }
       },
     );
@@ -40,510 +57,170 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
 
   @override
   void dispose() {
-    accountNumberController.removeListener(_onAccountNumberChanged);
-    accountNumberController.dispose();
+    _accountNumber.removeListener(_onNumberChanged);
+    _accountNumber.dispose();
     super.dispose();
   }
 
-  void _onAccountNumberChanged() {
-    final text = accountNumberController.text;
-    if (selectedBank != null && text.length == 10) {
-      FocusScope.of(context).unfocus();
-      final notifier = ref.read(withdrawalProvider.notifier);
-      notifier.validateBank(text, selectedBank!.code);
+  /// Validates as soon as there is a bank and a complete number — the user should not have to
+  /// press anything to find out whether the account exists.
+  void _onNumberChanged() {
+    setState(() {});
+    if (_bank == null || !_numberComplete) return;
+    FocusScope.of(context).unfocus();
+    ref
+        .read(withdrawalProvider.notifier)
+        .validateBank(_accountNumber.text.trim(), _bank!.code);
+  }
+
+  /// The name the bank returned, or null if the check has not passed.
+  String? _verifiedName(WithdrawalState state) {
+    final Map<String, dynamic>? result = state.validationResult.valueOrNull;
+    if (result == null || result.isEmpty || result['success'] != true) {
+      return null;
     }
+    final Object? name = result['data']?['account_name'];
+    final String text = (name ?? '').toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  Future<void> _save(WithdrawalState state, String accountName) async {
+    final notifier = ref.read(withdrawalProvider.notifier);
+    final bool replacing = state.userBank.valueOrNull != null;
+
+    if (replacing) {
+      await notifier.updateBank(
+        _bank!.code,
+        _accountNumber.text.trim(),
+        accountName,
+        _bank!.name,
+      );
+    } else {
+      await notifier.createBank(
+        _bank!.code,
+        _accountNumber.text.trim(),
+        accountName,
+        _bank!.name,
+      );
+    }
+
+    if (mounted) Navigator.of(context).pop(true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final withdrawalState = ref.watch(withdrawalProvider);
+    final v = context.vinkol;
+    final l10n = context.l10n;
+    final WithdrawalState state = ref.watch(withdrawalProvider);
+    final bool replacing = state.userBank.valueOrNull != null;
+    final String? verified = _verifiedName(state);
+    final bool checking = state.validationResult.isLoading;
+    final Map<String, dynamic>? result = state.validationResult.valueOrNull;
+    final bool refused = !checking &&
+        result != null &&
+        result.isNotEmpty &&
+        result['success'] != true;
 
-    return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+    return VinkolFormScaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: v.canvas,
+        surfaceTintColor: v.canvas,
         elevation: 0,
-        title: Text(
-          'Add Bank Account',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        iconTheme: IconThemeData(color: Colors.black),
+        title: Text(l10n.walletBankAccount,
+            style: VinkolType.h3.copyWith(color: v.textPrimary)),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Form(
-          key: formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Text(
-                'Bank Details',
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              Gap.h8,
-              Text(
-                'Add your bank account details to receive withdrawals',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey.shade600,
-                  height: 1.5,
-                ),
-              ),
-              Gap.h32,
-              // Select Bank Section
-              Text(
-                'Select Bank',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              Gap.h12,
-              withdrawalState.bankList.when(
-                data: (banks) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      InkWell(
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const BankSelectionScreen(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(16.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(
-                              color: selectedBank != null
-                                  ? Colors.green.shade300
-                                  : Colors.grey.shade300,
-                              width: selectedBank != null ? 2 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      selectedBank?.name ?? 'Select Bank',
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w600,
-                                        color: selectedBank != null
-                                            ? Colors.black
-                                            : Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16.sp,
-                                color: Colors.grey.shade400,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (selectedBank != null) ...[
-                        Gap.h12,
-                        Container(
-                          padding: EdgeInsets.all(16.w),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            border: Border.all(
-                                color: Colors.green.shade300, width: 2),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle,
-                                color: Colors.green.shade600,
-                                size: 24.sp,
-                              ),
-                              Gap.w12,
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Bank Selected',
-                                      style: TextStyle(
-                                        fontSize: 12.sp,
-                                        color: Colors.green.shade700,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Gap.h4,
-                                    Text(
-                                      selectedBank!.name,
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green.shade800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  );
-                },
-                loading: () => Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40.h),
-                    child: CircularProgressIndicator(
-                      color: AppColors.blue,
-                    ),
+      fields: <Widget>[
+        const SizedBox(height: VinkolSpace.sm),
+        Text(
+          l10n.walletBankAccountBody,
+          style: VinkolType.body.copyWith(color: v.textSecondary),
+        ),
+        const SizedBox(height: VinkolSpace.xxl),
+        Text(
+          l10n.walletBank,
+          style: VinkolType.label.copyWith(color: v.textSecondary),
+        ),
+        const SizedBox(height: VinkolSpace.labelToField),
+        state.bankList.when(
+          loading: () => const VinkolRowSkeleton(showValue: false),
+          error: (Object error, StackTrace _) => VinkolNotice(
+            headline: l10n.walletCouldNotLoadBanks,
+            body: error.toString(),
+            icon: Icons.warning_amber_rounded,
+            tone: VinkolNoticeTone.warning,
+          ),
+          data: (_) => VinkolRowGroup(
+            children: <VinkolRow>[
+              VinkolRow(
+                title: _bank?.name ?? l10n.walletSelectBank,
+                icon: Icons.account_balance_outlined,
+                accentIcon: _bank != null,
+                onTap: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const BankSelectionScreen(),
                   ),
                 ),
-                error: (error, stack) => Container(
-                  padding: EdgeInsets.all(20.w),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    border: Border.all(color: Colors.red.shade300),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.error_outline, color: Colors.red.shade600),
-                      Gap.w12,
-                      Expanded(
-                        child: Text(
-                          'Error loading banks: $error',
-                          style: TextStyle(
-                            color: Colors.red.shade700,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Gap.h32,
-              // Account Number Section
-              Text(
-                'Account Number',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              Gap.h12,
-              TextFormField(
-                controller: accountNumberController,
-                keyboardType: TextInputType.number,
-                maxLength: 10,
-                enabled: !withdrawalState.isLoading && selectedBank != null,
-                decoration: InputDecoration(
-                  hintText: 'Enter 10-digit account number',
-                  prefixIcon: Icon(Icons.account_circle_outlined,
-                      color: Colors.grey.shade600),
-                  suffixIcon: accountNumberController.text.length == 10 &&
-                          selectedBank != null
-                      ? withdrawalState.validationResult.isLoading
-                          ? Padding(
-                              padding: EdgeInsets.all(12.w),
-                              child: SizedBox(
-                                width: 20.w,
-                                height: 20.h,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.blue),
-                                ),
-                              ),
-                            )
-                          : Builder(
-                              builder: (context) {
-                                final result = withdrawalState
-                                    .validationResult.valueOrNull;
-                                if (result != null &&
-                                    result['success'] == true) {
-                                  return Icon(Icons.check_circle,
-                                      color: Colors.green.shade600,
-                                      size: 24.sp);
-                                } else if (result != null &&
-                                    result['success'] == false) {
-                                  return Icon(Icons.error,
-                                      color: Colors.red.shade600, size: 24.sp);
-                                }
-                                return SizedBox.shrink();
-                              },
-                            )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                    borderSide: BorderSide(color: AppColors.blue, width: 2),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
-                  ),
-                  counterText: '',
-                ),
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-                onChanged: (value) {
-                  setState(() {});
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter account number';
-                  }
-                  if (value.length < 10) {
-                    return 'Account number must be 10 digits';
-                  }
-                  return null;
-                },
-              ),
-              if (selectedBank == null)
-                Padding(
-                  padding: EdgeInsets.only(top: 8.h),
-                  child: Text(
-                    'Please select a bank first',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ),
-              Gap.h24,
-              // Validation Result
-              withdrawalState.validationResult.when(
-                data: (result) {
-                  if (result.isEmpty) {
-                    return SizedBox.shrink();
-                  }
-                  final validated = result['success'] == true;
-                  final accountName = result['data']?['account_name'] ?? '';
-                  return Container(
-                    padding: EdgeInsets.all(16.w),
-                    decoration: BoxDecoration(
-                      color:
-                          validated ? Colors.green.shade50 : Colors.red.shade50,
-                      border: Border.all(
-                        color: validated
-                            ? Colors.green.shade300
-                            : Colors.red.shade300,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          validated ? Icons.check_circle : Icons.error_outline,
-                          color: validated
-                              ? Colors.green.shade600
-                              : Colors.red.shade600,
-                          size: 24.sp,
-                        ),
-                        Gap.w12,
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                validated
-                                    ? 'Account Verified'
-                                    : 'Validation Failed',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: validated
-                                      ? Colors.green.shade700
-                                      : Colors.red.shade700,
-                                ),
-                              ),
-                              if (validated && accountName.isNotEmpty) ...[
-                                Gap.h4,
-                                Text(
-                                  'Account Name: $accountName',
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    color: Colors.green.shade700,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                loading: () => Container(
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    border: Border.all(color: Colors.blue.shade300),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 20.w,
-                        height: 20.h,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(AppColors.blue),
-                        ),
-                      ),
-                      Gap.w12,
-                      Text(
-                        'Validating account...',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: Colors.blue.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                error: (error, stack) => Container(
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    border: Border.all(color: Colors.red.shade300, width: 2),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.error_outline,
-                          color: Colors.red.shade600, size: 24.sp),
-                      Gap.w12,
-                      Expanded(
-                        child: Text(
-                          'Error: ${error.toString()}',
-                          style: TextStyle(
-                            color: Colors.red.shade700,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Gap.h32,
-              // Save Button
-              Builder(
-                builder: (context) {
-                  final validationData =
-                      withdrawalState.validationResult.valueOrNull;
-                  final isValidated = validationData != null &&
-                      validationData.isNotEmpty &&
-                      validationData['success'] == true;
-                  final accountName = isValidated
-                      ? (validationData['data']?['account_name'] ?? 'Account')
-                      : 'Account';
-
-                  return SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: (selectedBank == null ||
-                              accountNumberController.text.isEmpty ||
-                              !isValidated ||
-                              withdrawalState.isLoading)
-                          ? null
-                          : () async {
-                              final notifier =
-                                  ref.read(withdrawalProvider.notifier);
-
-                              if (withdrawalState.userBank.value != null) {
-                                await notifier.updateBank(
-                                  selectedBank!.code,
-                                  accountNumberController.text,
-                                  accountName,
-                                  selectedBank!.name,
-                                );
-                              } else {
-                                await notifier.createBank(
-                                  selectedBank!.code,
-                                  accountNumberController.text,
-                                  accountName,
-                                  selectedBank!.name,
-                                );
-                              }
-
-                              if (mounted) {
-                                Navigator.pop(context, true);
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: EdgeInsets.symmetric(vertical: 16.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: withdrawalState.isLoading
-                          ? SizedBox(
-                              height: 20.h,
-                              width: 20.w,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              withdrawalState.userBank.value != null
-                                  ? 'Update Bank Account'
-                                  : 'Save Bank Account',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                  );
-                },
               ),
             ],
           ),
         ),
+        const SizedBox(height: VinkolSpace.xxl),
+        VinkolFormField(
+          label: l10n.walletAccountNumber,
+          controller: _accountNumber,
+          enabled: _bank != null && !state.isLoading,
+          keyboardType: TextInputType.number,
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.digitsOnly,
+            if (_digits != null) LengthLimitingTextInputFormatter(_digits),
+          ],
+          hint: _digits == null ? null : l10n.walletAccountNumberHint(_digits!),
+          helper: _bank == null
+              ? l10n.walletSelectBankFirst
+              : (checking ? l10n.walletCheckingAccount : null),
+          error: refused ? l10n.walletAccountNotVerified : null,
+          trailing: checking
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: v.textTertiary),
+                )
+              : null,
+        ),
+        if (refused) ...<Widget>[
+          const SizedBox(height: VinkolSpace.md),
+          Text(
+            l10n.walletAccountNotVerifiedBody,
+            style: VinkolType.bodyS.copyWith(color: v.textTertiary),
+          ),
+        ],
+        if (verified != null) ...<Widget>[
+          const SizedBox(height: VinkolSpace.xxl),
+          Text(
+            l10n.walletAccountName,
+            style: VinkolType.label.copyWith(color: v.textSecondary),
+          ),
+          const SizedBox(height: VinkolSpace.labelToField),
+          VinkolRowGroup(
+            children: <VinkolRow>[
+              VinkolRow(
+                title: verified,
+                meta: l10n.walletAccountVerified,
+                icon: Icons.verified_outlined,
+                accentIcon: true,
+                titleMaxLines: 2,
+              ),
+            ],
+          ),
+        ],
+      ],
+      primaryAction: VinkolPrimaryButton(
+        label: replacing ? l10n.walletUpdateAccount : l10n.walletSaveAccount,
+        loading: state.isLoading,
+        onPressed: verified == null || state.isLoading
+            ? null
+            : () => _save(state, verified),
       ),
     );
   }

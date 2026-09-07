@@ -35,8 +35,8 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
     final userState = user?.currentState;
 
     // --- Stale Data Check ---
-    if (!forceRefresh && 
-        !_isDataStale() && 
+    if (!forceRefresh &&
+        !_isDataStale() &&
         state.hasValue &&
         _currentSearchQuery == (search ?? '') &&
         _currentTag == (tags)) {
@@ -45,7 +45,8 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
     }
 
     try {
-      logger.d('Fetching stores with user state: $userState, search: $search, tags: $tags, page: $page, limit: $limit, forceRefresh: $forceRefresh');
+      logger.d(
+          'Fetching stores with user state: $userState, search: $search, tags: $tags, page: $page, limit: $limit, forceRefresh: $forceRefresh');
       final response = await storeService.getStores(
         state: userState,
         search: search,
@@ -54,7 +55,8 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
         limit: limit,
       );
       _lastFetchedTime = DateTime.now();
-      logger.d('Stores fetched successfully. Number of items: ${response.stores.length}');
+      logger.d(
+          'Stores fetched successfully. Number of items: ${response.stores.length}');
       return response;
     } catch (e, st) {
       logger.e('Error fetching stores: $e\n$st');
@@ -73,7 +75,7 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
       final result = await _fetchStores(
         search: _currentSearchQuery,
         tags: _currentTag,
-          forceRefresh: true,
+        forceRefresh: true,
       );
       state = AsyncValue.data(result);
     } catch (e, st) {
@@ -81,12 +83,11 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
     }
   }
 
- 
   Future<void> filterStoresByTag(String? tag) async {
     if (_currentTag == tag && state.hasValue) {
       return;
     }
-    
+
     // Reset cache when tag changes to ensure fresh data
     _lastFetchedTime = null;
     _currentTag = tag;
@@ -141,11 +142,11 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
   }
 
   Future<void> loadMoreStores() async {
-    if (state is AsyncData<StoreResponse>) {
-    }
+    if (state is AsyncData<StoreResponse>) {}
   }
 }
 
-final storesViewModelProvider = AsyncNotifierProvider<StoresViewModel, StoreResponse>(
+final storesViewModelProvider =
+    AsyncNotifierProvider<StoresViewModel, StoreResponse>(
   StoresViewModel.new,
 );

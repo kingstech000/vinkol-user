@@ -1,312 +1,248 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Import Riverpod
-import 'package:starter_codes/core/services/navigation_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/provider/user_provider.dart';
-import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import 'package:starter_codes/widgets/modal/logout_modal.dart';
+import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/features/auth/model/user_model.dart';
+import 'package:starter_codes/features/profile/view/widget/profile_widgets.dart';
+import 'package:starter_codes/l10n/l10n.dart';
+import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
+import 'package:starter_codes/widgets/app_bar/large_title_app_bar.dart';
+import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
+import 'package:starter_codes/widgets/modal/logout_modal.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
-class ProfileScreen extends ConsumerStatefulWidget {
+/// **Profile** — the fifth pod destination, and the app's own menu.
+///
+/// The structure is the one the app already had: identity, then Account, then App, then the
+/// way out. What changed is what is on it. The gradient hero with a 100pt bordered avatar and
+/// a `state | role` pill is gone: role is an internal field a customer has no use for, and a
+/// screen that opens with a coloured slab spends the one saturated object Midnight allows
+/// (D-07) on a decoration rather than on something live. Profile has nothing live, so it has
+/// no saturated object at all.
+///
+/// Every row here goes somewhere that exists. Nothing promises saved addresses, payment
+/// methods, a notifications inbox, profile stats or a rating — none has an endpoint (D-10).
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final v = context.vinkol;
+    final l10n = context.l10n;
     final User? user = ref.watch(userProvider);
+    final bool isGuest = user == null || GuestModeUtils.isGuestMode();
 
-    ImageProvider<Object>? profileImageProvider;
+    void go(String route) => NavigationService.instance.navigateTo(route);
 
-    if (user?.avatar?.imageUrl != null && user!.avatar!.imageUrl.isNotEmpty) {
-      profileImageProvider = NetworkImage(user.avatar!.imageUrl);
-    } else {
-      profileImageProvider = null;
+    /// Rows that need an account. A guest sees them — hiding them would leave the screen
+    /// looking broken rather than locked — and tapping one explains why it is unavailable.
+    void goAuthed(String route) {
+      final allowed = !isGuest ||
+          GuestModeUtils.requireAuthForAction(
+            context,
+            title: l10n.profileSignInRequired,
+            message: l10n.profileSignInRequiredBody,
+          );
+      if (allowed) go(route);
     }
-    
-    final String displayUserName = user != null
-        ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim().isNotEmpty
-            ? '${user.firstname ?? ''} ${user.lastname ?? ''}'.trim()
-            : user.email
-        : 'Guest User';
-
-    final String displayUserRole = user != null
-        ? '${user.state ?? ''} | ${user.role}'
-            : 'Not Logged In';
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: const EmptyAppBar(),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(24.r),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary,
-                      AppColors.primary.withOpacity(0.8),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 100.r,
-                        height: 100.r,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 4.r,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: profileImageProvider != null
-                            ? ClipOval(
-                                child: Image(
-                                  image: profileImageProvider!,
-                                  width: 100.r,
-                                  height: 100.r,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(
-                                      Icons.person,
-                                      size: 50.w,
-                                      color: AppColors.primary,
-                                    );
-                                  },
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Icon(
-                                      Icons.person,
-                                      size: 50.w,
-                                      color: AppColors.primary,
-                                    );
-                                  },
-                                ),
-                              )
-                            : Icon(
-                                Icons.person,
-                                size: 50.w,
-                                color: AppColors.primary,
-                              ),
-                      ),
-                    ),
-                    Gap.h20,
-                    Center(
-                      child: Column(
-                        children: [
-                          AppText.h3(
-                            displayUserName,
-                            fontWeight: FontWeight.bold,
-                            textAlign: TextAlign.center,
-                            color: Colors.white,
-                          ),
-                          Gap.h8,
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16.r, vertical: 8.r),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: AppText.body(
-                              displayUserRole,
-                              color: Colors.white,
-                              fontSize: 14.sp,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+      backgroundColor: v.canvas,
+      appBar: VinkolLargeTitleBar(
+        title: l10n.profileTitle,
+        trailing: VinkolIconButton(
+          icon: Icons.tune,
+          semanticLabel: l10n.profileSettings,
+          onTap: () => go(NavigatorRoutes.settingsScreen),
+        ),
+      ),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(
+          VinkolSpace.pageMargin,
+          VinkolSpace.xs,
+          VinkolSpace.pageMargin,
+          VinkolPod.bodyInsetOf(context),
+        ),
+        children: <Widget>[
+          _IdentityCard(user: user, isGuest: isGuest),
+          VinkolSectionHeader(label: l10n.profileAccountSection),
+          VinkolRowGroup(
+            children: <VinkolRow>[
+              VinkolRow(
+                icon: Icons.person_outline,
+                title: l10n.profilePersonalInfo,
+                meta: l10n.profilePersonalInfoMeta,
+                onTap: () => goAuthed(NavigatorRoutes.personalInfoScreen),
               ),
-              Gap.h32,
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _ProfileOption(
-                      icon: Icons.person_outline,
-                      title: 'Personal Info',
-                      subtitle: 'Manage your personal information',
-                      onTap: () {
-                        NavigationService.instance
-                            .navigateTo(NavigatorRoutes.personalInfoScreen);
-                      },
-                    ),
-                    _ProfileOption(
-                      icon: Icons.security,
-                      title: 'Security',
-                      subtitle: 'Password and security settings',
-                      onTap: () {
-                        NavigationService.instance
-                            .navigateTo(NavigatorRoutes.securityScreen);
-                      },
-                    ),
-                    _ProfileOption(
-                      icon: Icons.settings_outlined,
-                      title: 'Settings',
-                      subtitle: 'App preferences and configuration',
-                      onTap: () {
-                        NavigationService.instance
-                            .navigateTo(NavigatorRoutes.settingsScreen);
-                      },
-                    ),
-                    _ProfileOption(
-                      icon: Icons.help_outline,
-                      title: 'Support & Help',
-                      subtitle: 'Get help and contact support',
-                      onTap: () {
-                        NavigationService.instance
-                            .navigateTo(NavigatorRoutes.supportAndHelpScreen);
-                      },
-                    ),
-                    _ProfileOption(
-                      icon: Icons.logout,
-                      title: 'Log Out',
-                      subtitle: 'Sign out of your account',
-                      onTap: () {
-                        showLogoutModal(context);
-                      },
-                      isDestructive: true,
-                    ),
-                  ],
-                ),
+              VinkolRow(
+                icon: Icons.lock_outline,
+                title: l10n.profileSecurity,
+                meta: l10n.profileSecurityMeta,
+                onTap: () => goAuthed(NavigatorRoutes.securityScreen),
+              ),
+              VinkolRow(
+                icon: Icons.account_balance_outlined,
+                title: l10n.profileBankAccount,
+                meta: l10n.profileBankAccountMeta,
+                onTap: () => goAuthed(NavigatorRoutes.bankAccountScreen),
               ),
             ],
           ),
-        ),
+          VinkolSectionHeader(label: l10n.profileAppSection),
+          VinkolRowGroup(
+            children: <VinkolRow>[
+              VinkolRow(
+                icon: Icons.tune,
+                title: l10n.profileSettings,
+                meta: l10n.profileSettingsMeta,
+                onTap: () => go(NavigatorRoutes.settingsScreen),
+              ),
+              VinkolRow(
+                icon: Icons.receipt_long_outlined,
+                title: l10n.profileDownloadReport,
+                meta: l10n.profileDownloadReportMeta,
+                onTap: () => goAuthed(NavigatorRoutes.downloadReportScreen),
+              ),
+              VinkolRow(
+                icon: Icons.support_agent_outlined,
+                title: l10n.profileSupport,
+                meta: l10n.profileSupportMeta,
+                onTap: () => go(NavigatorRoutes.supportAndHelpScreen),
+              ),
+            ],
+          ),
+          const SizedBox(height: VinkolSpace.xxl),
+          if (isGuest)
+            VinkolPrimaryButton(
+              label: l10n.profileSignIn,
+              onPressed: () async {
+                await GuestModeUtils.clearGuestMode();
+                NavigationService.instance
+                    .navigateToReplaceAll(NavigatorRoutes.authChoiceScreen);
+              },
+            )
+          else
+            VinkolPrimaryButton(
+              label: l10n.profileLogOut,
+              tone: VinkolButtonTone.danger,
+              onPressed: () => showLogoutModal(context),
+            ),
+          const SizedBox(height: VinkolSpace.lg),
+          const Center(child: _VersionLine()),
+        ],
       ),
     );
   }
 }
 
-class _ProfileOption extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final VoidCallback onTap;
-  final bool isDestructive;
+/// Who is signed in. A guest gets the same block with the reason they are seeing less.
+class _IdentityCard extends StatelessWidget {
+  const _IdentityCard({required this.user, required this.isGuest});
 
-  const _ProfileOption({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    required this.onTap,
-    this.isDestructive = false,
-  });
+  final User? user;
+  final bool isGuest;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.r, vertical: 4.r),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: isDestructive
-                ? Colors.red.withOpacity(0.2)
-                : Colors.grey.withOpacity(0.1),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(10.r),
-              decoration: BoxDecoration(
-                color: isDestructive
-                    ? Colors.red.withOpacity(0.1)
-                    : AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(icon,
-                  color: isDestructive ? Colors.red : AppColors.primary,
-                  size: 24.w),
-            ),
-            Gap.w16,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppText.body(
-                    title,
-                    color: isDestructive ? Colors.red : AppColors.black,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  if (subtitle != null) ...[
-                    Gap.h4,
-                    AppText.caption(
-                      subtitle!,
-                      color: Colors.grey.shade600,
-                      fontSize: 12.sp,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios,
-                color: isDestructive
-                    ? Colors.red.withOpacity(0.6)
-                    : Colors.grey.withOpacity(0.6),
-                size: 18.w),
-          ],
-        ),
+    final v = context.vinkol;
+    final l10n = context.l10n;
+
+    // A profile with no name yet falls back to the email rather than to "Guest User" — the
+    // account is real, it is just incomplete, and calling it a guest is wrong.
+    final String fullName = <String?>[user?.firstname, user?.lastname]
+        .whereType<String>()
+        .map((String s) => s.trim())
+        .where((String s) => s.isNotEmpty)
+        .join(' ');
+
+    final String name = isGuest
+        ? l10n.profileGuestName
+        : (fullName.isNotEmpty
+            ? fullName
+            : (user?.email ?? l10n.profileGuestName));
+
+    final String meta = isGuest ? l10n.profileGuestBody : (user?.email ?? '');
+
+    return Container(
+      padding: const EdgeInsets.all(VinkolSpace.lg),
+      decoration: BoxDecoration(
+        color: v.surface,
+        borderRadius: VinkolRadius.brLg,
+        border: VinkolElevation.hairline(v),
+        boxShadow: VinkolElevation.e1(v),
       ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          ProfileAvatar(
+            initials: isGuest
+                ? '–'
+                : profileInitials(
+                    first: user?.firstname,
+                    last: user?.lastname,
+                    email: user?.email,
+                  ),
+            imageUrl: isGuest ? null : user?.avatar?.imageUrl,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  name,
+                  style: VinkolType.h3.copyWith(color: v.textPrimary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  meta,
+                  style: VinkolType.bodyS.copyWith(color: v.textTertiary),
+                  // The guest line is a sentence; the email is one line and elides.
+                  maxLines: isGuest ? 3 : 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (!isGuest) ...<Widget>[
+            const SizedBox(width: VinkolSpace.md),
+            VinkolIconButton(
+              icon: Icons.chevron_right,
+              semanticLabel: l10n.profilePersonalInfo,
+              onTap: () => NavigationService.instance
+                  .navigateTo(NavigatorRoutes.personalInfoScreen),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The build actually running, read from the bundle rather than a constant that goes stale
+/// the next time someone bumps `pubspec.yaml`. It is the first thing support asks for.
+class _VersionLine extends StatelessWidget {
+  const _VersionLine();
+
+  @override
+  Widget build(BuildContext context) {
+    final v = context.vinkol;
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (BuildContext context, AsyncSnapshot<PackageInfo> snapshot) {
+        final PackageInfo? info = snapshot.data;
+        if (info == null) return const SizedBox(height: 16);
+        return Text(
+          context.l10n.profileVersion('${info.version} (${info.buildNumber})'),
+          style: VinkolType.caption.copyWith(color: v.textTertiary),
+        );
+      },
     );
   }
 }

@@ -1,61 +1,43 @@
-
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_states.dart';
 
+/// The legacy empty-state widget, re-pointed at [VinkolStateView] (decision D-03).
+///
+/// The old version was one 120pt brand-tinted circle, an 80pt icon and a line of grey text,
+/// used identically everywhere, with **no action**. That is a dead end: it tells a user the
+/// screen is empty, which they can see, and offers nothing to do about it.
+///
+/// The API is kept so existing call sites compile, but it is deliberately narrow now:
+/// [title] and [action] have no defaults worth guessing, so a caller that has not decided
+/// what this particular emptiness means gets a compile error rather than a generic screen.
+/// Prefer constructing [VinkolStateView.empty] directly in new code.
+@Deprecated(
+  'Use VinkolStateView.empty, which requires its own copy and an action. '
+  'EmptyContent exists only to keep older call sites compiling.',
+)
 class EmptyContent extends StatelessWidget {
   const EmptyContent({
     super.key,
-    this.contentText = '',
-    this.icon = Icons.inbox,
+    required this.title,
+    required this.contentText,
+    required this.actionLabel,
+    required this.onAction,
+    this.icon = Icons.inbox_outlined,
   });
+
+  final String title;
   final String contentText;
+  final String actionLabel;
+  final VoidCallback onAction;
   final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Option 1: Using CircleAvatar (recommended for simplicity)
-          CircleAvatar(
-            radius: 60.r, // Adjust radius as needed
-            backgroundColor: AppColors.primary.withOpacity(0.1), // Light background color
-            child: Icon(
-              icon,
-              size: 80.r, // Icon size should be smaller than radius
-              color: AppColors.primary,
-            ),
-          ),
-
-          // Option 2: Using ClipOval (if you need more custom control over the icon background)
-          // ClipOval(
-          //   child: Container(
-          //     padding: EdgeInsets.all(10.r), // Padding around the icon
-          //     decoration: BoxDecoration(
-          //       color: AppColors.primary.withOpacity(0.1), // Light background color
-          //       shape: BoxShape.circle,
-          //     ),
-          //     child: Icon(
-          //       icon,
-          //       size: 30.r,
-          //       color: AppColors.primary,
-          //     ),
-          //   ),
-          // ),
-
-          Gap.h10,
-          AppText.caption(
-            contentText,
-            fontSize: 14,
-            centered: true,
-            color: AppColors.primary,
-          )
-        ],
-      ),
+    return VinkolStateView.empty(
+      icon: icon,
+      title: title,
+      message: contentText,
+      action: VinkolStateAction(label: actionLabel, onPressed: onAction),
     );
   }
 }

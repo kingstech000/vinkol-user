@@ -1,48 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/l10n/l10n.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
+/// The end of the reset flow.
+///
+/// On the auth archetype like every other screen in the flow, so the mark, the centred
+/// heading and the one saturated action stay in the same places they have been for the last
+/// four screens. What stands in for the fields is a single tick — the only screen in auth
+/// with nothing to fill in.
 class PasswordResetSuccessScreen extends StatelessWidget {
   const PasswordResetSuccessScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.black,
-                child: Icon(
-                  Icons.check,
-                  color: Colors.white,
-                  size: 60,
-                ),
+    final v = context.vinkol;
+    final l10n = context.l10n;
+
+    return VinkolAuthScaffold(
+      title: l10n.authPasswordSavedTitle,
+      body: l10n.authPasswordSavedBody,
+      fields: <Widget>[
+        Center(
+          child: Semantics(
+            excludeSemantics: true,
+            child: Container(
+              width: 72,
+              height: 72,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: v.successGround,
+                shape: BoxShape.circle,
+                border: Border.fromBorderSide(BorderSide(color: v.success)),
               ),
-              Gap.h32,
-              AppText.h3('Password Reset Successfully'),
-              Gap.h32,
-              SizedBox(
-                width: double.infinity,
-                child: AppButton.primary(
-                  title: 'Back to Login',
-                  onTap: () {
-                    // TODO: Implement navigation to login screen
-                    NavigationService.instance
-                        .navigateTo(NavigatorRoutes.loginScreen);
-                  },
-                ),
-              ),
-            ],
+              child: Icon(Icons.check, size: 34, color: v.success),
+            ),
           ),
         ),
+      ],
+      primaryAction: VinkolPrimaryButton(
+        label: l10n.authBackToLogin,
+        onPressed: () => NavigationService.instance
+            .navigateToReplaceAll(NavigatorRoutes.loginScreen),
       ),
     );
   }

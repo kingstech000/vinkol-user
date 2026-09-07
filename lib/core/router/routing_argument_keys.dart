@@ -1,2 +1,1 @@
-class RoutingArgumentKey {
-}
+class RoutingArgumentKey {}

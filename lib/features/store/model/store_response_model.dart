@@ -24,8 +24,10 @@ class StoreResponse {
               .toList() ??
           [], // Provide an empty list if 'fetchedData' is null or not a List
       totalCount: data?['total'] as int? ?? 0, // Map 'total' to 'totalCount'
-      currentPage: data?['page_no'] as int? ?? 0, // Map 'page_no' to 'currentPage'
-      totalPages: data?['no_of_pages'] as int? ?? 0, // Map 'no_of_pages' to 'totalPages'
+      currentPage:
+          data?['page_no'] as int? ?? 0, // Map 'page_no' to 'currentPage'
+      totalPages: data?['no_of_pages'] as int? ??
+          0, // Map 'no_of_pages' to 'totalPages'
     );
   }
 
@@ -59,7 +61,8 @@ class StoreResponse {
 class SingleStoreResponse {
   final bool success;
   final String message;
-  final SingleStoreData data; // A new class to hold the nested 'store' and 'storeProducts'
+  final SingleStoreData
+      data; // A new class to hold the nested 'store' and 'storeProducts'
 
   SingleStoreResponse({
     required this.success,
@@ -71,19 +74,30 @@ class SingleStoreResponse {
     // Safely cast and provide defaults
     final bool success = json['success'] as bool? ?? false;
     final String message = json['message'] as String? ?? 'Unknown message';
-    final Map<String, dynamic>? dataJson = json['data'] as Map<String, dynamic>?;
+    final Map<String, dynamic>? dataJson =
+        json['data'] as Map<String, dynamic>?;
 
     return SingleStoreResponse(
       success: success,
       message: message,
       // If dataJson is null, we need to provide a default SingleStoreData instance
-      data: dataJson != null ? SingleStoreData.fromJson(dataJson) : SingleStoreData(
-        store: Store( // Provide a default empty or invalid Store
-          id: '', name: 'N/A', email: 'N/A', isEmailVerified: false, role: '', createdAt: DateTime.now().toString(), updatedAt: DateTime.now().toString(),
-          address: '', avatar: null, bio: '', lat: 0.0, lga: '', lng: 0.0, phone: '', state: '',
-        ),
-        storeProducts: [], // Default to an empty list of products
-      ),
+      data: dataJson != null
+          ? SingleStoreData.fromJson(dataJson)
+          : SingleStoreData(
+              store: Store(
+                // Provide a default empty or invalid Store
+                id: '',
+                name: 'N/A',
+                email: 'N/A',
+                isEmailVerified: false,
+                role: '',
+                createdAt: DateTime.now().toString(),
+                updatedAt: DateTime.now().toString(),
+                address: '', avatar: null, bio: '', lat: 0.0, lga: '', lng: 0.0,
+                phone: '', state: '',
+              ),
+              storeProducts: [], // Default to an empty list of products
+            ),
     );
   }
 
@@ -120,14 +134,31 @@ class SingleStoreData {
 
   factory SingleStoreData.fromJson(Map<String, dynamic> json) {
     // Safely cast and provide defaults for nested objects/lists
-    final Map<String, dynamic>? storeJson = json['store'] as Map<String, dynamic>?;
-    final List<dynamic>? storeProductsList = json['storeProducts'] as List<dynamic>?;
+    final Map<String, dynamic>? storeJson =
+        json['store'] as Map<String, dynamic>?;
+    final List<dynamic>? storeProductsList =
+        json['storeProducts'] as List<dynamic>?;
 
     return SingleStoreData(
-      store: storeJson != null ? Store.fromJson(storeJson) : Store(
-        id: '', name: 'N/A', email: 'N/A', isEmailVerified: false, role: '', createdAt: DateTime.now().toString(), updatedAt: DateTime.now().toString(),
-        address: '', avatar: null, bio: '', lat: 0.0, lga: '', lng: 0.0, phone: '', state: '',
-      ), // Provide a default Store if 'store' is null
+      store: storeJson != null
+          ? Store.fromJson(storeJson)
+          : Store(
+              id: '',
+              name: 'N/A',
+              email: 'N/A',
+              isEmailVerified: false,
+              role: '',
+              createdAt: DateTime.now().toString(),
+              updatedAt: DateTime.now().toString(),
+              address: '',
+              avatar: null,
+              bio: '',
+              lat: 0.0,
+              lga: '',
+              lng: 0.0,
+              phone: '',
+              state: '',
+            ), // Provide a default Store if 'store' is null
       storeProducts: storeProductsList
               ?.map((e) => StoreProduct.fromJson(e as Map<String, dynamic>))
               .toList() ??

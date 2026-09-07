@@ -1,0 +1,11 @@
+# Localization codegen. Quebec's Charter of the French Language makes French a legal
+# requirement for consumer-facing commercial content, so `fr` is a shipping locale, not a
+# nice-to-have (.claude/design/08-backend-gaps.md).
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false
+# Fail loudly on a key that exists in English and not in French, rather than silently
+# falling back to English in a market where that is a compliance problem.
+untranslated-messages-file: l10n-untranslated.json

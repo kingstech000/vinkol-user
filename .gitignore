@@ -45,3 +45,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 prototype/node_modules/
+l10n-untranslated.json

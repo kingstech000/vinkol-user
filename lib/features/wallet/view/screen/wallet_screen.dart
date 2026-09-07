@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:starter_codes/core/extensions/double_extension.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/core/utils/textstyles.dart';
-import 'package:starter_codes/features/wallet/view/widget/fund_wallet_sheet.dart';
-import '../../view_model/wallet_history_view_model.dart';
-import '../../data/wallet_service.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import 'package:starter_codes/core/utils/network_client.dart';
-import 'package:starter_codes/core/utils/app_logger.dart';
-import '../../model/payment_history_model.dart';
-import '../../view_model/withdrawal_view_model.dart';
-import '../widget/withdrawal_item.dart';
-import 'withdraw_screen.dart';
-import 'transaction_detail_screen.dart';
+import 'package:starter_codes/core/design/design.dart';
+import 'package:starter_codes/features/wallet/view/screen/fund_wallet_screen.dart';
+import 'package:starter_codes/features/wallet/view/screen/withdraw_screen.dart';
+import 'package:starter_codes/features/wallet/view/widget/payment_history_tab.dart';
+import 'package:starter_codes/features/wallet/view/widget/wallet_balance_hero.dart';
+import 'package:starter_codes/features/wallet/view/widget/withdrawal_history_tab.dart';
+import 'package:starter_codes/features/wallet/view_model/wallet_history_view_model.dart';
+import 'package:starter_codes/features/wallet/view_model/withdrawal_view_model.dart';
+import 'package:starter_codes/l10n/l10n.dart';
+import 'package:starter_codes/widgets/vinkol/vinkol_components.dart';
 
-final walletServiceProvider = Provider((ref) {
-  return WalletService(NetworkClient(), const AppLogger(WalletService));
-});
-
+/// The wallet: one balance, and the history of everything that moved it.
+///
+/// The structure the app already had is kept — balance, then a Payments / Withdrawals split —
+/// because the two lists answer different questions ("what have I spent" and "has my money
+/// reached my bank") and come from different endpoints.
+///
+/// The balance scrolls away with the content and the tabs pin under it, so a long history
+/// reads without the hero eating a third of a small screen.
 class WalletHistoryScreen extends ConsumerStatefulWidget {
   const WalletHistoryScreen({super.key});
 
@@ -30,17 +28,14 @@ class WalletHistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(walletOverviewViewModelProvider.notifier).refreshData();
-      ref.read(withdrawalProvider.notifier).refreshData();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
   }
 
   @override
@@ -49,597 +44,158 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
     super.dispose();
   }
 
+  Future<void> _refresh() => Future.wait<void>(<Future<void>>[
+        ref.read(walletOverviewViewModelProvider.notifier).refreshData(),
+        ref.read(withdrawalProvider.notifier).refreshData(),
+      ]);
+
+  Future<void> _addMoney() async {
+    final bool? funded = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(builder: (_) => const FundWalletScreen()),
+    );
+    if (funded == true && mounted) await _refresh();
+  }
+
+  Future<void> _withdraw() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => const WithdrawScreen()),
+    );
+    if (mounted) await _refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final walletOverviewState = ref.watch(walletOverviewViewModelProvider);
+    final v = context.vinkol;
+    final l10n = context.l10n;
+    final WalletOverviewState overview =
+        ref.watch(walletOverviewViewModelProvider);
+    final WithdrawalState withdrawals = ref.watch(withdrawalProvider);
+    // Measured, not guessed: the pinned header has to grow with the user's text-size setting
+    // or the tab labels clip at 2.0x (D-04). The track is a 22pt-taller label inside 4pt of
+    // padding, plus the 8pt gap under it.
+    final double tabsExtent =
+        MediaQuery.textScalerOf(context).scale(VinkolType.label.fontSize!) +
+            22 +
+            VinkolSpace.xs * 2 +
+            VinkolSpace.sm;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        toolbarHeight: 80.h,
-        scrolledUnderElevation: 0,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Gap.h12,
-                    AppText.h1(
-                      'Wallet',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    Gap.h8,
-                    AppText.caption(
-                      'Manage your wallet and transactions',
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await Future.wait<void>([
-            ref.read(walletOverviewViewModelProvider.notifier).refreshData(),
-            ref.read(withdrawalProvider.notifier).refreshData(),
-          ]);
-        },
-        child: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
+      backgroundColor: v.canvas,
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          color: v.brand,
+          backgroundColor: v.surface,
+          onRefresh: _refresh,
+          child: NestedScrollView(
+            headerSliverBuilder: (BuildContext context, bool _) => <Widget>[
               SliverToBoxAdapter(
-                child: Container(
-                  margin:
-                      EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    VinkolSpace.pageMargin,
+                    VinkolSpace.sm,
+                    VinkolSpace.pageMargin,
+                    0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        l10n.walletTitle,
+                        style: VinkolType.h1.copyWith(color: v.textPrimary),
                       ),
+                      const SizedBox(height: VinkolSpace.lg),
+                      WalletBalanceHero(
+                        balance: overview.walletBalance,
+                        onAddMoney: _addMoney,
+                        onWithdraw: _withdraw,
+                      ),
+                      VinkolSectionHeader(label: l10n.walletHistory),
                     ],
                   ),
-                  child: (() {
-                    final wb = walletOverviewState.walletBalance;
-                    if (wb is AsyncData<double>) {
-                      return _buildWalletHeader(wb.value);
-                    }
-                    if (wb is AsyncLoading<double>) {
-                      return _buildWalletHeaderLoading();
-                    }
-                    if (wb is AsyncError<double>) return _buildErrorStats();
-                    return const SizedBox.shrink();
-                  }()),
                 ),
               ),
               SliverPersistentHeader(
-                delegate: _SliverAppBarDelegate(
-                  TabBar(
+                pinned: true,
+                delegate: _PinnedTabs(
+                  extent: tabsExtent,
+                  background: v.canvas,
+                  child: VinkolTabBar(
                     controller: _tabController,
-                    labelColor: AppColors.blue,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: AppColors.blue,
-                    labelStyle: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    tabs: const [
-                      Tab(text: 'Payments'),
-                      Tab(text: 'Withdrawals'),
+                    labels: <String>[
+                      l10n.walletTabPayments,
+                      l10n.walletTabWithdrawals,
                     ],
                   ),
                 ),
-                pinned: true,
-              ),
-            ];
-          },
-          body: Container(
-            color: Colors.white,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildPaymentHistoryTab(walletOverviewState),
-                _buildWithdrawalHistoryTab(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentHistoryTab(dynamic walletOverviewState) {
-    final historyState = walletOverviewState.withdrawalHistory;
-
-    if (historyState is AsyncLoading<List<PaymentHistory>>) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.blue),
-      );
-    }
-
-    if (historyState is AsyncError<List<PaymentHistory>>) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(32.w),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
-              Gap.h16,
-              Text(
-                'Error loading history',
-                style: TextStyle(fontSize: 16.sp, color: Colors.grey.shade700),
               ),
             ],
-          ),
-        ),
-      );
-    }
-
-    if (historyState is AsyncData<List<PaymentHistory>>) {
-      final history = historyState.value;
-      if (history.isEmpty) {
-        return Center(
-          child: Padding(
-            padding: EdgeInsets.all(32.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.history, size: 64.sp, color: Colors.grey.shade300),
-                Gap.h16,
-                Text(
-                  'No payment history',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
+            body: Padding(
+              padding: const EdgeInsets.only(top: VinkolSpace.md),
+              child: TabBarView(
+                controller: _tabController,
+                children: <Widget>[
+                  PaymentHistoryTab(
+                    history: overview.withdrawalHistory,
+                    onRetry: _refresh,
+                    onAddMoney: _addMoney,
                   ),
-                ),
-                Gap.h8,
-                Text(
-                  'Your payment transactions will appear here',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey.shade500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-
-      return ListView.separated(
-        padding: EdgeInsets.all(16.w),
-        itemCount: history.length,
-        separatorBuilder: (context, index) => Gap.h12,
-        itemBuilder: (context, index) {
-          final payment = history[index];
-          final isDebit = payment.type == 'Debit';
-          final dateFormat = payment.createdAt.toLocal();
-          final formattedDate =
-              '${dateFormat.day}/${dateFormat.month}/${dateFormat.year}';
-          final formattedTime =
-              '${dateFormat.hour.toString().padLeft(2, '0')}:${dateFormat.minute.toString().padLeft(2, '0')}';
-
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        TransactionDetailScreen(transaction: payment),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(12.r),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: Colors.grey.shade200, width: 1),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44.w,
-                      height: 44.h,
-                      decoration: BoxDecoration(
-                        color:
-                            isDebit ? Colors.red.shade50 : Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Icon(
-                        isDebit ? Icons.arrow_downward : Icons.arrow_upward,
-                        color: isDebit
-                            ? Colors.red.shade600
-                            : Colors.green.shade600,
-                        size: 20.sp,
-                      ),
-                    ),
-                    Gap.w12,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            payment.narration.isNotEmpty
-                                ? payment.narration
-                                : (isDebit ? 'Payment' : 'Funding'),
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                          Gap.h4,
-                          Text(
-                            '$formattedDate at $formattedTime',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${isDebit ? '-' : '+'}${payment.amount.toMoney()}',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: isDebit
-                                ? Colors.red.shade600
-                                : Colors.green.shade600,
-                          ),
-                        ),
-                        Gap.h4,
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: payment.status.toLowerCase() ==
-                                        'successful' ||
-                                    payment.status.toLowerCase() == 'success'
-                                ? Colors.green.shade50
-                                : payment.status.toLowerCase() == 'pending'
-                                    ? Colors.orange.shade50
-                                    : Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(4.r),
-                          ),
-                          child: Text(
-                            payment.status.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9.sp,
-                              fontWeight: FontWeight.w600,
-                              color: payment.status.toLowerCase() ==
-                                          'successful' ||
-                                      payment.status.toLowerCase() == 'success'
-                                  ? Colors.green.shade700
-                                  : payment.status.toLowerCase() == 'pending'
-                                      ? Colors.orange.shade700
-                                      : Colors.red.shade700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    }
-
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildWithdrawalHistoryTab() {
-    return Consumer(
-      builder: (context, ref, _) {
-        final withdrawalState = ref.watch(withdrawalProvider);
-        final wh = withdrawalState.withdrawalHistory;
-
-        if (wh is AsyncLoading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.blue),
-          );
-        }
-
-        if (wh is AsyncError) {
-          return Center(
-            child: Padding(
-              padding: EdgeInsets.all(32.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
-                  Gap.h16,
-                  Text(
-                    'Error loading withdrawals',
-                    style:
-                        TextStyle(fontSize: 16.sp, color: Colors.grey.shade700),
+                  WithdrawalHistoryTab(
+                    history: withdrawals.withdrawalHistory,
+                    onRetry: _refresh,
+                    onWithdraw: _withdraw,
                   ),
                 ],
               ),
             ),
-          );
-        }
-
-        if (wh is AsyncData) {
-          final resp = wh.value;
-          final list = resp?.data ?? [];
-          if (list.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(32.w),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.account_balance_wallet,
-                        size: 64.sp, color: Colors.grey.shade300),
-                    Gap.h16,
-                    Text(
-                      'No withdrawals yet',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    Gap.h8,
-                    Text(
-                      'Your withdrawal requests will appear here',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: Colors.grey.shade500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: EdgeInsets.all(16.w),
-            itemCount: list.length,
-            separatorBuilder: (context, index) => Gap.h12,
-            itemBuilder: (context, index) {
-              return WithdrawalItem(withdrawal: list[index]);
-            },
-          );
-        }
-
-        return const SizedBox.shrink();
-      },
-    );
-  }
-
-  Widget _buildWalletHeader(double balance) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Wallet Balance',
-              style: headingStyle5,
-            ),
-            IconButton(
-              icon: Icon(Icons.refresh, size: 30.sp, color: AppColors.blue),
-              onPressed: () {
-                ref
-                    .read(walletOverviewViewModelProvider.notifier)
-                    .refreshData();
-                ref.read(withdrawalProvider.notifier).refreshData();
-              },
-              padding: EdgeInsets.zero,
-              constraints: BoxConstraints(),
-            ),
-          ],
-        ),
-        Gap.h8,
-        Text(
-          balance.toMoney(),
-          style: TextStyle(
-            fontSize: 28.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            letterSpacing: -0.5,
           ),
         ),
-        Gap.h20,
-        Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => showFundDialog(context, ref, mounted),
-                borderRadius: BorderRadius.circular(12.r),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [AppColors.blue, AppColors.blue.withOpacity(0.8)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.blue.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 16.h,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.add_circle_outline,
-                          color: Colors.white,
-                          size: 20.sp,
-                        ),
-                        Gap.w6,
-                        Flexible(
-                          child: Text(
-                            'Fund Wallet',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Gap.w12,
-            Expanded(
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const WithdrawScreen(),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(12.r),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(color: AppColors.blue, width: 2),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 16.h,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.send_rounded,
-                          color: AppColors.blue,
-                          size: 22.sp,
-                        ),
-                        Gap.w8,
-                        Text(
-                          'Withdraw',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.blue,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWalletHeaderLoading() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Wallet Balance',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 12),
-        const SizedBox(
-          child: CircularProgressIndicator(
-            color: AppColors.blue,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildErrorStats() {
-    return Center(
-      child: Text(
-        'Error loading balance',
-        style: TextStyle(color: Colors.grey.shade600),
       ),
     );
   }
 }
 
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate(this._tabBar);
+/// Pins the tab bar under the balance. It carries the canvas with it so rows scrolling
+/// underneath do not show through.
+class _PinnedTabs extends SliverPersistentHeaderDelegate {
+  const _PinnedTabs({
+    required this.child,
+    required this.background,
+    required this.extent,
+  });
 
-  final TabBar _tabBar;
+  final Widget child;
+  final Color background;
+
+  /// Measured against the active text scale by the caller — a sliver delegate has no context
+  /// of its own to measure with.
+  final double extent;
 
   @override
-  double get minExtent => _tabBar.preferredSize.height;
+  double get minExtent => extent;
+
   @override
-  double get maxExtent => _tabBar.preferredSize.height;
+  double get maxExtent => extent;
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
-      child: _tabBar,
+      color: background,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.fromLTRB(
+        VinkolSpace.pageMargin,
+        0,
+        VinkolSpace.pageMargin,
+        VinkolSpace.sm,
+      ),
+      child: child,
     );
   }
 
   @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
-  }
+  bool shouldRebuild(_PinnedTabs oldDelegate) =>
+      oldDelegate.child != child ||
+      oldDelegate.background != background ||
+      oldDelegate.extent != extent;
 }

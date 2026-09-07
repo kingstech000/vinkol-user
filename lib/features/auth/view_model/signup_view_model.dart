@@ -14,6 +14,7 @@ import 'package:starter_codes/widgets/text_action_modal.dart'; // Your text_acti
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 
 class SignUpViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -57,7 +58,7 @@ class SignUpViewModel extends BaseViewModel {
         context,
         onPressed: () => {},
         dialogText: e.message,
-        buttonText: "Try Again",
+        buttonText: context.l10n.commonTryAgain,
       );
     }
   }

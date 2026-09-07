@@ -11,6 +11,7 @@ import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart'; // Import your providers (should contain resetEmailProvider and resetPasswordProvider)
 import 'package:starter_codes/widgets/text_action_modal.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 
 class SetNewPasswordViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -48,7 +49,7 @@ class SetNewPasswordViewModel extends BaseViewModel {
         onPressed: () =>
             NavigationService.instance.goBack(), // Or just close dialog
         dialogText: 'Passwords do not match. Please re-enter.',
-        buttonText: "Okay",
+        buttonText: context.l10n.authOkay,
       );
       return;
     }
@@ -66,7 +67,7 @@ class SetNewPasswordViewModel extends BaseViewModel {
         onPressed: () => NavigationService.instance
             .navigateToReplace(NavigatorRoutes.resetPasswordScreen),
         dialogText: 'OTP not found. Please restart the process.',
-        buttonText: "Restart",
+        buttonText: context.l10n.authRestart,
       );
       return;
     }
@@ -97,7 +98,7 @@ class SetNewPasswordViewModel extends BaseViewModel {
         onPressed: () =>
             NavigationService.instance.goBack(), // Or simply close the dialog
         dialogText: e.message,
-        buttonText: "Try Again",
+        buttonText: context.l10n.commonTryAgain,
       );
     }
   }

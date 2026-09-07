@@ -22,22 +22,23 @@ class SplashViewModel extends BaseViewModel {
     try {
       changeState(const ViewModelState.busy());
 
-      // Get onboarding status
+      // Has the user been through first-run yet? First run is the country picker:
+      // currency, tax, address shape and phone format have to be settled before a
+      // user sees a price.
       bool isOnBoarded = await localCache.isOnBoarded();
       _logger.i('=== SPLASH SCREEN DEBUG ===');
       _logger.i('isOnBoarded: $isOnBoarded');
 
-      // If not onboarded, go to onboarding
       if (!isOnBoarded) {
-        _logger.i('User not onboarded. Redirecting to onboarding screen.');
+        _logger.i('First run. Redirecting to the country picker.');
         changeState(const ViewModelState.idle());
         _navigationService
-            .navigateToReplaceAll(NavigatorRoutes.onboardingScreen);
+            .navigateToReplaceAll(NavigatorRoutes.marketSelectScreen);
         return;
       }
 
-      // User is onboarded - check authentication status
-      _logger.i('User is onboarded. Checking authentication...');
+      // First run is done - check authentication status
+      _logger.i('First run complete. Checking authentication...');
 
       // Check if user is in guest mode
       bool isGuestMode = localCache.isGuestMode();

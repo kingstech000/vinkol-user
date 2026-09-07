@@ -13,9 +13,10 @@ import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/widgets/text_action_modal.dart';
 import 'package:dio/dio.dart'; // Import dio for MultipartFile
 import 'package:starter_codes/core/data/local/local_cache.dart';
+import 'package:starter_codes/core/market/market.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
-import 'package:starter_codes/utils/phone_number_utils.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 
 class ProfileSettingViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -24,19 +25,24 @@ class ProfileSettingViewModel extends BaseViewModel {
   String _firstName = '';
   String _surname = '';
   String _country = '';
-  String _selectedState = ' ';
-  String _phoneNumberPrefix = '+234';
+  String _selectedState = '';
   String _phoneNumber = '';
   File? _profileImage;
 
-  ProfileSettingViewModel(this._authService);
+  ProfileSettingViewModel(this._authService, this._ref);
+
+  final Ref _ref;
+
+  /// The dial code shown beside the phone field, and the one sent with the number. It belongs
+  /// to the market the user picked on the country screen — it was a hardcoded `+234`, which
+  /// is wrong the moment that choice is Canada.
+  String get phoneNumberPrefix => MarketScope.market.phone.dialCode;
 
   // Getters
   String get firstName => _firstName;
   String get surname => _surname;
   String get country => _country;
   String get selectedState => _selectedState;
-  String get phoneNumberPrefix => _phoneNumberPrefix;
   String get phoneNumber => _phoneNumber;
   File? get profileImage => _profileImage;
 
@@ -58,11 +64,6 @@ class ProfileSettingViewModel extends BaseViewModel {
 
   void setSelectedState(String value) {
     _selectedState = value;
-    notifyListeners();
-  }
-
-  void setPhoneNumberPrefix(String value) {
-    _phoneNumberPrefix = value;
     notifyListeners();
   }
 
@@ -93,7 +94,7 @@ class ProfileSettingViewModel extends BaseViewModel {
         context,
         onPressed: () => {},
         dialogText: e.message,
-        buttonText: "Dismiss",
+        buttonText: context.l10n.authDismiss,
       );
     }
   }
@@ -103,22 +104,23 @@ class ProfileSettingViewModel extends BaseViewModel {
     changeState(const ViewModelState.busy());
     FocusScope.of(context).unfocus();
     try {
-      // Validate and format phone number before sending to service
-      String? formattedPhoneNumber =
-          PhoneNumberUtils.validateAndFormatPhoneNumber(
-              _phoneNumber, _phoneNumberPrefix);
-
-      if (formattedPhoneNumber == null) {
+      // The phone shape is market config, not a constant. This used to run through
+      // PhoneNumberUtils, which rejects any dial code that is not +234 and demands exactly
+      // 10 digits — a Canadian user could never get past it, whatever the picker said.
+      final phoneConfig = MarketScope.market.phone;
+      if (!phoneConfig.isValidNational(_phoneNumber)) {
         changeState(const ViewModelState.idle());
         textActionModal(
           context,
           onPressed: () => {},
           dialogText:
-              "Please enter a valid Nigerian phone number (10 digits starting with 70, 80, 81, 90, or 91)",
-          buttonText: "OK",
+              context.l10n.profilePhoneRequired(phoneConfig.nationalDigits),
+          buttonText: context.l10n.authOk,
         );
         return;
       }
+      final String formattedPhoneNumber =
+          phoneConfig.international(_phoneNumber);
 
       // Prepare MultipartFile for avatar if an image is selected
       MultipartFile? avatarFile;
@@ -143,6 +145,22 @@ class ProfileSettingViewModel extends BaseViewModel {
       // Clear guest mode when profile is successfully completed
       await GuestModeUtils.clearGuestMode();
 
+      // Tax and pricing resolve from the region, so the active one has to match the one
+      // just written to the account.
+      //
+      // Guarded on its own. The profile is already saved by this point, so a failure here
+      // must not fall through to the outer catch — that would tell the user the save failed
+      // and leave them on this screen when their account is in fact up to date. The region
+      // also re-resolves from the account on the next profile fetch, so the worst case is
+      // that pricing uses the previous region until then.
+      try {
+        await _ref
+            .read(marketProvider.notifier)
+            .setRegionByName(_selectedState);
+      } catch (e) {
+        logger.w('Could not sync the active region to $_selectedState: $e');
+      }
+
       logger.i('Profile setup successful for $_firstName $_surname');
       _authService.getUserProfile();
       changeState(const ViewModelState.idle());
@@ -156,7 +174,7 @@ class ProfileSettingViewModel extends BaseViewModel {
         context,
         onPressed: () => {},
         dialogText: e.message,
-        buttonText: "Try Again",
+        buttonText: context.l10n.commonTryAgain,
       );
     }
   }
@@ -166,5 +184,5 @@ final profileSettingViewModelProvider =
     ChangeNotifierProvider<ProfileSettingViewModel>((ref) {
   final authService =
       ref.watch(authServiceProvider); // Assuming authServiceProvider is defined
-  return ProfileSettingViewModel(authService);
+  return ProfileSettingViewModel(authService, ref);
 });

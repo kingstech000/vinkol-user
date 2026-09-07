@@ -72,12 +72,15 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
     if (store == null) return;
 
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchSingleStoreAndProducts(store.id));
+    state =
+        await AsyncValue.guard(() => _fetchSingleStoreAndProducts(store.id));
   }
 
   Future<void> loadMoreProducts() async {
     final currentState = state.value;
-    if (currentState == null || currentState.isLoadingMore || currentState.currentPage >= currentState.totalPages) {
+    if (currentState == null ||
+        currentState.isLoadingMore ||
+        currentState.currentPage >= currentState.totalPages) {
       return;
     }
 

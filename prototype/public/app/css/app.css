@@ -4,7 +4,7 @@
  */
 
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { margin: 0; font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 
 /* Semantic tokens. Dark is the default register; light is a full peer, not a tint.
  * Only these blocks hold colour values — every component below reads var(--…). */
@@ -494,3 +494,278 @@ body { margin: 0; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoo
 .rw__prize { font-size: 40px; font-weight: 800; letter-spacing: -1.4px; line-height: 1;
   font-variant-numeric: tabular-nums; }
 .rw__prize span { font-size: 17px; font-weight: 700; margin-left: 5px; letter-spacing: -.2px; }
+
+/* ---------- reward, gift variant: the prize is an object ----------------------------------
+ * The route's destination stops being a glyph and becomes the box itself.
+ *
+ * Locked, the box is grey and stands in a dashed well: present, but not yours. Earned, it
+ * gains its colour, the well fills with brand tint and the box lifts off a soft ground
+ * shadow. Colour arriving *is* the reward — which is also how a photographic gold-and-red
+ * asset earns a place in a blue system: it is only ever gold and red once you have won it.
+ * Nothing else on the card competes; the box is the one warm thing on the screen. */
+
+.gf { position: relative; overflow: hidden; border-radius: var(--r-lg); padding: 18px;
+  background: var(--surf); border: 1px solid var(--line); box-shadow: var(--sh);
+  width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; display: block; }
+.gf::after { content: ''; position: absolute; right: -70px; top: -70px; width: 170px; height: 170px;
+  border-radius: 999px; background: var(--acc-dim); pointer-events: none; }
+.gf > * { position: relative; }
+
+/* The route, ending in the box. Every cell shares one node band, so the connectors sit on a
+ * single axis no matter how tall the destination becomes. */
+.gf__route { display: flex; align-items: flex-start; }
+.gf__cell { display: flex; flex-direction: column; align-items: center; flex: none; }
+.gf__band { height: 56px; display: grid; place-items: center; }
+.gf__lab { margin-top: 8px; font-size: 10px; font-weight: 600; color: var(--txt3); white-space: nowrap; }
+.gf__lab--on { color: var(--acc); }
+.gf__seg { flex: 1; height: 2px; margin-top: 27px; background: var(--line2); }
+.gf__seg--on { background: var(--acc); }
+.gf__seg--dash { background: none; border-top: 2px dashed var(--line2); height: 0; }
+
+/* A delivery stop. Same 22pt disc the abstract route uses — the family is unchanged. */
+.gf__n { width: 22px; height: 22px; border-radius: 999px; border: 2px solid var(--line2);
+  background: var(--surf2); display: grid; place-items: center; color: var(--txt3);
+  font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gf__n--done { background: var(--acc); border-color: var(--acc); color: var(--on-acc); }
+.gf__n--now { border-color: var(--acc); color: var(--acc); background: var(--surf);
+  box-shadow: 0 0 0 4px var(--acc-halo); }
+
+/* The destination: the box in its well. */
+.gf__gift { position: relative; width: 56px; height: 56px; border-radius: var(--r-sm);
+  display: grid; place-items: center; background: var(--surf2);
+  border: 2px dashed var(--line2); }
+.gf__gift img { width: 40px; height: 40px; object-fit: contain; display: block;
+  /* Locked: no colour, and barely there. The box is a promise, not a possession. */
+  filter: grayscale(1) contrast(.85) opacity(.42); }
+.gf__gift--won { background: var(--acc-dim); border-style: solid; border-color: var(--acc);
+  box-shadow: 0 0 0 5px var(--acc-halo); }
+.gf__gift--won img { filter: none; }
+
+.gf__body { margin-top: 18px; }
+.gf__body b { display: block; font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
+.gf__body small { display: block; font-size: 12.5px; color: var(--txt3); margin-top: 4px; }
+.gf__go { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px;
+  color: var(--acc); font-size: 13.5px; font-weight: 700; }
+
+/* ---- Earned. The box stops being a terminus and becomes the subject. ---- */
+.gf--won { background: linear-gradient(145deg, var(--acc) 0%, var(--acc-deep) 100%);
+  border-color: transparent; color: #fff; }
+.gf--won::after { background: rgba(255,255,255,.08); }
+.gf--won .gf__lab { color: rgba(255,255,255,.8); }
+.gf--won .gf__lab--on { color: #fff; }
+.gf--won .gf__seg { background: rgba(255,255,255,.55); }
+.gf--won .gf__n { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.5); color: #fff; }
+.gf--won .gf__body small { color: rgba(255,255,255,.85); }
+
+.gf__hero { display: flex; align-items: center; gap: 10px; margin: 4px 0 2px; }
+.gf__prize { font-size: 40px; font-weight: 800; letter-spacing: -1.4px; line-height: 1;
+  font-variant-numeric: tabular-nums; }
+.gf__prize span { font-size: 17px; font-weight: 700; margin-left: 5px; letter-spacing: -.2px; }
+/* The box sits *on* the card rather than being pasted to it: a soft ellipse of ground shadow
+ * under it is the whole difference between an object and a sticker. */
+.gf__heroBox { position: relative; width: 132px; height: 132px; flex: none; margin: -14px -10px -14px auto; }
+.gf__heroBox img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: contain; display: block; }
+.gf__heroBox::after { content: ''; position: absolute; left: 16%; right: 16%; bottom: 12px; height: 16px;
+  border-radius: 999px; background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.5), rgba(0,0,0,0) 70%); }
+
+/* ---- The home placement: the same object, compressed to a banner. ---- */
+.gf--home { display: flex; align-items: center; gap: 14px; padding: 15px 16px; }
+.gf--home .gf__body { margin-top: 0; flex: 1; min-width: 0; }
+.gf--home .gf__body b { font-size: 15px; }
+.gf--home .gf__go { margin-top: 8px; }
+.gf__homeBox { position: relative; width: 84px; height: 84px; flex: none; margin: -8px -6px -8px 0; }
+.gf__homeBox img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: contain; display: block;
+  filter: grayscale(1) contrast(.85) opacity(.42); }
+.gf__homeBox--won img { filter: none; }
+.gf__homeBox--won::after { content: ''; position: absolute; left: 18%; right: 18%; bottom: 10px; height: 12px;
+  border-radius: 999px; background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.35), rgba(0,0,0,0) 70%); }
+/* The count, so the compressed banner still answers "how far am I" without the route. */
+.gf__mini { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 7px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--txt3); }
+.gf__pips { display: inline-flex; gap: 3px; }
+.gf__pip { width: 14px; height: 4px; border-radius: 999px; background: var(--line2); }
+.gf__pip--on { background: var(--acc); }
+
+/* ---------- reward, compact ---------------------------------------------------------------
+ * The gift variant answered "what does the reward look like". This answers "what does it look
+ * like when it is the fourth thing on a home screen" — because that is where it actually
+ * lives, under a map and a service picker, with a nav pod eating the last 90px.
+ *
+ * Two takes, both one row tall:
+ *   .gc--meter  the box IS the progress. Colour fills it from the base as deliveries land,
+ *               so one object carries the count, the prize and the state. No route at all.
+ *   .gc--strip  the route survives, collapsed to a hairline under the copy — the Line at its
+ *               smallest scale, the way the order row wears it.
+ */
+
+.gc { position: relative; display: flex; align-items: center; gap: 13px; width: 100%;
+  padding: 14px; border-radius: var(--r-md); background: var(--surf);
+  border: 1px solid var(--line); box-shadow: var(--sh);
+  font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.gc__txt { flex: 1; min-width: 0; }
+.gc__eyebrow { display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--txt3); }
+.gc__eyebrow b { color: var(--acc); letter-spacing: .3px; }
+.gc__eyebrow i { width: 3px; height: 3px; border-radius: 999px; background: var(--line2); font-style: normal; }
+.gc__h { display: block; font-size: 15px; font-weight: 700; letter-spacing: -.2px; line-height: 19px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gc__sub { display: block; margin-top: 2px; font-size: 12px; color: var(--txt3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- take 1: the box is the meter ---
+ * One image, painted twice. The lower copy is greyscale and is the whole box; the upper is
+ * full colour clipped to the fill line, so colour rises through the object as the count does.
+ * `--fill` is the inset from the top of the *artwork's box*, not the canvas — the source is a
+ * 500px square whose box only occupies y 114..430, and clipping to the canvas would leave the
+ * meter reading two thirds full when it is empty. */
+.gc__meter { position: relative; width: 62px; height: 62px; flex: none; }
+.gc__meter img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.gc__meter img.is-base { filter: grayscale(1) contrast(.8) opacity(.3); }
+.gc__meter img.is-fill { clip-path: inset(var(--fill) 0 14% 0); }
+/* The waterline. Sits across the box's own width, so it reads as a level and not as a rule
+ * drawn over the card. */
+.gc__meter::after { content: ''; position: absolute; left: 23%; right: 12%; top: var(--fill);
+  height: 2px; border-radius: 999px; background: var(--acc); opacity: .9; }
+.gc--won .gc__meter::after { display: none; }
+.gc--won .gc__meter img.is-base { display: none; }
+
+/* --- take 2: the route, collapsed to a hairline --- */
+.gc__rail { display: flex; align-items: center; gap: 3px; margin-top: 8px; }
+.gc__tick { height: 4px; border-radius: 999px; background: var(--line2); flex: 1; }
+.gc__tick--on { background: var(--acc); }
+.gc__tick--now { background: var(--acc); opacity: .45; }
+.gc__end { flex: none; width: 9px; height: 9px; margin-left: 3px; border-radius: 2px;
+  transform: rotate(45deg); border: 1.5px dashed var(--line2); }
+.gc__end--on { border-style: solid; border-color: var(--acc); background: var(--acc); }
+.gc__box { width: 52px; height: 52px; flex: none; position: relative; }
+.gc__box img { width: 100%; height: 100%; object-fit: contain; display: block;
+  filter: grayscale(1) contrast(.85) opacity(.36); }
+.gc--won .gc__box img { filter: none; }
+.gc--won .gc__box::after { content: ''; position: absolute; left: 20%; right: 20%; bottom: 5px; height: 9px;
+  border-radius: 999px; background: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.35), rgba(0,0,0,0) 70%); }
+
+/* Earned: the card takes the tint, never the full saturation. On home the saturated object is
+ * the live delivery, and a reward outranking it would be the wrong screen. */
+.gc--won { background: var(--acc-dim); border-color: transparent; }
+.gc--won .gc__eyebrow { color: var(--acc); }
+
+/* A measuring aid for the harness only — never ships. */
+.mez { display: flex; align-items: center; gap: 8px; margin: 14px 0 5px;
+  font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--txt3); font-weight: 700; }
+.mez::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+/* ---------- reward, lively -----------------------------------------------------------------
+ * Option 1 (the meter) with the colour turned up.
+ *
+ * The restrained version kept everything blue and let the box supply the only warmth. This one
+ * makes colour temperature the progress signal: the card is cool and quiet at zero and heats
+ * through amber to a full celebration at three. Every state drives one variable, `--heat`
+ * (0 → 1), and the wash, the glow behind the box, the waterline and the ray burst all read
+ * off it — so there is one knob, not four decisions.
+ *
+ * The palette is taken from the artwork itself (its gold and its ribbon red) rather than
+ * invented, which is what keeps a warm card from looking like a different app. */
+
+.dev__in, [data-theme='dark'] {
+  --gold: #ffc45c; --gold-2: #ff9f2e; --gold-dim: rgba(255,196,92,.18);
+  --rose: #ff7f8a; --rose-dim: rgba(255,127,138,.16);
+}
+[data-theme='light'] {
+  --gold: #a25c00; --gold-2: #d08400; --gold-dim: #fdf0d9;
+  --rose: #c0392f; --rose-dim: #fdeae8;
+}
+
+.lv { position: relative; overflow: hidden; display: flex; align-items: center; gap: 13px;
+  width: 100%; padding: 14px; border-radius: var(--r-md); background: var(--surf);
+  border: 1px solid var(--line); box-shadow: var(--sh);
+  font: inherit; color: inherit; text-align: left; cursor: pointer; }
+
+/* The wash. Cool on the start edge, warm on the end — the card is literally warmer nearer
+ * the prize — and the whole thing fades up with --heat. */
+.lv::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(102deg,
+    rgba(46,139,239,.20) 0%, rgba(255,159,46,.26) 58%, rgba(255,127,138,.22) 100%);
+  opacity: var(--heat, 0); transition: opacity .4s cubic-bezier(.2,0,0,1); }
+.lv > * { position: relative; z-index: 1; }
+
+.lv__txt { flex: 1; min-width: 0; }
+.lv__eyebrow { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.lv__k { font-size: 10.5px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--txt3); }
+.lv__chip { padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800;
+  letter-spacing: .3px; font-variant-numeric: tabular-nums; background: var(--acc-dim); color: var(--acc); }
+.lv--hot .lv__chip { background: var(--gold-dim); color: var(--gold); }
+.lv__h { display: block; font-size: 15px; font-weight: 700; letter-spacing: -.2px; line-height: 19px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lv__sub { display: block; margin-top: 2px; font-size: 12px; color: var(--txt2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- the meter --- */
+.lv__meter { position: relative; width: 66px; height: 66px; flex: none; }
+.lv__meter img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; z-index: 2; }
+.lv__meter img.is-base { filter: grayscale(1) contrast(.8) opacity(.28); }
+.lv__meter img.is-fill { clip-path: inset(var(--fill) 0 14% 0); transition: clip-path .5s cubic-bezier(.2,0,0,1); }
+
+/* The gold the box throws onto the card. Grows with --heat, so the object appears to light
+ * its own surroundings rather than sit on them. */
+.lv__glow { position: absolute; inset: -34px; border-radius: 999px; z-index: 0;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255,175,60,.55), rgba(255,175,60,0) 70%);
+  opacity: var(--heat, 0); transition: opacity .4s cubic-bezier(.2,0,0,1); }
+
+/* The waterline: a bloom rather than a rule, warm on the end where the box is. */
+.lv__line { position: absolute; left: 20%; right: 10%; top: var(--fill); height: 2px; z-index: 3;
+  border-radius: 999px; background: linear-gradient(90deg, var(--acc), var(--gold-2));
+  box-shadow: 0 0 10px 1px rgba(255,175,60,.55); transition: top .5s cubic-bezier(.2,0,0,1); }
+.lv--won .lv__line { display: none; }
+.lv--won .lv__meter img.is-base { display: none; }
+
+/* Earned. A slow ray burst behind the box, masked to a ring so it reads as light and not as
+ * a starburst sticker, plus one sweep of shine across the box. */
+.lv__rays { position: absolute; inset: -30px; z-index: 0; opacity: 0; border-radius: 999px;
+  background: conic-gradient(from 0deg,
+    rgba(255,196,92,.42) 0 4deg, transparent 4deg 26deg, rgba(255,196,92,.30) 26deg 29deg,
+    transparent 29deg 52deg, rgba(255,127,138,.34) 52deg 56deg, transparent 56deg 78deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 40%, #000 56%, transparent 82%);
+  mask: radial-gradient(closest-side, transparent 40%, #000 56%, transparent 82%);
+  animation: lvSpin 26s linear infinite; }
+.lv--won .lv__rays { opacity: 1; }
+@keyframes lvSpin { to { transform: rotate(360deg); } }
+
+.lv--won .lv__meter { animation: lvBob 3.4s ease-in-out infinite; }
+@keyframes lvBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+.lv__shine { position: absolute; inset: 0; z-index: 3; overflow: hidden; border-radius: 12px; opacity: 0; }
+.lv--won .lv__shine { opacity: 1; }
+.lv__shine::after { content: ''; position: absolute; top: -20%; bottom: -20%; width: 32%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
+  transform: translateX(-160%) rotate(12deg); animation: lvSweep 3.6s ease-in-out infinite; }
+@keyframes lvSweep { 0% { transform: translateX(-160%) rotate(12deg); }
+  55%, 100% { transform: translateX(340%) rotate(12deg); } }
+
+/* --- festive: the same card, colour all the way up --- */
+.lv--festive { border-color: transparent; }
+.lv--festive::before { opacity: 1;
+  background: linear-gradient(102deg, var(--acc-deep) 0%, #b4610a 62%, #93303b 100%); }
+[data-theme='light'] .lv--festive::before {
+  background: linear-gradient(102deg, var(--acc) 0%, #e08a12 60%, #d2564f 100%); }
+.lv--festive .lv__k { color: rgba(255,255,255,.78); }
+.lv--festive .lv__h, .lv--festive .lv__sub { color: #fff; }
+.lv--festive .lv__sub { color: rgba(255,255,255,.86); }
+.lv--festive .lv__chip { background: rgba(255,255,255,.22); color: #fff; }
+.lv--festive .lv__glow { opacity: .85; }
+
+/* Confetti — four flecks in the artwork's own hues, drifting. Only on the festive earned
+ * card, and only four: past that it stops being celebration and becomes noise. */
+.lv__cf { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.lv__cf i { position: absolute; width: 5px; height: 9px; border-radius: 1.5px; opacity: .85;
+  animation: lvDrift 5.5s ease-in-out infinite; }
+.lv__cf i:nth-child(1) { left: 22%; top: 16%; background: var(--gold); animation-delay: -.4s; }
+.lv__cf i:nth-child(2) { left: 47%; top: 66%; background: var(--rose); animation-delay: -1.8s; }
+.lv__cf i:nth-child(3) { left: 63%; top: 22%; background: #fff; opacity: .5; animation-delay: -3.1s; }
+.lv__cf i:nth-child(4) { left: 78%; top: 72%; background: var(--gold); animation-delay: -2.3s; }
+@keyframes lvDrift { 0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-7px) rotate(22deg); } }
+
+/* Reduced motion is a setting, not a preference to be overridden by a party. */
+@media (prefers-reduced-motion: reduce) {
+  .lv *, .lv::before { animation: none !important; transition: none !important; }
+}

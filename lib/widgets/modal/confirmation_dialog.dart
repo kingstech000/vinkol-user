@@ -1,12 +1,22 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/colors.dart';
 
+/// Asked when the payment webview closes and the app does not know whether payment
+/// completed.
+///
+/// Reworked to the token system. Two things changed beyond the styling:
+///
+/// - **The primary action is the one that helps.** Verifying was previously an
+///   `OutlinedButton` filled with the brand and cancelling was an `ElevatedButton` outlined
+///   in red — two buttons both claiming primacy, in opposite widget types. Verify is the
+///   primary pill now; cancelling is the quiet path.
+/// - **The caveat is a warning banner, not orange body text.** The note that an already-paid
+///   order still processes is the most important sentence in the dialog, and it was the
+///   faintest thing on it.
 class PaymentConfirmationDialog extends StatelessWidget {
   const PaymentConfirmationDialog({super.key, required this.isStoreOrder});
 
@@ -14,166 +24,183 @@ class PaymentConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final v = context.vinkol;
+
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      elevation: 0,
       backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.all(VinkolSpace.xl),
       child: Container(
-        padding:
-            EdgeInsets.only(top: 24.h, left: 15.w, right: 15.w, bottom: 10.h),
+        padding: const EdgeInsets.all(VinkolSpace.xl),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          color: v.surface,
+          borderRadius: VinkolRadius.brLg,
+          border: VinkolElevation.hairline(v),
+          boxShadow: VinkolElevation.e2(v),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
             Align(
-              alignment: Alignment.topRight,
-              child: InkWell(
-                child: const Icon(Icons.close),
-                onTap: () {
-                  Navigator.pop(context);
-                },
+              alignment: AlignmentDirectional.centerEnd,
+              child: Semantics(
+                button: true,
+                label: 'Close',
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(VinkolSpace.xs),
+                    child: Icon(Icons.close, size: 20, color: v.textTertiary),
+                  ),
+                ),
               ),
             ),
-            Container(
-              width: 64.w,
-              height: 64.w,
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.payment_rounded,
-                size: 32.w,
-                color: Colors.orange,
+            Center(
+              child: Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: v.warningGround,
+                  borderRadius: VinkolRadius.brSm,
+                  border: VinkolElevation.hairline(v),
+                ),
+                child:
+                    Icon(Icons.payments_outlined, size: 24, color: v.warning),
               ),
             ),
-
-            SizedBox(height: 20.h),
-
-            // Title
+            const SizedBox(height: VinkolSpace.lg),
             Text(
-              'Payment in Progress',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-
-            SizedBox(height: 12.h),
-
-            // Description
-            Text(
-              'Have you completed your payment? If yes, verify to see your order. If not, you can cancel and try again later.',
+              'Payment in progress',
+              style: VinkolType.h3.copyWith(color: v.textPrimary),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[600],
-                height: 1.5,
-              ),
             ),
-
-            SizedBox(height: 28.h),
-
-            SizedBox(
-              width: double.infinity,
-              height: 48.h,
-              child: OutlinedButton(
-                onPressed: () => Navigator.of(context).pop('verify'),
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                ),
-                child: Text(
-                  'Verify Payment Status',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.white,
-                  ),
-                ),
-              ),
+            const SizedBox(height: VinkolSpace.sm),
+            Text(
+              'Have you completed your payment? If you have, verify to see your order. '
+              'If not, you can cancel and try again later.',
+              style: VinkolType.body.copyWith(color: v.textSecondary),
+              textAlign: TextAlign.center,
             ),
-
-            SizedBox(height: 12.h),
-
-            // Primary Button - Continue Payment
-            SizedBox(
-              width: double.infinity,
-              height: 48.h,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (isStoreOrder == true) {
-                    Navigator.pop(context);
-                    NavigationService.instance.navigateToReplace(
-                      NavigatorRoutes.cartScreen,
-                      argument: {
-                        'isFromWebviewClosing': true,
-                      },
-                    );
-                    log('Routing back to Cart Screen');
-                  } else {
-                    Navigator.pop(context);
-                    NavigationService.instance.navigateToReplace(
-                      NavigatorRoutes.mapWithQuoteScreen,
-                    );
-                    log('Routing back to Map With Quote Screen');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: AppColors.red, width: 1.5),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                ),
-                child: Text(
-                  'Cancel Payment',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.red,
-                  ),
-                ),
-              ),
+            const SizedBox(height: VinkolSpace.xl),
+            _PillButton(
+              label: 'Verify payment status',
+              fill: v.brand,
+              ink: v.onBrand,
+              onTap: () => Navigator.of(context).pop('verify'),
             ),
-
-            // Secondary Button - Verify Payment
-
-            SizedBox(height: 10.h),
+            const SizedBox(height: VinkolSpace.md),
+            _PillButton(
+              label: 'Cancel payment',
+              fill: Colors.transparent,
+              ink: v.danger,
+              border: v.borderSubtle,
+              onTap: () {
+                Navigator.pop(context);
+                if (isStoreOrder) {
+                  NavigationService.instance.navigateToReplace(
+                    NavigatorRoutes.cartScreen,
+                    argument: <String, dynamic>{'isFromWebviewClosing': true},
+                  );
+                  log('Routing back to Cart Screen');
+                } else {
+                  NavigationService.instance.navigateToReplace(
+                    NavigatorRoutes.mapWithQuoteScreen,
+                  );
+                  log('Routing back to Map With Quote Screen');
+                }
+              },
+            ),
+            const SizedBox(height: VinkolSpace.lg),
+            // The caveat that matters most, given the weight it deserves.
             Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
-              width: 300,
-              child: Text(
-                'Note: If you\'ve already paid, the order will be processed even if you cancel verification. Check your Deliveries section later.',
-                textAlign: TextAlign.start,
-                style: GoogleFonts.montserrat(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 12.sp,
-                  color: Colors.orange.withOpacity(.8),
-                  height: 1.5,
-                ),
+              padding: const EdgeInsets.all(VinkolSpace.md),
+              decoration: BoxDecoration(
+                color: v.warningGround,
+                borderRadius: VinkolRadius.brSm,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Icon(Icons.info_outline, size: 16, color: v.warning),
+                  const SizedBox(width: VinkolSpace.sm),
+                  Expanded(
+                    child: Text(
+                      'If you have already paid, the order is processed even if you cancel '
+                      'verification. Check Records later.',
+                      style: VinkolType.bodyS.copyWith(color: v.warning),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PillButton extends StatefulWidget {
+  const _PillButton({
+    required this.label,
+    required this.fill,
+    required this.ink,
+    required this.onTap,
+    this.border,
+  });
+
+  final String label;
+  final Color fill;
+  final Color ink;
+  final Color? border;
+  final VoidCallback onTap;
+
+  @override
+  State<_PillButton> createState() => _PillButtonState();
+}
+
+class _PillButtonState extends State<_PillButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedOpacity(
+          duration: VinkolMotion.respecting(context, VinkolMotion.instant),
+          curve: VinkolMotion.standard,
+          opacity: _pressed ? 0.78 : 1,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            alignment: Alignment.center,
+            padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: VinkolSpace.lg,
+              vertical: VinkolSpace.md,
+            ),
+            decoration: BoxDecoration(
+              color: widget.fill,
+              borderRadius: VinkolRadius.brFull,
+              border: widget.border != null
+                  ? Border.fromBorderSide(BorderSide(color: widget.border!))
+                  : null,
+            ),
+            child: Text(
+              widget.label,
+              style: VinkolType.button.copyWith(color: widget.ink),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+            ),
+          ),
         ),
       ),
     );

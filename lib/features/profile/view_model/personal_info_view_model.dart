@@ -5,7 +5,10 @@ import 'package:starter_codes/features/auth/model/user_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:starter_codes/core/market/market_provider.dart';
+import 'package:starter_codes/core/market/market_scope.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
+import 'package:starter_codes/l10n/l10n.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 
@@ -76,7 +79,7 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
       if (!mounted) return;
 
       state = state.copyWith(
-        errorMessage: 'Failed to pick image: ${e.toString()}',
+        errorMessage: L10n.current.profilePhotoFailed,
       );
       logger.e('Error picking image: $e');
     }
@@ -101,34 +104,23 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
         );
       }
 
-      // Extract just the local number part (without +234)
-      String phoneNumber = state.phoneNumber.trim();
-      String localNumber = '';
+      // The phone shape is market config, not a constant. This used to strip a literal
+      // '+234' and demand 10 digits, which is wrong the moment the market is Canada.
+      final phoneConfig = MarketScope.market.phone;
+      final phoneNumber = state.phoneNumber.trim();
 
-      if (phoneNumber.startsWith('+234')) {
-        localNumber = phoneNumber.substring(4);
-      } else if (phoneNumber.startsWith('234')) {
-        localNumber = phoneNumber.substring(3);
-      } else {
-        localNumber = phoneNumber;
-      }
-
-      logger.d('Phone number from state: "$phoneNumber"');
-      logger.d('Extracted local number: "$localNumber"');
-
-      // Simple validation: just check if it's 10 digits
-      if (localNumber.length < 10) {
+      if (!phoneConfig.isValidNational(phoneNumber)) {
         if (!mounted) return false;
 
         state = state.copyWith(
           isLoading: false,
-          errorMessage: 'Phone number must be 10 digits',
+          errorMessage:
+              L10n.current.profilePhoneRequired(phoneConfig.nationalDigits),
         );
         return false;
       }
 
-      // Format with +234 prefix for the backend
-      final formattedPhoneNumber = '+234$localNumber';
+      final formattedPhoneNumber = phoneConfig.international(phoneNumber);
       logger.i('Sending phone number to backend: $formattedPhoneNumber');
       logger.i(
           'Full update payload - firstname: ${state.firstname}, lastName: ${state.lastname}, state: ${state.address}');
@@ -147,11 +139,15 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
 
       await _authService.getUserProfile();
 
+      // Keep the active region in step with the one on the account. Tax and pricing resolve
+      // from the region, so leaving the two out of sync quietly prices the wrong province.
+      await _ref.read(marketProvider.notifier).setRegionByName(state.address);
+
       if (!mounted) return true;
 
       state = state.copyWith(
         isLoading: false,
-        successMessage: 'Profile updated successfully!',
+        successMessage: L10n.current.profileSaved,
       );
 
       logger.i('Profile update successful!');
@@ -173,7 +169,7 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
 
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'An unexpected error occurred. Please try again.',
+        errorMessage: L10n.current.profileSaveFailed,
       );
       logger.e('Unexpected error during profile update: $e');
       return false;

@@ -110,3 +110,47 @@ String calculateDistanceInKm(
 double _toRadians(double degree) {
   return degree * (pi / 180);
 }
+
+/// The bounds containing every point in [points].
+///
+/// Extracted from the three quote screens, which each carried an identical
+/// `_boundsFromLatLngList`; two of them force-unwrapped the accumulators and threw on an
+/// empty list. Returns null here instead, so the caller decides what an empty route means.
+LatLngBounds? boundsFor(List<LatLng> points) {
+  if (points.isEmpty) return null;
+
+  double south = points.first.latitude;
+  double north = points.first.latitude;
+  double west = points.first.longitude;
+  double east = points.first.longitude;
+
+  for (final LatLng point in points) {
+    if (point.latitude < south) south = point.latitude;
+    if (point.latitude > north) north = point.latitude;
+    if (point.longitude < west) west = point.longitude;
+    if (point.longitude > east) east = point.longitude;
+  }
+
+  return LatLngBounds(
+    southwest: LatLng(south, west),
+    northeast: LatLng(north, east),
+  );
+}
+
+/// The driving route between two points, falling back to a straight line.
+///
+/// The Directions call fails on a rate limit, a missing key or a pair of points with no road
+/// between them. A straight line is wrong but legible; drawing nothing leaves the user
+/// looking at two unconnected pins and no sense of the trip.
+Future<List<LatLng>> routeBetween(LatLng origin, LatLng destination) async {
+  try {
+    final List<LatLng> points = await createPolyline(
+      pickup: PointLatLng(origin.latitude, origin.longitude),
+      dropOff: PointLatLng(destination.latitude, destination.longitude),
+    );
+    if (points.isNotEmpty) return points;
+  } catch (e) {
+    debugPrint('routeBetween: falling back to a straight line — $e');
+  }
+  return <LatLng>[origin, destination];
+}

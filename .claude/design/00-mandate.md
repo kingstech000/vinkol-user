@@ -40,8 +40,8 @@ Phase 6  Edge states, motion, accessibility pass                                
 ### Phase 2 status
 
 Built and analyzer-clean: `lib/core/design/` — `vinkol_color.dart` (ramps, semantic light/dark
-as a `ThemeExtension`, the ten status triples), `vinkol_type.dart` (Montserrat / Inter / IBM
-Plex Mono, tabular numerics), `vinkol_space.dart` (4pt scale, radius, elevation),
+as a `ThemeExtension`, the ten status triples), `vinkol_type.dart` (Geist / Geist Mono,
+tabular numerics — D-02a), `vinkol_space.dart` (4pt scale, radius, elevation),
 `vinkol_motion.dart`, `vinkol_theme.dart` (real `ThemeData` for both brightnesses),
 `design.dart` (barrel). Additive only — nothing existing renders differently yet.
 

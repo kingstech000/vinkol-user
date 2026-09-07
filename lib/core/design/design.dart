@@ -9,6 +9,8 @@ library;
 
 export 'vinkol_color.dart';
 export 'vinkol_motion.dart';
+export 'vinkol_reward.dart';
+export 'vinkol_shape.dart';
 export 'vinkol_space.dart';
 export 'vinkol_theme.dart';
 export 'vinkol_type.dart';

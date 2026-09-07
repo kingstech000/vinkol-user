@@ -1,4 +1,4 @@
-import 'package:intl/intl.dart';
+import 'package:starter_codes/core/market/market_format.dart';
 
 extension StringExtension on String {
   ///check if the string is an email
@@ -26,14 +26,13 @@ extension StringExtension on String {
     return "${text[0].toUpperCase()}${lowercaseOther ? text.substring(1).toLowerCase() : text.substring(1)}";
   }
 
+  /// Money from a numeric string. Pinned to the exact-amount register (at least 2 decimal
+  /// places), which is what this returned before and what CAD needs anyway. Non-numeric input
+  /// is returned untouched.
   String toMoney() {
-    var number = num.tryParse(this);
-    if (number == null) {
-      return this;
-    }
-
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return '₦${formatter.format(number)}';
+    final number = num.tryParse(this);
+    if (number == null) return this;
+    return MarketFormat.moneyPrecise(number);
   }
 
   bool get isImage {

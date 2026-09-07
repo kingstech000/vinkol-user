@@ -21,7 +21,8 @@ class DeliveryItemCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      margin: const EdgeInsets.only(bottom: 10), // Space between cards if multiple
+      margin:
+          const EdgeInsets.only(bottom: 10), // Space between cards if multiple
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
