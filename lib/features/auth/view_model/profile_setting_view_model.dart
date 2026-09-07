@@ -10,7 +10,7 @@ import 'package:starter_codes/core/utils/base_view_model.dart';
 import 'package:starter_codes/features/auth/data/auth_service.dart'; // Assuming you have an AuthService
 import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
-import 'package:starter_codes/widgets/text_action_modal.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:dio/dio.dart'; // Import dio for MultipartFile
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
@@ -24,7 +24,9 @@ class ProfileSettingViewModel extends BaseViewModel {
   String _firstName = '';
   String _surname = '';
   String _country = '';
-  String _selectedState = ' ';
+  String _selectedState = '';
+
+  /// Overwritten from the device market before the number is submitted.
   String _phoneNumberPrefix = '+234';
   String _phoneNumber = '';
   File? _profileImage;
@@ -62,9 +64,15 @@ class ProfileSettingViewModel extends BaseViewModel {
   }
 
   void setPhoneNumberPrefix(String value) {
+    if (_phoneNumberPrefix == value) return;
     _phoneNumberPrefix = value;
     notifyListeners();
   }
+
+  /// Digits expected after the dial code, set alongside the prefix.
+  int _localPhoneDigits = PhoneNumberUtils.expectedPhoneNumberLength;
+
+  void setLocalPhoneDigits(int value) => _localPhoneDigits = value;
 
   void setPhoneNumber(String value) {
     _phoneNumber = value;
@@ -89,10 +97,10 @@ class ProfileSettingViewModel extends BaseViewModel {
     } on Failure catch (e) {
       logger.e('Image picking failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => {},
-        dialogText: e.message,
+        e.title,
+        e.message,
         buttonText: "Dismiss",
       );
     }
@@ -106,15 +114,17 @@ class ProfileSettingViewModel extends BaseViewModel {
       // Validate and format phone number before sending to service
       String? formattedPhoneNumber =
           PhoneNumberUtils.validateAndFormatPhoneNumber(
-              _phoneNumber, _phoneNumberPrefix);
+        _phoneNumber,
+        _phoneNumberPrefix,
+        expectedLength: _localPhoneDigits,
+      );
 
       if (formattedPhoneNumber == null) {
         changeState(const ViewModelState.idle());
-        textActionModal(
+        AppStatusDialogs.showError(
           context,
-          onPressed: () => {},
-          dialogText:
-              "Please enter a valid Nigerian phone number (10 digits starting with 70, 80, 81, 90, or 91)",
+          "Invalid phone number",
+          "Enter a $_localPhoneDigits-digit number for $_phoneNumberPrefix.",
           buttonText: "OK",
         );
         return;
@@ -130,7 +140,9 @@ class ProfileSettingViewModel extends BaseViewModel {
       }
 
       logger.i('Sending formatted phone number: $formattedPhoneNumber');
-      log("{$_firstName, $_surname, $_selectedState, $formattedPhoneNumber, Avatar: ${avatarFile != null}}");
+      log(
+        "{$_firstName, $_surname, $_selectedState, $formattedPhoneNumber, Avatar: ${avatarFile != null}}",
+      );
       await _authService.updateProfile(
         firstname: _firstName,
         lastName: _surname,
@@ -148,14 +160,15 @@ class ProfileSettingViewModel extends BaseViewModel {
       changeState(const ViewModelState.idle());
 
       NavigationService.instance.navigateTo(
-          NavigatorRoutes.dashboardScreen); // Navigate to dashboard after setup
+        NavigatorRoutes.dashboardScreen,
+      ); // Navigate to dashboard after setup
     } on Failure catch (e) {
       logger.e('Profile setup failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => {},
-        dialogText: e.message,
+        e.title,
+        e.message,
         buttonText: "Try Again",
       );
     }
@@ -164,7 +177,8 @@ class ProfileSettingViewModel extends BaseViewModel {
 
 final profileSettingViewModelProvider =
     ChangeNotifierProvider<ProfileSettingViewModel>((ref) {
-  final authService =
-      ref.watch(authServiceProvider); // Assuming authServiceProvider is defined
+  final authService = ref.watch(
+    authServiceProvider,
+  ); // Assuming authServiceProvider is defined
   return ProfileSettingViewModel(authService);
 });

@@ -8,14 +8,16 @@ import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/features/booking/data/booking_service.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
+import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
-import 'package:starter_codes/widgets/modal_form_field.dart';
 import 'package:starter_codes/features/booking/model/request.dart';
 import 'package:starter_codes/features/booking/model/order_model.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ItemDetails {
   final TextEditingController packageNameController = TextEditingController();
@@ -52,7 +54,16 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
   bool _isLoading = false;
 
   final List<String> _priorityTypes = ['Express', 'Regular'];
-  final List<String> _vehicleTypes = ['Bike', 'Car', 'Bicycle', 'Truck'];
+
+  /// The label is what the backend is sent, lowercased. The icon is the whole
+  /// reason this is not a dropdown: a vehicle is recognised faster than it is
+  /// read.
+  final List<({String label, IconData icon})> _vehicleOptions = const [
+    (label: 'Bike', icon: PhosphorIconsRegular.motorcycle),
+    (label: 'Car', icon: PhosphorIconsRegular.car),
+    (label: 'Bicycle', icon: PhosphorIconsRegular.bicycle),
+    (label: 'Truck', icon: PhosphorIconsRegular.truck),
+  ];
 
   bool _isInitialized = false;
   ProviderSubscription? _rideLocationSubscription;
@@ -61,7 +72,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
   void initState() {
     super.initState();
     _priorityController.text = _priorityTypes.first;
-    _vehicleController.text = _vehicleTypes.first;
+    _vehicleController.text = _vehicleOptions.first.label;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeItems();
@@ -281,7 +292,10 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
         );
 
         final List<QuoteResponseModel> quoteResponse = await bookingService
-            .getAllQuotesForDeliveryTypes(baseQuoteDetails: quoteRequest);
+            .getAllQuotesForDeliveryTypes(
+          baseQuoteDetails: quoteRequest,
+          market: ref.read(marketProvider),
+        );
 
         ref.read(rideLocationProvider.notifier).setQuoteRequest(quoteRequest);
         ref.read(rideLocationProvider.notifier).setQuoteResponse(quoteResponse);
@@ -467,15 +481,8 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
               ),
               Container(
                 padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 24.h),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
                 ),
                 child: _buildSubmitButton(),
               ),
@@ -506,7 +513,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
                 context,
                 label: 'Pickup Date',
                 value: _pickupDate,
-                icon: Icons.calendar_today_rounded,
+                icon: PhosphorIconsRegular.calendarBlank,
                 onTap: () => _selectDate(context),
               ),
             ),
@@ -516,7 +523,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
                 context,
                 label: 'Pickup Time',
                 value: _pickupTime,
-                icon: Icons.access_time_rounded,
+                icon: PhosphorIconsRegular.clock,
                 onTap: () => _selectTime(context),
               ),
             ),
@@ -525,20 +532,85 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
         SizedBox(height: 20.h),
         _buildFieldLabel('Vehicle Type'),
         SizedBox(height: 8.h),
-        ModalFormField(
-          title: _vehicleController.text.isEmpty
-              ? 'Select vehicle type'
-              : _vehicleController.text,
-          textColor: _vehicleController.text.isEmpty
-              ? AppColors.darkgrey.withOpacity(0.5)
-              : AppColors.black,
-          options: _vehicleTypes,
-          controller: _vehicleController,
-          onOptionSelected: (value) {
-            _vehicleController.text = value;
-          },
-        ),
+        _buildVehicleSelector(),
       ],
+    );
+  }
+
+  /// Four options, all of them on screen. A sheet to choose between four things
+  /// costs two taps, hides the alternatives behind the first one, and shows
+  /// nothing about what is being chosen. Laid out, the vehicle is one gesture
+  /// and the icons carry the meaning.
+  Widget _buildVehicleSelector() {
+    // IntrinsicHeight so the four tiles stay the same height when a large OS
+    // text scale wraps one of the labels onto a second line.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < _vehicleOptions.length; i++) ...[
+            if (i > 0) const SizedBox(width: 8),
+            Expanded(child: _buildVehicleTile(_vehicleOptions[i])),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVehicleTile(({String label, IconData icon}) option) {
+    final selected = _vehicleController.text == option.label;
+    return GestureDetector(
+      onTap: () => setState(() => _vehicleController.text = option.label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsetsDirectional.symmetric(
+          vertical: 12,
+          horizontal: 6,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12),
+          // Selection is carried by the border weight, the icon, the label
+          // weight and the tick together — never by colour on its own.
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.lightgrey,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  option.icon,
+                  size: 26,
+                  color: selected ? AppColors.primary : AppColors.darkgrey,
+                ),
+                const SizedBox(height: 8),
+                AppText.caption(
+                  option.label,
+                  centered: true,
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: selected ? AppColors.black : AppColors.darkgrey,
+                ),
+              ],
+            ),
+            if (selected)
+              const PositionedDirectional(
+                top: 0,
+                end: 0,
+                child: Icon(
+                  PhosphorIconsFill.checkCircle,
+                  size: 14,
+                  color: AppColors.primary,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -583,13 +655,6 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
               borderRadius: BorderRadius.circular(16.r),
               border: Border.all(
                   color: AppColors.greyLight.withOpacity(0.3), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -617,7 +682,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
                   'Package Name',
                   item.packageNameController,
                   hintText: 'Enter package name',
-                  icon: Icons.inventory_2_outlined,
+                  icon: PhosphorIconsRegular.package,
                 ),
                 if (state.orderType != OrderType.standard) ...[
                   SizedBox(height: 16.h),
@@ -625,14 +690,14 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
                     'Recipient Name',
                     item.recipientNameController,
                     hintText: 'Name',
-                    icon: Icons.person_outline,
+                    icon: PhosphorIconsRegular.user,
                   ),
                   SizedBox(height: 12.w),
                   _buildInputField(
                     'Recipient Phone',
                     item.recipientPhoneController,
                     hintText: 'Phone',
-                    icon: Icons.phone_outlined,
+                    icon: PhosphorIconsRegular.phone,
                   ),
                 ],
                 SizedBox(height: 16.h),
@@ -653,17 +718,10 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
   Widget _buildHeader() {
     return Row(
       children: [
-        Container(
-          padding: EdgeInsets.all(12.w),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Icon(
-            Icons.local_shipping_rounded,
-            color: AppColors.primary,
-            size: 28.w,
-          ),
+        Icon(
+          PhosphorIconsRegular.truck,
+          color: AppColors.primary,
+          size: 28.w,
         ),
         SizedBox(width: 16.w),
         Expanded(
@@ -757,27 +815,13 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(color: Colors.grey[300]!, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               children: [
-                Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 15.w,
-                    color: AppColors.primary,
-                  ),
+                Icon(
+                  icon,
+                  size: 15.w,
+                  color: AppColors.primary,
                 ),
                 SizedBox(width: 12.w),
                 Expanded(

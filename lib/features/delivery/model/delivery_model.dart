@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:starter_codes/core/money/money.dart';
 // import 'package:intl/intl.dart'; // Uncomment if you use DateFormat for date/time parsing
 
 // --- Bulk Order Sub-Models ---
@@ -38,8 +39,7 @@ class BulkContact extends Equatable {
   factory BulkContact.fromJson(Map<String, dynamic> json) {
     return BulkContact(
       location: json['location'] is Map<String, dynamic>
-          ? BulkLocationPoint.fromJson(
-              json['location'] as Map<String, dynamic>)
+          ? BulkLocationPoint.fromJson(json['location'] as Map<String, dynamic>)
           : null,
       contact: json['contact'] as String?,
       name: json['name'] as String?,
@@ -373,6 +373,28 @@ class DeliveryModel extends Equatable {
   final String? paymentReference;
   final double? riderFee;
 
+  /// Processing fee. Zero on Nigerian plain deliveries.
+  final double? serviceFee;
+
+  /// Tax resolved from the delivery's province. Zero in Nigeria.
+  final double? taxAmount;
+
+  /// The rate the tax was computed at, e.g. `0.13`.
+  final double? taxRate;
+
+  /// What to call the tax on the receipt, e.g. `HST` or `GST + QST`.
+  final String? taxLabel;
+
+  /// What the customer was actually charged. Null on records the server has not
+  /// itemised, in which case [totalAmount] stands.
+  final double? grandTotal;
+
+  /// The market this order belongs to, decided by the server from the pickup
+  /// coordinates. Absent on records written before the Canada expansion, all of
+  /// which are Nigerian.
+  final Country country;
+  final Currency currency;
+
   const DeliveryModel({
     this.id,
     this.user,
@@ -409,7 +431,28 @@ class DeliveryModel extends Equatable {
     this.paymentSource,
     this.paymentReference,
     this.riderFee,
+    this.serviceFee,
+    this.taxAmount,
+    this.taxRate,
+    this.taxLabel,
+    this.grandTotal,
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
   });
+
+  /// What the customer was charged. Falls back to the stored total when the
+  /// server has not itemised the bill, so Nigerian records render as before.
+  Money get amountDue => Money(grandTotal ?? totalAmount ?? 0, currency);
+
+  Money? get deliveryFeeMoney =>
+      deliveryFee == null ? null : Money(deliveryFee!, currency);
+
+  Money? get serviceFeeMoney =>
+      serviceFee == null ? null : Money(serviceFee!, currency);
+
+  Money? get taxMoney => taxAmount == null ? null : Money(taxAmount!, currency);
+
+  bool get hasItemisedCharges => (serviceFee ?? 0) > 0 || (taxAmount ?? 0) > 0;
 
   factory DeliveryModel.fromJson(Map<String, dynamic> json) {
     AgentModel? agent;
@@ -536,7 +579,14 @@ class DeliveryModel extends Equatable {
         walletAmountUsed: (json['walletAmountUsed'] as num?)?.toDouble(),
         paymentSource: json['paymentSource'] as String?,
         paymentReference: json['paymentReference'] as String?,
-        riderFee: (json['riderFee'] as num?)?.toDouble());
+        riderFee: (json['riderFee'] as num?)?.toDouble(),
+        serviceFee: Money.parseAmount(json['serviceFee']),
+        taxAmount: Money.parseAmount(json['taxAmount']),
+        taxRate: Money.parseAmount(json['taxRate']),
+        taxLabel: json['taxLabel'] as String?,
+        grandTotal: Money.parseAmount(json['grandTotal']),
+        country: Country.fromCode(json['country'] as String?),
+        currency: Currency.fromCode(json['currency'] as String?));
   }
 
   Map<String, dynamic> toJson() {
@@ -557,6 +607,13 @@ class DeliveryModel extends Equatable {
       'orderOtp': orderOtp,
       'trackingId': trackingId,
       'totalAmount': totalAmount,
+      'country': country.code,
+      'currency': currency.code,
+      if (serviceFee != null) 'serviceFee': serviceFee,
+      if (taxAmount != null) 'taxAmount': taxAmount,
+      if (taxRate != null) 'taxRate': taxRate,
+      if (taxLabel != null) 'taxLabel': taxLabel,
+      if (grandTotal != null) 'grandTotal': grandTotal,
     };
 
     if (pickupLocation != null) jsonMap['pickupLocation'] = pickupLocation;
@@ -602,6 +659,13 @@ class DeliveryModel extends Equatable {
         paymentSource,
         paymentReference,
         riderFee,
+        serviceFee,
+        taxAmount,
+        taxRate,
+        taxLabel,
+        grandTotal,
+        country,
+        currency,
       ];
 
   int get totalItemsOrdered {
@@ -644,6 +708,13 @@ class DeliveryModel extends Equatable {
     String? paymentSource,
     String? paymentReference,
     double? riderFee,
+    double? serviceFee,
+    double? taxAmount,
+    double? taxRate,
+    String? taxLabel,
+    double? grandTotal,
+    Country? country,
+    Currency? currency,
   }) {
     return DeliveryModel(
       id: id ?? this.id,
@@ -677,6 +748,13 @@ class DeliveryModel extends Equatable {
       paymentSource: paymentSource ?? this.paymentSource,
       paymentReference: paymentReference ?? this.paymentReference,
       riderFee: riderFee ?? this.riderFee,
+      serviceFee: serviceFee ?? this.serviceFee,
+      taxAmount: taxAmount ?? this.taxAmount,
+      taxRate: taxRate ?? this.taxRate,
+      taxLabel: taxLabel ?? this.taxLabel,
+      grandTotal: grandTotal ?? this.grandTotal,
+      country: country ?? this.country,
+      currency: currency ?? this.currency,
     );
   }
 }

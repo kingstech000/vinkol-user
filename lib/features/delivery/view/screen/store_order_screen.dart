@@ -21,6 +21,7 @@ import 'package:starter_codes/widgets/reverse_map.dart';
 
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/widgets/loading_overlay.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class StoreOrderScreen extends ConsumerStatefulWidget {
   const StoreOrderScreen({super.key});
@@ -97,15 +98,8 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
-                child: Icon(Icons.arrow_back_ios_new,
+                child: Icon(PhosphorIconsRegular.caretLeft,
                     color: AppColors.black, size: 18.w),
               ),
             ),
@@ -127,7 +121,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                     borderRadius: BorderRadius.circular(18.r),
                   ),
                   child: Icon(
-                    Icons.directions_rounded,
+                    PhosphorIconsRegular.navigationArrow,
                     color: Colors.white,
                     size: 32.w,
                   ),
@@ -168,13 +162,6 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                           topLeft: Radius.circular(24.r),
                           topRight: Radius.circular(24.r),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, -5),
-                          ),
-                        ],
                       ),
                       child: Column(
                         children: [
@@ -204,7 +191,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                         padding: EdgeInsets.all(40.w),
                                         child: Column(
                                           children: [
-                                            Icon(Icons.shopping_bag_outlined,
+                                            Icon(PhosphorIconsRegular.bag,
                                                 size: 64.w,
                                                 color: Colors.grey.shade400),
                                             Gap.h16,
@@ -240,14 +227,6 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                           ),
                                           borderRadius:
                                               BorderRadius.circular(16.r),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppColors.primary
-                                                  .withOpacity(0.3),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
                                         ),
                                         child: Row(
                                           children: [
@@ -259,7 +238,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Icon(
-                                                Icons.shopify_outlined,
+                                                PhosphorIconsRegular.storefront,
                                                 color: AppColors.white,
                                                 size: 24.w,
                                               ),
@@ -505,10 +484,10 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                                         (index) =>
                                                                             Icon(
                                                                           index < rating.avgRating.floor()
-                                                                              ? Icons.star
+                                                                              ? PhosphorIconsFill.star
                                                                               : (index == rating.avgRating.floor() && rating.avgRating % 1 >= 0.5)
-                                                                                  ? Icons.star_half
-                                                                                  : Icons.star_border,
+                                                                                  ? PhosphorIconsFill.starHalf
+                                                                                  : PhosphorIconsRegular.star,
                                                                           color:
                                                                               Colors.amber,
                                                                           size:
@@ -581,7 +560,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                       ),
                                                       child: IconButton(
                                                         icon: Icon(
-                                                          Icons.call,
+                                                          PhosphorIconsRegular.phone,
                                                           color: Colors.white,
                                                           size: 20.w,
                                                         ),
@@ -722,7 +701,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                           ),
                                                         ),
                                                         Icon(
-                                                          Icons.chevron_right,
+                                                          PhosphorIconsRegular.caretRight,
                                                           color: Colors
                                                               .grey.shade400,
                                                           size: 24.w,
@@ -883,7 +862,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                               child: Column(
                                                 children: [
                                                   _EnhancedLocationInfo(
-                                                    icon: Icons.store_outlined,
+                                                    icon: PhosphorIconsRegular.storefront,
                                                     iconColor: Colors.green,
                                                     title:
                                                         'Pick-up Location (Store)',
@@ -923,7 +902,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                     ),
                                                   ),
                                                   _EnhancedLocationInfo(
-                                                    icon: Icons.location_on,
+                                                    icon: PhosphorIconsRegular.mapPin,
                                                     iconColor:
                                                         AppColors.primary,
                                                     title: 'Drop-off Location',
@@ -955,7 +934,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                                     Row(
                                                       children: [
                                                         Icon(
-                                                          Icons.lock_outline,
+                                                          PhosphorIconsRegular.lock,
                                                           color:
                                                               AppColors.primary,
                                                           size: 20.w,
@@ -997,7 +976,7 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
                                   child: Center(
                                     child: Column(
                                       children: [
-                                        Icon(Icons.error_outline,
+                                        Icon(PhosphorIconsRegular.warningCircle,
                                             size: 48.w, color: Colors.red),
                                         Gap.h16,
                                         Text(
@@ -1042,13 +1021,6 @@ class _EnhancedCard extends StatelessWidget {
           color: Colors.grey.shade200,
           width: 1.w,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: child,
     );

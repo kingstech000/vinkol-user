@@ -2,78 +2,77 @@
 
 import 'package:flutter/services.dart';
 
-/// Utility class for phone number validation and formatting
+/// Utility class for phone number validation and formatting.
+///
+/// Every entry point takes the market's dial code and digit count rather than
+/// assuming Nigeria's. The old version rejected any code that was not `+234`
+/// outright, which made onboarding in another market impossible.
 class PhoneNumberUtils {
   static const String defaultCountryCode = '+234';
   static const int expectedPhoneNumberLength = 10;
 
-  /// Validates and formats a Nigerian phone number
-  /// Ensures the number starts with +234 and has exactly 10 additional digits
+  /// Validates a number and returns it in international form, or null.
+  ///
+  /// Accepts the number however the customer typed it — already
+  /// international, without the `+`, in local trunk form with a leading zero,
+  /// or as bare local digits.
   static String? validateAndFormatPhoneNumber(
-      String phoneNumber, String countryCode) {
+    String phoneNumber,
+    String countryCode, {
+    int expectedLength = expectedPhoneNumberLength,
+  }) {
     // Remove any whitespace and special characters except +
-    String cleanedNumber = phoneNumber.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    final cleaned = phoneNumber.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    if (countryCode.isEmpty) return null;
 
-    // Ensure country code is +234
-    if (countryCode != defaultCountryCode) {
-      return null; // Invalid country code
-    }
+    final dialDigits = countryCode.replaceAll('+', '');
+    String local;
 
-    // Check if the number already starts with +234
-    if (cleanedNumber.startsWith('+234')) {
-      // Extract the number part after +234
-      String numberPart = cleanedNumber.substring(4);
-
-      // Validate that it's exactly 10 digits and all numeric
-      if (numberPart.length == expectedPhoneNumberLength &&
-          RegExp(r'^\d{10}$').hasMatch(numberPart)) {
-        return cleanedNumber; // Return the full number with +234
-      }
-    } else if (cleanedNumber.startsWith('234')) {
-      // Handle case where + is missing
-      String numberPart = cleanedNumber.substring(3);
-
-      if (numberPart.length == expectedPhoneNumberLength &&
-          RegExp(r'^\d{10}$').hasMatch(numberPart)) {
-        return '+$cleanedNumber'; // Add the + prefix
-      }
-    } else if (cleanedNumber.startsWith('0')) {
-      // Handle case where number starts with 0 (local format)
-      String numberPart = cleanedNumber.substring(1);
-
-      if (numberPart.length == expectedPhoneNumberLength &&
-          RegExp(r'^\d{10}$').hasMatch(numberPart)) {
-        return '$countryCode$numberPart'; // Combine country code with number
-      }
+    if (cleaned.startsWith(countryCode)) {
+      local = cleaned.substring(countryCode.length);
+    } else if (cleaned.startsWith(dialDigits)) {
+      local = cleaned.substring(dialDigits.length);
+    } else if (cleaned.startsWith('0')) {
+      // Local trunk form; the leading zero is dropped internationally.
+      local = cleaned.substring(1);
     } else {
-      // Handle case where only the 10-digit number is provided
-      if (cleanedNumber.length == expectedPhoneNumberLength &&
-          RegExp(r'^\d{10}$').hasMatch(cleanedNumber)) {
-        return '$countryCode$cleanedNumber'; // Combine country code with number
-      }
+      local = cleaned;
     }
 
-    return null; // Invalid format
+    if (local.length != expectedLength ||
+        !RegExp('^\\d{$expectedLength}\$').hasMatch(local)) {
+      return null;
+    }
+    return '$countryCode$local';
   }
 
   /// Validates if a phone number is in the correct format
-  static bool isValidPhoneNumber(String phoneNumber, String countryCode) {
-    return validateAndFormatPhoneNumber(phoneNumber, countryCode) != null;
+  static bool isValidPhoneNumber(
+    String phoneNumber,
+    String countryCode, {
+    int expectedLength = expectedPhoneNumberLength,
+  }) {
+    return validateAndFormatPhoneNumber(phoneNumber, countryCode,
+            expectedLength: expectedLength) !=
+        null;
   }
 
-  /// Formats a phone number for display (e.g., +234 801 234 5678)
-  static String formatForDisplay(String phoneNumber) {
-    if (phoneNumber.startsWith('+234') && phoneNumber.length == 14) {
-      String numberPart = phoneNumber.substring(4);
-      return '+234 ${numberPart.substring(0, 3)} ${numberPart.substring(3, 6)} ${numberPart.substring(6)}';
-    }
-    return phoneNumber;
+  /// Groups the local part in threes for display, e.g. `+1 647 946 0011`.
+  static String formatForDisplay(String phoneNumber, String countryCode) {
+    if (!phoneNumber.startsWith(countryCode)) return phoneNumber;
+    final local = phoneNumber.substring(countryCode.length);
+    if (local.length < 7) return phoneNumber;
+    final head = local.substring(0, 3);
+    final mid = local.substring(3, 6);
+    final tail = local.substring(6);
+    return '$countryCode $head $mid $tail';
   }
 
-  /// Extracts the local number part (10 digits) from a full international number
-  static String extractLocalNumber(String fullPhoneNumber) {
-    if (fullPhoneNumber.startsWith('+234') && fullPhoneNumber.length == 14) {
-      return fullPhoneNumber.substring(4);
+  /// Extracts the local part from a full international number.
+  static String extractLocalNumber(
+      String fullPhoneNumber, String countryCode) {
+    if (fullPhoneNumber.startsWith(countryCode)) {
+      return fullPhoneNumber.substring(countryCode.length);
     }
     return fullPhoneNumber;
   }

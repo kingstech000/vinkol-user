@@ -9,6 +9,7 @@ import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ProductCard extends ConsumerWidget {
   final StoreProduct product;
@@ -67,7 +68,7 @@ class ProductCard extends ConsumerWidget {
                   errorWidget: (context, url, error) => Container(
                     color: Colors.grey[100],
                     child: const Icon(
-                      Icons.image_not_supported,
+                      PhosphorIconsRegular.imageBroken,
                       color: Colors.grey,
                       size: 32,
                     ),
@@ -183,7 +184,7 @@ class ProductCard extends ConsumerWidget {
                     ),
                   ),
                   child: const Icon(
-                    Icons.remove,
+                    PhosphorIconsRegular.minus,
                     color: AppColors.primary,
                     size: 20, // Larger for better touch target
                   ),
@@ -241,7 +242,7 @@ class ProductCard extends ConsumerWidget {
                     ),
                   ),
                   child: const Icon(
-                    Icons.add,
+                    PhosphorIconsRegular.plus,
                     color: AppColors.primary,
                     size: 20, // Larger for better touch target
                   ),

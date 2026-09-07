@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/constants/api_routes.dart';
 import 'package:starter_codes/core/utils/network_client.dart'; // Your specified NetworkClient
 import 'package:starter_codes/features/wallet/model/payment_history_model.dart';
+import 'package:starter_codes/features/wallet/model/withdrawable_amount_model.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 
 final walletServiceProvider = Provider((ref) => WalletService(
@@ -68,6 +69,29 @@ class WalletService {
       return 0.0;
     } catch (e, st) {
       _logger.e('WalletService: Failed to fetch wallet balance.',
+          error: e, stackTrace: st);
+      rethrow;
+    }
+  }
+
+  /// Fetches what can actually be withdrawn, with the breakdown that explains
+  /// why it may be less than the balance.
+  Future<WithdrawableAmount> fetchWithdrawableAmount(String userId) async {
+    _logger.d('WalletService: Fetching withdrawable amount for $userId');
+    try {
+      final response = await _apiClient.get(
+        '${ApiRoute.users}/$userId/withdrawable-amount',
+      );
+      _logger.d('WalletService: Raw withdrawable-amount response: $response');
+
+      if (response is Map<String, dynamic> && response['data'] != null) {
+        return WithdrawableAmount.fromJson(
+            Map<String, dynamic>.from(response['data'] as Map));
+      }
+
+      throw Exception('Unexpected response from withdrawable-amount endpoint');
+    } catch (e, st) {
+      _logger.e('WalletService: Failed to fetch withdrawable amount.',
           error: e, stackTrace: st);
       rethrow;
     }

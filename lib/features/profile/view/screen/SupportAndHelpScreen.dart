@@ -7,6 +7,7 @@ import 'package:starter_codes/core/utils/textstyles.dart'; // Ensure this file e
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart'; // Ensure this file exists
 import 'package:starter_codes/widgets/gap.dart'; // Ensure this file exists
 import 'package:url_launcher/url_launcher.dart'; // Use url_launcher directly
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class SupportHelpScreen extends StatefulWidget {
   const SupportHelpScreen({super.key});
@@ -52,7 +53,7 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MiniAppBar(
-        icon: Icons.arrow_back_ios,
+        icon: PhosphorIconsRegular.caretLeft,
         color: AppColors.black,
         title: 'Support And Help',
       ),
@@ -111,7 +112,7 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
         children: [
           Gap.h32,
           _ContactOption(
-            icon: Icons.phone_outlined,
+            icon: PhosphorIconsRegular.phone,
             title: 'Customer Service (Primary)',
             onTap: () {
               _launchUrl(context, LinkRoutes.customerServicePhone1);
@@ -126,28 +127,28 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
             },
           ),
           _ContactOption(
-            icon: Icons.email_outlined,
+            icon: PhosphorIconsRegular.envelope,
             title: 'Email Us: Vinkollogistics@gmail.com',
             onTap: () {
               _launchUrl(context, LinkRoutes.emailSupport1);
             },
           ),
           _ContactOption(
-            icon: Icons.mail_outline, // Changed icon for visual distinction
+            icon: PhosphorIconsRegular.envelope, // Changed icon for visual distinction
             title: 'Email Us: vinkolltd@gmail.com',
             onTap: () {
               _launchUrl(context, LinkRoutes.emailSupport2);
             },
           ),
           _ContactOption(
-            icon: Icons.chat_bubble_outline,
+            icon: PhosphorIconsRegular.chatCircle,
             title: 'Chat on WhatsApp 1',
             onTap: () {
               _launchUrl(context, LinkRoutes.whatsAppChat);
             },
           ),
           _ContactOption(
-            icon: Icons.chat_bubble_outline,
+            icon: PhosphorIconsRegular.chatCircle,
             title: 'Chat on WhatsApp 2',
             onTap: () {
               _launchUrl(context, LinkRoutes.whatsAppChat2);
@@ -161,22 +162,22 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
             textAlign: TextAlign.start,
           ),
           _ContactOption(
-            icon: Icons.web,
+            icon: PhosphorIconsRegular.globe,
             title: 'Official Website',
             onTap: () => _launchUrl(context, LinkRoutes.officialWebsite),
           ),
           _ContactOption(
-            icon: Icons.info_outline, // Changed icon
+            icon: PhosphorIconsRegular.info, // Changed icon
             title: 'About Us',
             onTap: () => _launchUrl(context, LinkRoutes.about),
           ),
           _ContactOption(
-            icon: Icons.privacy_tip_outlined, // Changed icon
+            icon: PhosphorIconsRegular.shieldCheck, // Changed icon
             title: 'Privacy Policy',
             onTap: () => _launchUrl(context, LinkRoutes.privacyPolicy),
           ),
           _ContactOption(
-            icon: Icons.description_outlined, // Changed icon
+            icon: PhosphorIconsRegular.fileText, // Changed icon
             title: 'Terms and Condition',
             onTap: () => _launchUrl(context, LinkRoutes.termsAndCondition),
           ),
@@ -188,21 +189,21 @@ class _SupportHelpScreenState extends State<SupportHelpScreen>
             textAlign: TextAlign.start,
           ),
           _ContactOption(
-            icon: Icons.camera_alt_outlined,
+            icon: PhosphorIconsRegular.camera,
             title: 'Follow Us on Instagram',
             onTap: () {
               _launchUrl(context, LinkRoutes.instagramProfile);
             },
           ),
           _ContactOption(
-            icon: Icons.alternate_email,
+            icon: PhosphorIconsRegular.at,
             title: 'Follow Us on X (Twitter)',
             onTap: () {
               _launchUrl(context, LinkRoutes.twitterProfile);
             },
           ),
           _ContactOption(
-            icon: Icons.link,
+            icon: PhosphorIconsRegular.link,
             title: 'Connect on LinkedIn',
             onTap: () {
               _launchUrl(context, LinkRoutes.linkedInProfile);
@@ -333,7 +334,7 @@ class _ContactOption extends StatelessWidget {
               child: AppText.body(title,
                   color: AppColors.black), // Display title as content
             ),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18.w),
+            Icon(PhosphorIconsRegular.caretRight, color: Colors.grey, size: 18.w),
           ],
         ),
       ),
@@ -391,8 +392,8 @@ class _FAQItemState extends State<_FAQItem> {
                   ),
                   Icon(
                     _isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
+                        ? PhosphorIconsRegular.caretUp
+                        : PhosphorIconsRegular.caretDown,
                     color: Colors.grey,
                   ),
                 ],

@@ -11,6 +11,7 @@ import 'package:starter_codes/provider/delivery_provider.dart';
 import 'package:starter_codes/provider/navigation_provider.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class PaymentVerificationScreen extends ConsumerStatefulWidget {
   final String orderId;
@@ -223,13 +224,6 @@ class _PaymentVerificationScreenState
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -243,7 +237,7 @@ class _PaymentVerificationScreenState
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.info_outline_rounded,
+                  PhosphorIconsRegular.info,
                   size: 48.w,
                   color: Colors.orange,
                 ),
@@ -425,13 +419,6 @@ class _PaymentVerificationScreenState
                   ],
                 ),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
               child: Center(
                 child: SizedBox(
@@ -480,16 +467,9 @@ class _PaymentVerificationScreenState
                   ],
                 ),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.green.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
               child: Icon(
-                Icons.check_circle_rounded,
+                PhosphorIconsFill.checkCircle,
                 size: 60.w,
                 color: Colors.white,
               ),
@@ -529,16 +509,9 @@ class _PaymentVerificationScreenState
                   ],
                 ),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
               child: Icon(
-                Icons.error_rounded,
+                PhosphorIconsFill.warningCircle,
                 size: 60.w,
                 color: Colors.white,
               ),
@@ -578,16 +551,9 @@ class _PaymentVerificationScreenState
                   ],
                 ),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
               child: Icon(
-                Icons.schedule_rounded,
+                PhosphorIconsRegular.clock,
                 size: 60.w,
                 color: Colors.white,
               ),
@@ -671,7 +637,7 @@ class _PaymentVerificationScreenState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.arrow_back_rounded,
+                  PhosphorIconsRegular.arrowLeft,
                   color: Colors.grey[700],
                   size: 20.w,
                 ),
@@ -707,13 +673,6 @@ class _PaymentVerificationScreenState
                 colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
               ),
               borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
             ),
             child: ElevatedButton(
               onPressed: _retryVerification,
@@ -728,7 +687,7 @@ class _PaymentVerificationScreenState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.refresh_rounded, color: Colors.white, size: 22.w),
+                  Icon(PhosphorIconsRegular.arrowClockwise, color: Colors.white, size: 22.w),
                   SizedBox(width: 8.w),
                   Text(
                     'Retry Verification',
@@ -761,7 +720,7 @@ class _PaymentVerificationScreenState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.list_alt_rounded,
+                  Icon(PhosphorIconsRegular.listBullets,
                       color: AppColors.primary, size: 22.w),
                   SizedBox(width: 8.w),
                   Text(

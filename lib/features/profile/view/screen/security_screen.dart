@@ -7,6 +7,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class SecurityScreen extends StatefulWidget {
   const SecurityScreen({super.key});
@@ -24,7 +25,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MiniAppBar(
-        icon: Icons.arrow_back_ios,
+        icon: PhosphorIconsRegular.caretLeft,
         color: AppColors.black,
       ),
       body: SingleChildScrollView(
@@ -48,7 +49,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             //   trailingWidget: Row(
             //     children: [
             //       if (_authenticatedWithGoogle)
-            //         Icon(Icons.check, color: AppColors.primary, size: 20.w),
+            //         Icon(PhosphorIconsRegular.check, color: AppColors.primary, size: 20.w),
             //       Gap.w4,
             //       AppText.body('Google',
             //           color: _authenticatedWithGoogle
@@ -142,7 +143,7 @@ class _SecurityOption extends StatelessWidget {
               children: [
                 if (trailingWidget != null) trailingWidget!,
                 Gap.w8,
-                Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18.w),
+                Icon(PhosphorIconsRegular.caretRight, color: Colors.grey, size: 18.w),
               ],
             ),
           ],

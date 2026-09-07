@@ -5,6 +5,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'dart:async';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 Future<String?> showTransactionPinModal(BuildContext context) {
   final formKey = GlobalKey<FormState>();
@@ -45,7 +46,7 @@ Future<String?> showTransactionPinModal(BuildContext context) {
                             Navigator.of(context).pop();
                             pinCompleter.complete(null);
                           },
-                          icon: const Icon(Icons.cancel),
+                          icon: const Icon(PhosphorIconsFill.xCircle),
                         ),
                       ],
                     ),
@@ -139,7 +140,7 @@ Future<String?> showTransactionPinModal(BuildContext context) {
                                 });
                               }
                             },
-                            icon: const Icon(Icons.backspace_outlined),
+                            icon: const Icon(PhosphorIconsRegular.backspace),
                           );
                         } else {
                           return numberButton('${index + 1}', () {

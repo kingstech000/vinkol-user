@@ -10,7 +10,7 @@ class ImageAsset {
   static const String regularBadge = "$imagePath/regular-badge.png";
   static const String logout = "$imagePath/logout.png";
   static const String speechBubble = "$imagePath/speech.png";
-  static const String logo='$imagePath/logo.png';
+  static const String logo = '$imagePath/logo.png';
 }
 
 class LottieAssets {
@@ -18,7 +18,9 @@ class LottieAssets {
 }
 
 class SvgAsset {
-  static const String svgPath = "assets/svgs";
+  static const String svgPath = "assets/images";
+  static const String onboardingIcon = "$svgPath/onboading-icon.svg";
+  static const String locationIcon = "$svgPath/location.svg";
 }
 
 class PngAsset {

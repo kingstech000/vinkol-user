@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
@@ -11,6 +10,7 @@ import 'package:starter_codes/widgets/app_bar/mini_action_app_bar.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -58,7 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       appBar: MiniActionAppBar(
-        icon: CupertinoIcons.chevron_back,
+        icon: PhosphorIconsRegular.caretLeft,
         action: 'Sign up',
         actionOnTap: () {
           NavigationService.instance.navigateTo(NavigatorRoutes.signupScreen);
@@ -101,7 +101,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   suffixIcon: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Icon(
-                      Icons.email,
+                      PhosphorIconsRegular.envelope,
                       size: 20,
                       color: AppColors.greyLight,
                     ),

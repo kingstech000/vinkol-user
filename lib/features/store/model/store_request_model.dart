@@ -2,8 +2,8 @@ class CreateStoreOrderPayload {
   final String state;
   final String store;
   final List<ProductOrderPayload> products;
-  final int amount;
-  final int
+  final double amount;
+  final double
       deliveryFee; // Can be 0 if included in total or handled otherwise, but kept for legacy
   final String dropoffLocation;
   final String deliveryType;
@@ -15,6 +15,14 @@ class CreateStoreOrderPayload {
   final String? paymentSource;
   final String? deliveryProvider;
   final int? externalDeliveryFeeId;
+
+  /// The server-issued quote id. When present it is sent instead of
+  /// [deliveryFee]: a quote is the only route to a Canadian price, and a
+  /// raw fee always prices the order as Nigerian.
+  ///
+  /// Null for partner (Chowdeck) quotes, which the server does not issue quote
+  /// ids for and which are therefore still ordered with a raw fee.
+  final String? quoteId;
 
   CreateStoreOrderPayload({
     required this.state,
@@ -32,6 +40,7 @@ class CreateStoreOrderPayload {
     this.paymentSource,
     this.deliveryProvider,
     this.externalDeliveryFeeId,
+    this.quoteId,
   });
 
   Map<String, dynamic> toJson() {
@@ -40,7 +49,9 @@ class CreateStoreOrderPayload {
       'store': store,
       'products': products.map((p) => p.toJson()).toList(),
       'amount': amount,
-      'deliveryFee': deliveryFee,
+      // Exactly one of the two is required, and a quoteId makes deliveryFee
+      // ignored outright, so only ever send one.
+      if (quoteId != null) 'quoteId': quoteId else 'deliveryFee': deliveryFee,
       'dropoffLocation': dropoffLocation,
       'deliveryType': deliveryType,
       'orderType': orderType,

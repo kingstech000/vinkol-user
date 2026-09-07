@@ -106,7 +106,10 @@ class BadRequestException extends DioException with Failure {
   }
 
   @override
-  String get message => (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Invalid request") : (serverResponse?.data?.toString() ?? "Invalid request");
+  String get message => userFacingMessage(
+        (serverResponse?.data is Map) ? serverResponse?.data["message"] : null,
+        "We couldn't complete that request. Please try again.",
+      );
 
   @override
   String get title => "An error occurred";
@@ -122,7 +125,8 @@ class InternalServerErrorException extends DioException with Failure {
   }
 
   @override
-  String get message => "Unknown error occurred, please try again later.";
+  String get message =>
+      "We're having trouble on our end. Please try again shortly.";
 
   @override
   String get title => "Server error";
@@ -141,11 +145,13 @@ class ConflictException extends DioException with Failure {
   }
 
   @override
-  String get message =>
-      (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Conflict occurred.") : (serverResponse?.data?.toString() ?? "Conflict occurred.");
+  String get message => userFacingMessage(
+        (serverResponse?.data is Map) ? serverResponse?.data["message"] : null,
+        "That conflicts with information we already have.",
+      );
 
   @override
-  String get title => "Network error";
+  String get title => "An error occurred";
 }
 
 /// 401
@@ -161,7 +167,10 @@ class UnauthorizedException extends DioException with Failure {
   }
 
   @override
-  String get message => (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Invalid request") : (serverResponse?.data?.toString() ?? "Invalid request");
+  String get message => userFacingMessage(
+        (serverResponse?.data is Map) ? serverResponse?.data["message"] : null,
+        "We couldn't verify your details. Please try again.",
+      );
 
   @override
   String get title => "Access denied";
@@ -180,11 +189,13 @@ class NotFoundException extends DioException with Failure {
   }
 
   @override
-  String get message =>
-      (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Not found, please try again.") : (serverResponse?.data?.toString() ?? "Not found, please try again.");
+  String get message => userFacingMessage(
+        (serverResponse?.data is Map) ? serverResponse?.data["message"] : null,
+        "We couldn't find what you were looking for.",
+      );
 
   @override
-  String get title => "Not Found";
+  String get title => "Not found";
 }
 
 /// No Internet
@@ -241,13 +252,13 @@ class ServerCommunicationException extends DioException with Failure {
       log(r?.data?.toString() ?? "No response data");
 
       if (r?.data == null) {
-        return "Server communication error occurred";
+        return kGenericErrorMessage;
       }
 
       return getMessagefromServer(r!.data);
     } catch (e) {
       log("Error parsing server message: $e");
-      return "Something went wrong";
+      return kGenericErrorMessage;
     }
   }
 
@@ -268,7 +279,10 @@ class ForbiddenException extends DioException with Failure {
   }
 
   @override
-  String get message => (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Access forbidden") : (serverResponse?.data?.toString() ?? "Access forbidden");
+  String get message => userFacingMessage(
+        (serverResponse?.data is Map) ? serverResponse?.data["message"] : null,
+        "You don't have access to that.",
+      );
 
   @override
   String get title => "Forbidden";
@@ -287,9 +301,11 @@ class UnprocessableEntityException extends DioException with Failure {
   }
 
   @override
-  String get message =>
-      (serverResponse?.data is Map) ? (serverResponse?.data["message"] ?? "Unprocessable entity") : (serverResponse?.data?.toString() ?? "Unprocessable entity");
+  String get message => userFacingMessage(
+        (serverResponse?.data is Map) ? serverResponse?.data["message"] : null,
+        "Some of the details you entered aren't valid.",
+      );
 
   @override
-  String get title => "Validation Error";
+  String get title => "Validation error";
 }

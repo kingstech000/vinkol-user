@@ -1,4 +1,4 @@
-import 'package:intl/intl.dart';
+import 'package:starter_codes/core/money/money.dart';
 
 extension StringExtension on String {
   ///check if the string is an email
@@ -26,14 +26,15 @@ extension StringExtension on String {
     return "${text[0].toUpperCase()}${lowercaseOther ? text.substring(1).toLowerCase() : text.substring(1)}";
   }
 
-  String toMoney() {
+  /// Formats this string as money for a market, or returns it unchanged when it
+  /// does not parse as a number. Defaults to naira; see [DoubleX.toMoney].
+  String toMoney([Currency currency = Currency.ngn]) {
     var number = num.tryParse(this);
     if (number == null) {
       return this;
     }
 
-    final formatter = NumberFormat('#,##0.00', 'en_US');
-    return '₦${formatter.format(number)}';
+    return Money(number.toDouble(), currency).format();
   }
 
   bool get isImage {

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/wallet_service.dart';
 import '../model/payment_history_model.dart';
+import '../model/withdrawable_amount_model.dart';
+import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 
 // State class to hold both withdrawal history and wallet balance
@@ -8,19 +10,27 @@ class WalletOverviewState {
   final AsyncValue<List<PaymentHistory>> withdrawalHistory;
   final AsyncValue<double> walletBalance; // Assuming this is also managed here
 
+  /// What can actually be withdrawn, which nets off disputed and pending
+  /// amounts. Use this rather than [walletBalance] to gate a withdrawal —
+  /// `/withdraw` refuses anything above it.
+  final AsyncValue<WithdrawableAmount> withdrawable;
+
   WalletOverviewState({
     this.withdrawalHistory = const AsyncValue.loading(),
     this.walletBalance = const AsyncValue.loading(),
+    this.withdrawable = const AsyncValue.loading(),
   });
 
   // Helper to create a new state with updated values (immutability is key)
   WalletOverviewState copyWith({
     AsyncValue<List<PaymentHistory>>? withdrawalHistory,
     AsyncValue<double>? walletBalance,
+    AsyncValue<WithdrawableAmount>? withdrawable,
   }) {
     return WalletOverviewState(
       withdrawalHistory: withdrawalHistory ?? this.withdrawalHistory,
       walletBalance: walletBalance ?? this.walletBalance,
+      withdrawable: withdrawable ?? this.withdrawable,
     );
   }
 }
@@ -101,6 +111,27 @@ class WalletOverviewNotifier extends Notifier<WalletOverviewState> {
       _logger.e('WalletOverviewNotifier: Error fetching wallet balance.',
           error: e, stackTrace: st);
       state = state.copyWith(walletBalance: AsyncValue.error(e, st));
+    }
+
+    // --- Fetch Withdrawable Amount ---
+    final userId = ref.read(userProvider)?.id;
+    if (userId == null) {
+      _logger.w('WalletOverviewNotifier: No user id; skipping withdrawable.');
+    } else {
+      try {
+        if (!state.withdrawable.isLoading) {
+          state = state.copyWith(withdrawable: const AsyncValue.loading());
+        }
+        final withdrawable =
+            await _walletService.fetchWithdrawableAmount(userId);
+        state = state.copyWith(withdrawable: AsyncValue.data(withdrawable));
+        _logger.d('WalletOverviewNotifier: Withdrawable amount fetched: '
+            '${withdrawable.withdrawableAmount}');
+      } catch (e, st) {
+        _logger.e('WalletOverviewNotifier: Error fetching withdrawable amount.',
+            error: e, stackTrace: st);
+        state = state.copyWith(withdrawable: AsyncValue.error(e, st));
+      }
     }
 
     try {

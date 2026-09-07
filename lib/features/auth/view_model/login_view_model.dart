@@ -9,7 +9,7 @@ import 'package:starter_codes/core/utils/base_view_model.dart';
 import 'package:starter_codes/features/auth/data/auth_service.dart';
 import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
-import 'package:starter_codes/widgets/text_action_modal.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
@@ -72,9 +72,15 @@ class LoginViewModel extends BaseViewModel {
           // Send OTP first before navigating
 
           // Show message and navigate to verification screen
-          textActionModal(
+          AppStatusDialogs.showError(
             context,
-            onPressed: () async {
+            'Verify your email',
+            userFacingMessage(
+              message,
+              'Please verify your email address to continue.',
+            ),
+            buttonText: "Verify Email",
+            onClosed: () async {
               try {
                 await _authService.resendOtp(email: _email);
                 logger.i('OTP sent successfully for: $_email');
@@ -86,8 +92,6 @@ class LoginViewModel extends BaseViewModel {
                 // Continue anyway - user can request OTP again on verification screen
               }
             },
-            dialogText: message,
-            buttonText: "Verify Email",
           );
 
           changeState(const ViewModelState.idle());
@@ -115,20 +119,23 @@ class LoginViewModel extends BaseViewModel {
             .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
       } else {
         // Login failed
-        textActionModal(
+        AppStatusDialogs.showError(
           context,
-          onPressed: () {},
-          dialogText: responseData['message'] ?? 'Login failed',
+          'Login failed',
+          userFacingMessage(
+            responseData['message'],
+            "We couldn't sign you in. Please try again.",
+          ),
           buttonText: "Dismiss",
         );
       }
     } on Failure catch (e) {
       logger.e('Login failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () {},
-        dialogText: e.message,
+        e.title,
+        e.message,
         buttonText: "Dismiss",
       );
     }

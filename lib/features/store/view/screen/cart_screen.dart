@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/constants/assets.dart';
 import 'package:starter_codes/core/extensions/double_extension.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
@@ -40,6 +41,10 @@ class _CartScreenState extends ConsumerState<CartScreen>
   // State for selected delivery option
   QuoteResponseModel? _selectedQuote;
   String _selectedPaymentMethod = 'Paystack';
+
+  /// The market the selected quote belongs to. Governs which payment sources
+  /// are on offer and whether there is a wallet at all.
+  Country _market = Country.ng;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -120,8 +125,17 @@ class _CartScreenState extends ConsumerState<CartScreen>
       return;
     }
 
+    // Quotes are single-use and expire 15 minutes after the server issues them.
+    if (_selectedQuote!.isExpired) {
+      setState(() => _selectedQuote = null);
+      ref.invalidate(deliveryFeeProvider);
+      _showSnackbar(
+          'That price expired. We have re-priced your delivery — please confirm again.');
+      return;
+    }
+
     final double deliveryFee = _selectedQuote!.price;
-    final int? externalDeliveryFeeId = _selectedQuote!.id;
+    final int? externalDeliveryFeeId = _selectedQuote!.externalDeliveryFeeId;
     final String deliveryType = _selectedQuote!.deliveryType;
     final String deliveryProvider =
         externalDeliveryFeeId != null ? 'Chowdeck' : 'Internal';
@@ -151,8 +165,8 @@ class _CartScreenState extends ConsumerState<CartScreen>
       state: initialPersonalInfo.address,
       store: storeId,
       products: productPayloads,
-      amount: subtotal.toInt(),
-      deliveryFee: deliveryFee.toInt(),
+      amount: subtotal,
+      deliveryFee: deliveryFee,
       dropoffLocation: dropOffLocation.formattedAddress!,
       deliveryType: deliveryType,
       orderType: 'Shopping',
@@ -160,9 +174,12 @@ class _CartScreenState extends ConsumerState<CartScreen>
       time: formattedTime,
       note: 'Order from App',
       description: '',
-      paymentSource: _selectedPaymentMethod,
+      paymentSource: _market.paymentSourceOrNull(_selectedPaymentMethod),
       deliveryProvider: deliveryProvider,
       externalDeliveryFeeId: externalDeliveryFeeId,
+      // Prices the order server-side. Null on Chowdeck quotes, which fall
+      // back to sending the fee.
+      quoteId: _selectedQuote!.quoteId,
     );
 
     ref.read(appLoggerProvider).d('Payload to send: ${orderPayload.toJson()}');
@@ -196,7 +213,14 @@ class _CartScreenState extends ConsumerState<CartScreen>
     } else {
       final errorMessage = ref.read(storeOrderViewModelProvider).error;
       if (errorMessage != null) {
-        _showSnackbar('Failed to create order: $errorMessage');
+        if (isStaleQuoteMessage(errorMessage)) {
+          setState(() => _selectedQuote = null);
+          ref.invalidate(deliveryFeeProvider);
+          _showSnackbar(
+              'That price expired. We have re-priced your delivery — please confirm again.');
+        } else {
+          _showSnackbar('Failed to create order: $errorMessage');
+        }
       }
     }
   }
@@ -225,8 +249,18 @@ class _CartScreenState extends ConsumerState<CartScreen>
     double subtotal = cartItems.fold(
         0.0, (sum, item) => sum + (item.price * (item.quantity ?? 0)));
 
-    double deliveryFee = _selectedQuote?.price ?? 0.0;
-    double total = subtotal + deliveryFee;
+    // Render every amount in the quote's own currency, and charge what the
+    // server says to charge: the delivery's grandTotal already carries its
+    // processing fee and tax.
+    final Currency currency = _selectedQuote?.currency ?? Currency.ngn;
+    _market = _selectedQuote?.country ?? Country.ng;
+    // A selection carried over from another market would be rejected.
+    if (!_market.paymentSources.contains(_selectedPaymentMethod)) {
+      _selectedPaymentMethod = _market.paymentSources.first;
+    }
+    final double deliveryFee = _selectedQuote?.fare.amount ?? 0.0;
+    final double deliveryDue = _selectedQuote?.amountDue.amount ?? 0.0;
+    final double total = subtotal + deliveryDue;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -513,7 +547,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
 
                                             return _DeliveryOptionCard(
                                               title: displayTitle,
-                                              price: quote.price.toMoney(),
+                                              price: quote.amountDue.format(),
                                               isSelected:
                                                   _selectedQuote == quote,
                                               isAvailable: quote.isAvailable,
@@ -560,9 +594,10 @@ class _CartScreenState extends ConsumerState<CartScreen>
                                     final double? walletBalance =
                                         walletState.walletBalance.valueOrNull;
                                     final bool isWalletInsufficient =
-                                        _selectedQuote != null &&
+                                        _market.hasCustomerWallet &&
+                                            _selectedQuote != null &&
                                             walletBalance != null &&
-                                            (_selectedQuote!.price) >
+                                            _selectedQuote!.amountDue.amount >
                                                 walletBalance;
 
                                     _showPaymentMethodPicker(context,
@@ -610,7 +645,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
                                             if (_selectedPaymentMethod ==
                                                 'Wallet')
                                               Text(
-                                                'Balance: ${walletState.walletBalance.valueOrNull?.toMoney() ?? "₦0.00"}',
+                                                'Balance: ${(walletState.walletBalance.valueOrNull ?? 0).toMoney()}',
                                                 style: TextStyle(
                                                   fontSize: 12.sp,
                                                   color: Colors.grey[600],
@@ -642,7 +677,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
                             child: Column(
                               children: [
                                 _buildSummaryRow(
-                                    'Subtotal', subtotal.toMoney()),
+                                    'Subtotal', subtotal.toMoney(currency)),
                                 Gap.h12,
                                 Row(
                                   mainAxisAlignment:
@@ -656,7 +691,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
                                       ),
                                     ),
                                     Text(
-                                      deliveryFee.toMoney(),
+                                      deliveryFee.toMoney(currency),
                                       style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
@@ -664,6 +699,26 @@ class _CartScreenState extends ConsumerState<CartScreen>
                                     ),
                                   ],
                                 ),
+                                // Itemised by the server. Zero and therefore
+                                // absent on Nigerian plain deliveries.
+                                if ((_selectedQuote?.serviceFee ?? 0) > 0) ...[
+                                  Gap.h12,
+                                  _buildSummaryRow(
+                                    'Processing fee',
+                                    _selectedQuote!.serviceFee!
+                                        .toMoney(currency),
+                                  ),
+                                ],
+                                if ((_selectedQuote?.taxAmount ?? 0) > 0) ...[
+                                  Gap.h12,
+                                  _buildSummaryRow(
+                                    _selectedQuote!.taxLabel?.isNotEmpty == true
+                                        ? _selectedQuote!.taxLabel!
+                                        : 'Tax',
+                                    _selectedQuote!.taxAmount!
+                                        .toMoney(currency),
+                                  ),
+                                ],
                                 Gap.h12,
                                 Divider(color: Colors.grey[300], thickness: 1),
                                 Gap.h12,
@@ -680,7 +735,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
                                       ),
                                     ),
                                     Text(
-                                      total.toMoney(),
+                                      total.toMoney(currency),
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 20,
@@ -796,23 +851,22 @@ class _CartScreenState extends ConsumerState<CartScreen>
                 ),
               ),
               Gap.h24,
-              _buildPaymentDetailOption(
-                context,
-                'Wallet',
-                Icons.account_balance_wallet,
-                isWalletInsufficient,
-                isWalletInsufficient
-                    ? 'Insufficient funds'
-                    : 'Balance: ${walletBalance?.toMoney() ?? "₦0.00"}',
-              ),
-              Gap.h16,
-              _buildPaymentDetailOption(
-                context,
-                'Paystack',
-                Icons.credit_card,
-                false,
-                'Pay securely with card',
-              ),
+              for (final source in _market.paymentSources) ...[
+                _buildPaymentDetailOption(
+                  context,
+                  source,
+                  source == 'Wallet'
+                      ? Icons.account_balance_wallet
+                      : Icons.credit_card,
+                  source == 'Wallet' && isWalletInsufficient,
+                  source == 'Wallet'
+                      ? (isWalletInsufficient
+                          ? 'Insufficient funds'
+                          : 'Balance: ${(walletBalance ?? 0).toMoney()}')
+                      : 'Pay securely with card',
+                ),
+                Gap.h16,
+              ],
               // Gap.h16,
               // _buildPaymentDetailOption(
               //   context,

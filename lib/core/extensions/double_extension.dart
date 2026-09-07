@@ -1,32 +1,27 @@
-import 'package:intl/intl.dart';
+import 'package:starter_codes/core/money/money.dart';
 
 extension DoubleX on double {
-  String toMoney() {
-    var f = NumberFormat.currency(
-        symbol: '',
-        decimalDigits: 0,
-        locale: 'en_US',
-        customPattern: '#,##0.00');
-    return '₦${f.format(this)}'; // 'this' refers to the double value itself
-  }
+  /// Formats this amount for a market.
+  ///
+  /// Defaults to naira so the existing call sites keep working unchanged; pass
+  /// [currency] wherever the amount's market is known — it travels with every
+  /// quote, order, payment and withdrawal the API returns.
+  ///
+  /// Naira is written without decimals and Canadian dollars with two. That is a
+  /// property of the currency, not of the call site.
+  String toMoney([Currency currency = Currency.ngn]) =>
+      Money(this, currency).format();
 
-  String toMoneyShowFree() {
+  String toMoneyShowFree([Currency currency = Currency.ngn]) {
     if (this == 0.0) {
       return "Free";
     }
-    return toMoney(); // Returns ₦2,000.00 or similar
+    return toMoney(currency);
   }
 
-  String toMoneyWithoutSymbol() {
-    var f = NumberFormat.currency(
-        symbol: '',
-        decimalDigits: 0,
-        locale: 'en_US',
-        customPattern: '#,##0.00');
-    return f.format(this);
-  }
+  String toMoneyWithoutSymbol([Currency currency = Currency.ngn]) =>
+      Money(this, currency).format(showSymbol: false);
 
-  String toMoneyWithSymbol() {
-    return toMoney();
-  }
+  String toMoneyWithSymbol([Currency currency = Currency.ngn]) =>
+      toMoney(currency);
 }

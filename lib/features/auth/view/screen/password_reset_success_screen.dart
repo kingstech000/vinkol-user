@@ -4,6 +4,7 @@ import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class PasswordResetSuccessScreen extends StatelessWidget {
   const PasswordResetSuccessScreen({super.key});
@@ -21,7 +22,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                 radius: 50,
                 backgroundColor: Colors.black,
                 child: Icon(
-                  Icons.check,
+                  PhosphorIconsRegular.check,
                   color: Colors.white,
                   size: 60,
                 ),

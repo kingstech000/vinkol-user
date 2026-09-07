@@ -27,7 +27,7 @@ class PhoneNumberValidationExample {
       print('Valid: $isValid');
       print('Formatted: ${formatted ?? 'INVALID'}');
       print(
-          'Display Format: ${formatted != null ? PhoneNumberUtils.formatForDisplay(formatted) : 'N/A'}');
+          'Display Format: ${formatted != null ? PhoneNumberUtils.formatForDisplay(formatted, '+234') : 'N/A'}');
       print('---');
     }
 

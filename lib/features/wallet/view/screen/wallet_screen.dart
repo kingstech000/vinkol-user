@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/extensions/double_extension.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/utils/colors.dart';
+import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/core/utils/textstyles.dart';
 import 'package:starter_codes/features/wallet/view/widget/fund_wallet_sheet.dart';
@@ -16,6 +19,7 @@ import '../../view_model/withdrawal_view_model.dart';
 import '../widget/withdrawal_item.dart';
 import 'withdraw_screen.dart';
 import 'transaction_detail_screen.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 final walletServiceProvider = Provider((ref) {
   return WalletService(NetworkClient(), const AppLogger(WalletService));
@@ -47,6 +51,25 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  /// Runs a wallet action, or explains why it is unavailable.
+  ///
+  /// There are no customer wallets outside Nigeria: top-ups are refused server
+  /// side and there is nothing to withdraw, so say so here rather than letting
+  /// the request fail.
+  void _guardWalletAction(VoidCallback action) {
+    final market = ref.read(userProvider)?.country ?? Country.ng;
+    if (market.hasCustomerWallet) {
+      action();
+      return;
+    }
+    AppStatusDialogs.showError(
+      context,
+      'Wallet unavailable',
+      'The wallet is not available in your region. Payments are made by card '
+          'at checkout, and refunds go back to the card you paid with.',
+    );
   }
 
   @override
@@ -106,13 +129,6 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: (() {
                     final wb = walletOverviewState.walletBalance;
@@ -184,7 +200,7 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+              Icon(PhosphorIconsRegular.warningCircle, size: 48.sp, color: Colors.red),
               Gap.h16,
               Text(
                 'Error loading history',
@@ -205,7 +221,7 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.history, size: 64.sp, color: Colors.grey.shade300),
+                Icon(PhosphorIconsRegular.clockCounterClockwise, size: 64.sp, color: Colors.grey.shade300),
                 Gap.h16,
                 Text(
                   'No payment history',
@@ -274,7 +290,7 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                       child: Icon(
-                        isDebit ? Icons.arrow_downward : Icons.arrow_upward,
+                        isDebit ? PhosphorIconsRegular.arrowDown : PhosphorIconsRegular.arrowUp,
                         color: isDebit
                             ? Colors.red.shade600
                             : Colors.green.shade600,
@@ -382,7 +398,7 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                  Icon(PhosphorIconsRegular.warningCircle, size: 48.sp, color: Colors.red),
                   Gap.h16,
                   Text(
                     'Error loading withdrawals',
@@ -405,7 +421,7 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.account_balance_wallet,
+                    Icon(PhosphorIconsRegular.wallet,
                         size: 64.sp, color: Colors.grey.shade300),
                     Gap.h16,
                     Text(
@@ -458,7 +474,7 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
               style: headingStyle5,
             ),
             IconButton(
-              icon: Icon(Icons.refresh, size: 30.sp, color: AppColors.blue),
+              icon: Icon(PhosphorIconsRegular.arrowClockwise, size: 30.sp, color: AppColors.blue),
               onPressed: () {
                 ref
                     .read(walletOverviewViewModelProvider.notifier)
@@ -485,7 +501,8 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
           children: [
             Expanded(
               child: InkWell(
-                onTap: () => showFundDialog(context, ref, mounted),
+                onTap: () => _guardWalletAction(
+                    () => showFundDialog(context, ref, mounted)),
                 borderRadius: BorderRadius.circular(12.r),
                 child: Container(
                   decoration: BoxDecoration(
@@ -495,13 +512,6 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(12.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.blue.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
                   ),
                   child: Padding(
                     padding: EdgeInsets.symmetric(
@@ -513,7 +523,7 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.add_circle_outline,
+                          PhosphorIconsRegular.plusCircle,
                           color: Colors.white,
                           size: 20.sp,
                         ),
@@ -538,14 +548,14 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
             Gap.w12,
             Expanded(
               child: InkWell(
-                onTap: () {
+                onTap: () => _guardWalletAction(() {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => const WithdrawScreen(),
                     ),
                   );
-                },
+                }),
                 borderRadius: BorderRadius.circular(12.r),
                 child: Container(
                   decoration: BoxDecoration(
@@ -562,7 +572,7 @@ class _WalletHistoryScreenState extends ConsumerState<WalletHistoryScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.send_rounded,
+                          PhosphorIconsRegular.paperPlaneTilt,
                           color: AppColors.blue,
                           size: 22.sp,
                         ),

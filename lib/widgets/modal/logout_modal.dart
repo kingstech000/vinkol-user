@@ -13,6 +13,7 @@ import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class LogoutModal extends ConsumerWidget {
   const LogoutModal({super.key});
@@ -42,7 +43,7 @@ class LogoutModal extends ConsumerWidget {
             backgroundColor: AppColors.primary
                 .withOpacity(0.3), // A light blue background for the icon
             child: Icon(
-              Icons.cancel_outlined, // A clear "cancel" or "stop" icon
+              PhosphorIconsRegular.xCircle, // A clear "cancel" or "stop" icon
               color: AppColors
                   .primary, // Primary color for the icon, or a distinct blue/red
               size: 40.w,

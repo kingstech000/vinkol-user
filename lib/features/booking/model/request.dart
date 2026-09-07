@@ -20,6 +20,14 @@ class CreateOrderRequest {
   final String? recipientName;
   final String? recipientPhone;
 
+  /// The server-issued quote id. When present it is sent instead of
+  /// [price]/[deliveryFee]: a quote is the only route to a Canadian price, and a
+  /// raw fee always prices the order as Nigerian.
+  ///
+  /// Null for partner (Chowdeck) quotes, which the server does not issue quote
+  /// ids for and which are therefore still ordered with a raw fee.
+  final String? quoteId;
+
   CreateOrderRequest({
     required this.pickupLocation,
     required this.dropOffLocation,
@@ -39,6 +47,7 @@ class CreateOrderRequest {
     this.description,
     this.recipientName,
     this.recipientPhone,
+    this.quoteId,
   });
 
   Map<String, dynamic> toJson() {
@@ -51,7 +60,9 @@ class CreateOrderRequest {
       'vehicleRequest': vehicleType,
       "orderType": "Delivery",
       'state': state,
-      'deliveryFee': price,
+      // Exactly one of the two is required, and a quoteId makes deliveryFee
+      // ignored outright, so only ever send one.
+      if (quoteId != null) 'quoteId': quoteId else 'deliveryFee': price,
       'itemType': packageName,
       // 'packageName': packageName,
       if (paymentSource != null) 'paymentSource': paymentSource,
@@ -87,6 +98,7 @@ class CreateOrderRequest {
       description: json['description'] as String?,
       recipientName: json['recipientName'] as String?,
       recipientPhone: json['recipientPhone'] as String?,
+      quoteId: json['quoteId'] as String?,
     );
   }
 
@@ -110,6 +122,7 @@ class CreateOrderRequest {
     String? description,
     String? recipientName,
     String? recipientPhone,
+    String? quoteId,
   }) {
     return CreateOrderRequest(
       state: state ?? this.state,
@@ -132,6 +145,7 @@ class CreateOrderRequest {
       description: description ?? this.description,
       recipientName: recipientName ?? this.recipientName,
       recipientPhone: recipientPhone ?? this.recipientPhone,
+      quoteId: quoteId ?? this.quoteId,
     );
   }
 }
@@ -167,41 +181,6 @@ class BulkDropoffItem {
   }
 }
 
-class CreateBulkOrderRequest {
-  final LocationModel pickupLocation;
-  final List<BulkDropoffItem> dropoffs;
-  final String vehicleType;
-  final String pickupDate;
-  final String pickupTime;
-  final String state;
-  final double totalPrice;
-  final String? paymentSource;
-
-  CreateBulkOrderRequest({
-    required this.pickupLocation,
-    required this.dropoffs,
-    required this.vehicleType,
-    required this.pickupDate,
-    required this.pickupTime,
-    required this.state,
-    required this.totalPrice,
-    this.paymentSource,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'pickupLocation': pickupLocation.formattedAddress,
-      'dropoffs': dropoffs.map((d) => d.toJson()).toList(),
-      'vehicleRequest': vehicleType,
-      'date': pickupDate,
-      'time': pickupTime,
-      'state': state,
-      'deliveryFee': totalPrice,
-      'orderType': 'Bulk',
-      if (paymentSource != null) 'paymentSource': paymentSource,
-    };
-  }
-}
 
 class MultiOrderRequestItem {
   final LocationModel pickupLocation;
@@ -237,38 +216,6 @@ class MultiOrderRequestItem {
   }
 }
 
-class CreateMultiOrderRequest {
-  final List<MultiOrderRequestItem> orders;
-  final String vehicleType;
-  final String pickupDate;
-  final String pickupTime;
-  final String state;
-  final double totalPrice;
-  final String? paymentSource;
-
-  CreateMultiOrderRequest({
-    required this.orders,
-    required this.vehicleType,
-    required this.pickupDate,
-    required this.pickupTime,
-    required this.state,
-    required this.totalPrice,
-    this.paymentSource,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'orders': orders.map((o) => o.toJson()).toList(),
-      'vehicleRequest': vehicleType,
-      'date': pickupDate,
-      'time': pickupTime,
-      'state': state,
-      'deliveryFee': totalPrice,
-      'orderType': 'Multi',
-      if (paymentSource != null) 'paymentSource': paymentSource,
-    };
-  }
-}
 
 // ---  GetQuoteRequest ---
 class GetQuoteRequest {
@@ -549,34 +496,40 @@ class GetNewBulkQuoteRequest {
 
 class CreateNewBulkOrderRequest {
   final String quoteId;
-  final String paymentSource;
+
+  /// Null lets the server pick the market's default, which is the safest thing
+  /// to send: naming a source the market does not offer is a 400.
+  final String? paymentSource;
 
   CreateNewBulkOrderRequest({
     required this.quoteId,
-    required this.paymentSource,
+    this.paymentSource,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'quoteId': quoteId,
-      'paymentSource': paymentSource,
+      if (paymentSource != null) 'paymentSource': paymentSource,
     };
   }
 }
 
 class CreateNewMultiOrderRequest {
   final String quoteId;
-  final String paymentSource;
+
+  /// Null lets the server pick the market's default, which is the safest thing
+  /// to send: naming a source the market does not offer is a 400.
+  final String? paymentSource;
 
   CreateNewMultiOrderRequest({
     required this.quoteId,
-    required this.paymentSource,
+    this.paymentSource,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'quoteId': quoteId,
-      'paymentSource': paymentSource,
+      if (paymentSource != null) 'paymentSource': paymentSource,
     };
   }
 }

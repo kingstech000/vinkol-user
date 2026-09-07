@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 
 // Alternative Design - Card Style
@@ -29,13 +30,6 @@ class PromotionBannerAlt extends StatelessWidget {
             color: const Color(0xFF6366F1).withOpacity(0.2),
             width: 2,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Row(
           children: [
@@ -208,7 +202,7 @@ class PromotionBannerMinimal extends StatelessWidget {
             ),
             
             Icon(
-              Icons.arrow_forward_ios,
+              PhosphorIconsRegular.caretRight,
               color: const Color(0xFF6366F1),
               size: 16.sp,
             ),

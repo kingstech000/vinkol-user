@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:starter_codes/core/utils/colors.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -22,11 +22,11 @@ class CustomBottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
-          _buildNavItem(Icons.description, 0, 'Documents'),
-          _buildNavItem(Icons.history, 1, 'History'),
-          _buildNavItem(Icons.wallet_outlined, 2, 'Wallet'),
-          _buildNavItem(CupertinoIcons.chat_bubble_2, 3, 'Chat'),
-          _buildNavItem(Icons.person_outline, 4, 'Profile'),
+          _buildNavItem(PhosphorIconsRegular.fileText, 0, 'Documents'),
+          _buildNavItem(PhosphorIconsRegular.clockCounterClockwise, 1, 'History'),
+          _buildNavItem(PhosphorIconsRegular.wallet, 2, 'Wallet'),
+          _buildNavItem(PhosphorIconsRegular.chatsCircle, 3, 'Chat'),
+          _buildNavItem(PhosphorIconsRegular.user, 4, 'Profile'),
         ],
       ),
     );

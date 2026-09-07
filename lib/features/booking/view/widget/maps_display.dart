@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class MapDisplay extends ConsumerStatefulWidget {
   const MapDisplay({
@@ -192,7 +193,7 @@ class MapShimmerPlaceholder extends StatelessWidget {
       child: Stack(
         children: [
           Center(
-            child: Icon(Icons.map, size: 80, color: Colors.grey[400]),
+            child: Icon(PhosphorIconsRegular.mapTrifold, size: 80, color: Colors.grey[400]),
           ),
           Positioned(
             bottom: 16,

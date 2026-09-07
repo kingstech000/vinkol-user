@@ -17,6 +17,7 @@ import 'package:starter_codes/widgets/circular_network_image.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/reverse_map.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class BookingOrderScreen extends ConsumerStatefulWidget {
   const BookingOrderScreen({super.key});
@@ -79,7 +80,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.arrow_back_ios,
+              child: Icon(PhosphorIconsRegular.caretLeft,
                   color: AppColors.black, size: 20.w),
             ),
           ),
@@ -174,7 +175,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                   shape: BoxShape.circle,
                                                 ),
                                                 child: Icon(
-                                                  Icons.timelapse_outlined,
+                                                  PhosphorIconsRegular.timer,
                                                   color: AppColors.white,
                                                   size: 20.w,
                                                 ),
@@ -285,12 +286,6 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                       ),
                                                       decoration: BoxDecoration(
                                                         color: AppColors.white,
-                                                        boxShadow: const [
-                                                          BoxShadow(
-                                                            color: Colors.black,
-                                                            blurRadius: 2,
-                                                          )
-                                                        ],
                                                         borderRadius:
                                                             BorderRadius
                                                                 .circular(10),
@@ -373,7 +368,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                     children: [
                                                       BorderedIconButton(
                                                         icon:
-                                                            Icons.call_outlined,
+                                                            PhosphorIconsRegular.phone,
                                                         onPressed: () {
                                                           if (delivery
                                                                   .deliveryAgent
@@ -421,7 +416,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                         _WhiteContainer(
                                           children: [
                                             _LocationInfo(
-                                              icon: Icons.location_on,
+                                              icon: PhosphorIconsRegular.mapPin,
                                               iconColor: Colors.green,
                                               title: 'Pick-up Location',
                                               address:
@@ -451,7 +446,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                             ),
                                             Gap.h8,
                                             _LocationInfo(
-                                              icon: Icons.location_on,
+                                              icon: PhosphorIconsRegular.mapPin,
                                               iconColor: AppColors.primary,
                                               title: 'Drop-off Location',
                                               address:

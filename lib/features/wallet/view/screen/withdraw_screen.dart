@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_codes/core/extensions/double_extension.dart';
+import 'package:starter_codes/core/money/money.dart';
+import 'package:starter_codes/core/utils/text.dart';
+import '../../model/withdrawable_amount_model.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import '../../view_model/withdrawal_view_model.dart';
@@ -9,6 +13,7 @@ import 'add_bank_screen.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import '../../view_model/wallet_history_view_model.dart';
 import '../widget/withdrawal_confirmation_sheet.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class WithdrawScreen extends ConsumerStatefulWidget {
   const WithdrawScreen({super.key});
@@ -18,6 +23,12 @@ class WithdrawScreen extends ConsumerStatefulWidget {
 }
 
 class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
+  /// There are no customer wallets in Canada, so wallet amounts are always naira.
+  /// The symbol and decimal places still come from the market layer rather than
+  /// being written into the screen.
+  static const Currency _walletCurrency = Currency.ngn;
+  static const double _minimumWithdrawal = 100;
+
   final amountController = TextEditingController();
   final reasonController = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -88,7 +99,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
   Widget build(BuildContext context) {
     final withdrawalState = ref.watch(withdrawalProvider);
     final walletOverviewState = ref.watch(walletOverviewViewModelProvider);
-    final walletBalanceValue = walletOverviewState.walletBalance.valueOrNull;
+    final withdrawable = walletOverviewState.withdrawable.valueOrNull;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -166,7 +177,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
                 //           ],
                 //         ),
                 //         Icon(
-                //           Icons.account_balance_wallet,
+                //           PhosphorIconsRegular.wallet,
                 //           color: Colors.white,
                 //           size: 40.sp,
                 //         ),
@@ -180,7 +191,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
                       return _buildNoBankAccountState();
                     }
                     return _buildWithdrawalForm(
-                        userBank, withdrawalState, walletBalanceValue);
+                        userBank, withdrawalState, withdrawable);
                   },
                   loading: () => Center(
                     child: Padding(
@@ -218,7 +229,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.account_balance_outlined,
+              PhosphorIconsRegular.bank,
               size: 40.sp,
               color: AppColors.blue,
             ),
@@ -282,7 +293,12 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
   }
 
   Widget _buildWithdrawalForm(
-      userBank, withdrawalState, double? walletBalance) {
+      userBank, withdrawalState, WithdrawableAmount? withdrawable) {
+    // `/withdraw` refuses anything above the withdrawable amount, so validate
+    // against that rather than the balance — otherwise the screen offers a
+    // number the server will reject.
+    final double? limit = withdrawable?.withdrawableAmount;
+    final Currency currency = withdrawable?.currency ?? _walletCurrency;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -316,7 +332,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
           enabled: !withdrawalState.isLoading,
           decoration: InputDecoration(
             hintText: '0.00',
-            prefixText: '₦ ',
+            prefixText: '${_walletCurrency.symbol} ',
             prefixStyle: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w600,
@@ -353,24 +369,46 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
             if (amount == null || amount <= 0) {
               return 'Please enter a valid amount';
             }
-            if (amount < 100) {
-              return 'Minimum withdrawal is ₦100';
+            if (amount < _minimumWithdrawal) {
+              return 'Minimum withdrawal is '
+                  '${Money(_minimumWithdrawal, currency).format()}';
             }
-            if (walletBalance != null && amount > walletBalance) {
-              return 'Insufficient balance. Available: ₦${walletBalance.toStringAsFixed(2)}';
+            if (limit != null && amount > limit) {
+              return 'Insufficient balance. Available: '
+                  '${limit.toMoney(currency)}';
             }
             return null;
           },
         ),
-        if (walletBalance != null) ...[
+        if (withdrawable != null) ...[
           Gap.h8,
-          Text(
-            'Available: ₦${walletBalance.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey.shade600,
-            ),
+          AppText.caption(
+            'Available: ${withdrawable.withdrawable.format()}',
+            color: AppColors.darkgrey,
+            fontSize: 12,
           ),
+          // The gap between the balance and what can be withdrawn is otherwise
+          // unexplained, and reads as money going missing.
+          if (withdrawable.hasHoldings) ...[
+            Gap.h4,
+            AppText.caption(
+              'Balance ${withdrawable.total.format()}',
+              color: AppColors.darkgrey,
+              fontSize: 12,
+            ),
+            if (withdrawable.pendingAmount > 0)
+              AppText.caption(
+                'Pending withdrawal ${withdrawable.pending.format()}',
+                color: AppColors.darkgrey,
+                fontSize: 12,
+              ),
+            if (withdrawable.disputedAmount > 0)
+              AppText.caption(
+                'Held for disputed orders ${withdrawable.disputed.format()}',
+                color: AppColors.darkgrey,
+                fontSize: 12,
+              ),
+          ],
         ],
         Gap.h24,
         Text(
@@ -468,7 +506,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
       child: Column(
         children: [
           Icon(
-            Icons.error_outline,
+            PhosphorIconsRegular.warningCircle,
             size: 48.sp,
             color: Colors.red,
           ),

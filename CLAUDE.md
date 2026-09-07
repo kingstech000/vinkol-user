@@ -20,24 +20,24 @@ documents live in `.claude/design/` and are binding:
 | `05-decisions.md` | **Every ratified decision. Read D-07 to D-10 first** |
 | `06-screen-inventory.md` | Every screen and its redesign state |
 | `07-redesign-groups.md` | The 65 view files grouped by shared design problem |
-| `08-backend-gaps.md` | **The Canada spec for the backend, and what was removed as invented** |
-| `09-prototype.md` | **The approved prototype: how to run it, and every screen's Flutter target** |
-| `10-build-plan.md` | **14 work packages with a paste-ready prompt for each** |
+| `08-backend-gaps.md` | **The market layer's specification. The source of truth for Canada work** |
+| `09-prototype.md` | ~~The prototype~~ — **stale, the prototype is abandoned** |
+| `10-build-plan.md` | ~~14 work packages~~ — **stale, keyed to the abandoned prototype** |
 
-## Where things stand (3 Sep 2026)
+## Where things stand (7 Sep 2026)
 
-- **Direction ratified: A · Midnight** (D-07). Dark-first, one saturated blue object per
-  screen. Two earlier attempts are kept for reference only.
-- **The prototype is the source of truth.** 44 clickable screens, Direction A, light + dark,
-  NG + CA markets. `cd prototype && npm start` → `http://localhost:3000/app`. When the docs and
-  the prototype disagree, the prototype wins.
-- **`lib/core/design/` is stale** — built for the rejected direction. WP1 reworks it. Nothing
-  else should start first.
-- **The Canada expansion is the point of the project** (D-09). Market-layer work stays even
-  though the backend does not support it yet.
-- Nothing has been implemented in Flutter beyond the stale token layer.
-
-To start any piece of work, open `10-build-plan.md` and paste the prompt for that package.
+- **The prototype is abandoned.** `prototype/` is no longer a specification and should not be
+  consulted — it predates the backend contract and contradicts it. The market-layer decisions
+  taken from it (Interac, a Canadian wallet, a `market-select` screen, `CA$`, client-computed
+  tax) are all void. `09-prototype.md` and `10-build-plan.md` are keyed to it and are stale.
+- **`08-backend-gaps.md` is the source of truth for the market layer.** Where any other design
+  doc disagrees with it, it wins.
+- **The Canada expansion is live on staging** and largely implemented in Flutter:
+  quote-then-order, `grandTotal` and the tax line, market-aware currency rendering,
+  market-conditional payment sources, and the withdrawable-amount breakdown. The market layer
+  is `lib/core/money/money.dart`, covered by `test/core/`.
+- **`lib/core/design/` is stale** — built for a rejected direction, and nothing consumes it.
+- The visual redesign is parked; the Canada migration is the active work.
 
 **Load the `vinkol-design-system` skill before writing or editing any UI.** It carries the hard
 rules; a PostToolUse hook flags violations in lines you add.
@@ -70,7 +70,7 @@ dart format --output=none --set-exit-if-changed lib/
 flutter run
 python3 .claude/scripts/contrast.py '#0E74D8' '#FFFFFF'   # WCAG check before quoting a ratio
 
-cd prototype && npm start                                # the approved prototype, :3000/app
+flutter test test/core/                                  # market layer: money, quotes, payments
 ```
 
 ## Notes
@@ -82,4 +82,5 @@ cd prototype && npm start                                # the approved prototyp
   theme layer is Phase 2 work.
 - Dead files pending deletion: `wallet_screen_backup.dart`,
   `features/delivery/view/screen/test.dart`, `utils/phone_number_validation_example.dart`,
-  `widgets/bottom_nav_bar.dart` (superseded by the pod in `dashboard_screen.dart`).
+  `widgets/bottom_nav_bar.dart` (superseded by the pod in `dashboard_screen.dart`),
+  `widgets/text_action_modal.dart` (superseded by `widgets/modal/app_status_dialogs.dart`).

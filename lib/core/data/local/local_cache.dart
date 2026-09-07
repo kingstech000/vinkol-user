@@ -13,10 +13,6 @@ abstract class LocalCache {
 
   ///Retrieves user data
   Map<String, dynamic>? getUserData();
-// ONBOARDING
-  Future<void> onBoarded();
-  Future<bool> isOnBoarded();
-
   Future<void> authenticated();
   Future<bool> isAuthenticated();
 

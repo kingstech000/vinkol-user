@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Vinkol motion. Source of truth: `.claude/design/04-tokens.md` §6.
-///
-/// Motion exists to explain a change, never to decorate one. No bounce, no elastic, no
-/// overshoot, and nothing longer than [deliberate].
 abstract final class VinkolMotion {
   static const instant = Duration(milliseconds: 80); // press feedback
   static const fast = Duration(milliseconds: 140); // toggles, chips, checkboxes
@@ -18,10 +14,6 @@ abstract final class VinkolMotion {
 
   static const skeletonPeriod = Duration(milliseconds: 1200);
 
-  /// Whether this context has asked for reduced motion.
-  ///
-  /// Reduced motion means cross-fade or no transition — never a shortened bounce. Check this
-  /// before every non-trivial animation.
   static bool reduced(BuildContext context) =>
       MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 

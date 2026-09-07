@@ -1,7 +1,7 @@
 // lib/features/store/model/product_model.dart
 // (Confirming your provided model structure)
 
-import 'package:intl/intl.dart'; // Import the intl package
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/features/store/model/store_model.dart'; // For StoreAvatar
 
 class Product {
@@ -18,6 +18,11 @@ class Product {
   final int? v; // Version key, nullable
   int quantity; // Added quantity as a final property with a default value
 
+  /// The market this product is sold in. Absent on records written before
+  /// the Canada expansion, all of which are Nigerian.
+  final Country country;
+  final Currency currency;
+
   Product({
     required this.id,
     required this.title,
@@ -31,16 +36,11 @@ class Product {
     required this.slug,
     this.v,
     this.quantity = 0, // Set default value to 0
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
   });
 
-  String get formattedPrice {
-    final formatCurrency = NumberFormat.currency(
-      locale: 'en_NG', // English, Nigeria for Naira symbol
-      symbol: '₦', // Explicitly set Naira symbol
-      decimalDigits: 2, // Ensure 2 decimal places
-    );
-    return formatCurrency.format(price.toDouble());
-  }
+  String get formattedPrice => Money(price.toDouble(), currency).format();
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
@@ -60,6 +60,8 @@ class Product {
       slug: json['slug'] as String,
       v: json['__v'] as int?,
       quantity: json['quantity'] as int? ?? 0, // Parse from JSON or default to 0
+      country: Country.fromCode(json['country'] as String?),
+      currency: Currency.fromCode(json['currency'] as String?),
     );
   }
 
@@ -77,6 +79,8 @@ class Product {
       'slug': slug,
       '__v': v,
       'quantity': quantity, // Include in toJson
+      'country': country.code,
+      'currency': currency.code,
     };
   }
 
@@ -93,6 +97,8 @@ class Product {
     String? slug,
     int? v,
     int? quantity, // Add to copyWith
+    Country? country,
+    Currency? currency,
   }) {
     return Product(
       id: id ?? this.id,
@@ -107,6 +113,8 @@ class Product {
       slug: slug ?? this.slug,
       v: v ?? this.v,
       quantity: quantity ?? this.quantity, // Copy quantity
+      country: country ?? this.country,
+      currency: currency ?? this.currency,
     );
   }
 }

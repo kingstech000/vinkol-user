@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/models/failure.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 
 final personalInfoViewModelProvider =
@@ -101,14 +102,18 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
         );
       }
 
-      // Extract just the local number part (without +234)
+      // Extract just the local number part, without whichever dial code it
+      // arrived with.
+      final profile = _ref.read(marketProfileProvider);
+      final dial = profile.dialCode;
+      final dialDigits = dial.replaceAll('+', '');
       String phoneNumber = state.phoneNumber.trim();
       String localNumber = '';
 
-      if (phoneNumber.startsWith('+234')) {
-        localNumber = phoneNumber.substring(4);
-      } else if (phoneNumber.startsWith('234')) {
-        localNumber = phoneNumber.substring(3);
+      if (phoneNumber.startsWith(dial)) {
+        localNumber = phoneNumber.substring(dial.length);
+      } else if (phoneNumber.startsWith(dialDigits)) {
+        localNumber = phoneNumber.substring(dialDigits.length);
       } else {
         localNumber = phoneNumber;
       }
@@ -116,19 +121,19 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
       logger.d('Phone number from state: "$phoneNumber"');
       logger.d('Extracted local number: "$localNumber"');
 
-      // Simple validation: just check if it's 10 digits
-      if (localNumber.length < 10) {
+      if (localNumber.length < profile.localPhoneDigits) {
         if (!mounted) return false;
 
         state = state.copyWith(
           isLoading: false,
-          errorMessage: 'Phone number must be 10 digits',
+          errorMessage:
+              'Phone number must be ${profile.localPhoneDigits} digits',
         );
         return false;
       }
 
-      // Format with +234 prefix for the backend
-      final formattedPhoneNumber = '+234$localNumber';
+      // Format with the market's dial code for the backend
+      final formattedPhoneNumber = '$dial$localNumber';
       logger.i('Sending phone number to backend: $formattedPhoneNumber');
       logger.i(
           'Full update payload - firstname: ${state.firstname}, lastName: ${state.lastname}, state: ${state.address}');
@@ -143,10 +148,12 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
 
       logger.i('Backend call completed successfully');
 
-      if (!mounted) return true;
-
-      await _authService.getUserProfile();
-
+      // AuthService.updateProfile refreshes the user itself, and that refresh
+      // rebuilds this provider — which disposes this notifier. So by the time
+      // control returns here `mounted` is normally already false and anything
+      // written to state is dropped. The return value is the result of the
+      // update; callers must not wait on a success state that may never
+      // arrive.
       if (!mounted) return true;
 
       state = state.copyWith(

@@ -7,6 +7,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class AuthPromptBottomSheet extends ConsumerWidget {
   final String title;
@@ -73,7 +74,7 @@ class AuthPromptBottomSheet extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.lock_outline,
+                PhosphorIconsRegular.lock,
                 size: 30.sp,
                 color: AppColors.primary,
               ),

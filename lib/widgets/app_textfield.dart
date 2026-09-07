@@ -6,6 +6,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:starter_codes/core/extensions/context.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/textstyles.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class AppTextField extends StatefulWidget {
   final String? text;
@@ -41,6 +42,12 @@ class AppTextField extends StatefulWidget {
   final bool enableSuggestions;
   final bool autocorrect;
 
+  /// Shows the field exactly as an editable one but refuses the keyboard, so a
+  /// picker can present itself as a field rather than as its own species of
+  /// control. Pair with [onTap].
+  final bool readOnly;
+  final VoidCallback? onTap;
+
   const AppTextField({
     super.key,
     this.hint,
@@ -75,6 +82,8 @@ class AppTextField extends StatefulWidget {
     this.autofillHints,
     this.enableSuggestions = true,
     this.autocorrect = true,
+    this.readOnly = false,
+    this.onTap,
   });
 
   @override
@@ -98,8 +107,10 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      TextFormField(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
           autofillHints: widget.autofillHints,
           enableSuggestions: widget.enableSuggestions,
           autocorrect: widget.autocorrect,
@@ -110,6 +121,8 @@ class _AppTextFieldState extends State<AppTextField> {
           style: widget.textFormStyle ??
               headingStyle6.copyWith(color: AppColors.black, fontSize: 16),
           controller: widget.controller,
+          readOnly: widget.readOnly,
+          onTap: widget.onTap,
           inputFormatters: widget.formatter,
           onFieldSubmitted: widget.onSubmitted,
           validator: widget.validator,
@@ -119,8 +132,10 @@ class _AppTextFieldState extends State<AppTextField> {
           decoration: InputDecoration(
             fillColor: widget.fillColor ?? Colors.grey.shade200,
             focusColor: widget.focusColor,
-            errorStyle:
-                headingStyle6.copyWith(color: AppColors.red, fontSize: 14.sp),
+            errorStyle: headingStyle6.copyWith(
+              color: AppColors.red,
+              fontSize: 14.sp,
+            ),
             labelText: widget.labelText,
             suffixIconConstraints: BoxConstraints(maxHeight: 40.h),
             prefixIconConstraints: BoxConstraints(maxHeight: 40.h),
@@ -128,10 +143,14 @@ class _AppTextFieldState extends State<AppTextField> {
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.isPassword
                 ? IconButton(
-                    icon:
-                        Icon(obscure ? Icons.visibility_off : Icons.visibility),
+                    icon: Icon(
+                      obscure
+                          ? PhosphorIconsRegular.eyeSlash
+                          : PhosphorIconsRegular.eye,
+                    ),
                     onPressed: toggleVisibility,
-                    color: AppColors.black.withOpacity(0.6))
+                    color: AppColors.black.withOpacity(0.6),
+                  )
                 : widget.suffixIcon,
             isDense: true,
             contentPadding: widget.contentPadding ??
@@ -139,30 +158,40 @@ class _AppTextFieldState extends State<AppTextField> {
             hintText: widget.hint,
             hintStyle: widget.hintStyle ??
                 headingStyle6.copyWith(
-                    color: AppColors.black.withOpacity(0.35), fontSize: 14.sp),
+                  color: AppColors.black.withOpacity(0.35),
+                  fontSize: 14.sp,
+                ),
             filled: true,
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10.r)),
-                borderSide: widget.validCode
-                    ? const BorderSide(color: AppColors.green)
-                    : BorderSide.none),
+              borderRadius: BorderRadius.all(Radius.circular(10.r)),
+              borderSide: widget.validCode
+                  ? const BorderSide(color: AppColors.green)
+                  : BorderSide.none,
+            ),
             focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10.r)),
-                borderSide:
-                    BorderSide(color: widget.borderColor ?? AppColors.primary)),
+              borderRadius: BorderRadius.all(Radius.circular(10.r)),
+              borderSide: BorderSide(
+                color: widget.borderColor ?? AppColors.primary,
+              ),
+            ),
             errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10.r)),
-                borderSide: const BorderSide(color: AppColors.red)),
+              borderRadius: BorderRadius.all(Radius.circular(10.r)),
+              borderSide: const BorderSide(color: AppColors.red),
+            ),
             focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10.r)),
-                borderSide:
-                    BorderSide(color: widget.borderColor ?? AppColors.black)),
+              borderRadius: BorderRadius.all(Radius.circular(10.r)),
+              borderSide: BorderSide(
+                color: widget.borderColor ?? AppColors.black,
+              ),
+            ),
             // disabledBorder: const OutlineInputBorder(
             //   borderRadius: BorderRadius.all(Radius.circular(16)),
             // ),
           ),
-          onChanged: widget.onChanged)
-    ]);
+          onChanged: widget.onChanged,
+        ),
+      ],
+    );
   }
 }
 
@@ -224,11 +253,7 @@ class _PinCodeFieldState extends State<PinCodeField> {
       appContext: context,
       length: widget.length,
       autoDisposeControllers: false,
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(
-          RegExp("[0-9]"),
-        ),
-      ],
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp("[0-9]"))],
       onChanged: (value) {
         text = value;
       },

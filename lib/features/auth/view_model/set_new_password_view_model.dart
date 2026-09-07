@@ -10,7 +10,7 @@ import 'package:starter_codes/features/auth/data/auth_service.dart'; // Ensure t
 import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart'; // Import your providers (should contain resetEmailProvider and resetPasswordProvider)
-import 'package:starter_codes/widgets/text_action_modal.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
 class SetNewPasswordViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -43,11 +43,10 @@ class SetNewPasswordViewModel extends BaseViewModel {
     // Basic validation within ViewModel (can also be done in UI validator)
     if (newPassword != confirmPassword) {
       // changeState(const ViewModelState.error(Failure('Passwords do not match.'))); // You had this commented, but it's good for state
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () =>
-            NavigationService.instance.goBack(), // Or just close dialog
-        dialogText: 'Passwords do not match. Please re-enter.',
+        'Passwords do not match',
+        'Please re-enter your new password.',
         buttonText: "Okay",
       );
       return;
@@ -61,12 +60,13 @@ class SetNewPasswordViewModel extends BaseViewModel {
 
     if (otp.isEmpty) {
       // changeState(const ViewModelState.error(Failure('OTP not found. Please restart the password reset process.')));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => NavigationService.instance
-            .navigateToReplace(NavigatorRoutes.resetPasswordScreen),
-        dialogText: 'OTP not found. Please restart the process.',
+        'Code not found',
+        'Please restart the password reset process.',
         buttonText: "Restart",
+        onClosed: () => NavigationService.instance
+            .navigateToReplace(NavigatorRoutes.resetPasswordScreen),
       );
       return;
     }
@@ -92,12 +92,12 @@ class SetNewPasswordViewModel extends BaseViewModel {
     } on Failure catch (e) {
       logger.e('Password reset failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () =>
-            NavigationService.instance.goBack(), // Or simply close the dialog
-        dialogText: e.message,
+        e.title,
+        e.message,
         buttonText: "Try Again",
+        onClosed: () => NavigationService.instance.goBack(),
       );
     }
   }

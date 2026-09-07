@@ -10,6 +10,7 @@ import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final StoreProduct product;
@@ -47,16 +48,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                  icon: const Icon(PhosphorIconsRegular.caretLeft, size: 18),
                   color: Colors.black87,
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -77,7 +71,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   errorWidget: (context, url, error) => Container(
                     color: Colors.grey[200],
                     child: const Icon(
-                      Icons.image_not_supported,
+                      PhosphorIconsRegular.imageBroken,
                       color: Colors.grey,
                       size: 64,
                     ),
@@ -191,13 +185,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 color: Colors.grey[200]!,
                                 width: 1,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                             ),
                             child: Column(
                               children: [
@@ -225,14 +212,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                                 errorWidget:
                                                     (context, url, error) =>
                                                         Icon(
-                                                  Icons.store_rounded,
+                                                  PhosphorIconsRegular.storefront,
                                                   color: Colors.orange[400],
                                                   size: 30.w,
                                                 ),
                                               ),
                                             )
                                           : Icon(
-                                              Icons.store_rounded,
+                                              PhosphorIconsRegular.storefront,
                                               color: Colors.orange[400],
                                               size: 30.w,
                                             ),
@@ -305,7 +292,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 // Store Details
                                 if (store.address != null) ...[
                                   _buildStoreDetailItem(
-                                    icon: Icons.location_on_rounded,
+                                    icon: PhosphorIconsRegular.mapPin,
                                     label: 'Address',
                                     value: store.address!,
                                   ),
@@ -313,7 +300,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 ],
                                 if (store.phone != null) ...[
                                   _buildStoreDetailItem(
-                                    icon: Icons.phone_rounded,
+                                    icon: PhosphorIconsRegular.phone,
                                     label: 'Phone',
                                     value: store.phone!,
                                   ),
@@ -321,7 +308,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 ],
                                 if (store.state != null) ...[
                                   _buildStoreDetailItem(
-                                    icon: Icons.map_rounded,
+                                    icon: PhosphorIconsRegular.mapTrifold,
                                     label: 'State',
                                     value: store.state!,
                                   ),
@@ -349,13 +336,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
-            ),
-          ],
         ),
         child: currentQuantity == 0
             ? AppButton.primary(
@@ -371,7 +351,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         content: Row(
                           children: [
                             Icon(
-                              Icons.check_circle,
+                              PhosphorIconsFill.checkCircle,
                               color: Colors.white,
                               size: 20.w,
                             ),
@@ -474,7 +454,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         content: Row(
                           children: [
                             Icon(
-                              Icons.remove_shopping_cart,
+                              PhosphorIconsRegular.shoppingCartSimple,
                               color: Colors.white,
                               size: 20.w,
                             ),
@@ -516,7 +496,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     ),
                   ),
                   child: const Icon(
-                    Icons.remove,
+                    PhosphorIconsRegular.minus,
                     color: AppColors.primary,
                     size: 24,
                   ),
@@ -573,7 +553,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     ),
                   ),
                   child: const Icon(
-                    Icons.add,
+                    PhosphorIconsRegular.plus,
                     color: AppColors.primary,
                     size: 24,
                   ),

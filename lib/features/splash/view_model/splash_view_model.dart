@@ -9,6 +9,7 @@ import 'package:starter_codes/features/auth/data/auth_service.dart';
 import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
+import 'package:starter_codes/provider/user_location_provider.dart';
 
 class SplashViewModel extends BaseViewModel {
   final NavigationService _navigationService = NavigationService.instance;
@@ -22,22 +23,21 @@ class SplashViewModel extends BaseViewModel {
     try {
       changeState(const ViewModelState.busy());
 
-      // Get onboarding status
-      bool isOnBoarded = await localCache.isOnBoarded();
       _logger.i('=== SPLASH SCREEN DEBUG ===');
-      _logger.i('isOnBoarded: $isOnBoarded');
 
-      // If not onboarded, go to onboarding
-      if (!isOnBoarded) {
-        _logger.i('User not onboarded. Redirecting to onboarding screen.');
+      // The first thing a new install is asked. Everything downstream —
+      // address search, phone format, the map, the market — needs to know
+      // where the customer is, so it is the gate before any of it.
+      if (!hasStoredUserLocation()) {
+        _logger.i('No stored location. Redirecting to location setup.');
         changeState(const ViewModelState.idle());
         _navigationService
-            .navigateToReplaceAll(NavigatorRoutes.onboardingScreen);
+            .navigateToReplaceAll(NavigatorRoutes.locationSetupScreen);
         return;
       }
 
-      // User is onboarded - check authentication status
-      _logger.i('User is onboarded. Checking authentication...');
+      // Location is known - check authentication status
+      _logger.i('Location is set. Checking authentication...');
 
       // Check if user is in guest mode
       bool isGuestMode = localCache.isGuestMode();

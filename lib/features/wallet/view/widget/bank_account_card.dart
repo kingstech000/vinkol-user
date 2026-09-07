@@ -3,6 +3,7 @@ import '../../model/bank_model.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class BankAccountCard extends StatelessWidget {
   final UserBank bank;
@@ -33,13 +34,6 @@ class BankAccountCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.blue.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +50,7 @@ class BankAccountCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.account_balance,
+                      PhosphorIconsRegular.bank,
                       color: Colors.white,
                       size: 14.sp,
                     ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ImageFileSelector extends StatefulWidget {
   final Function(File?) onImageSelected;
@@ -44,7 +45,7 @@ class _ImageFileSelectorState extends State<ImageFileSelector> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.image_outlined, color: Colors.grey),
+            const Icon(PhosphorIconsRegular.image, color: Colors.grey),
             const SizedBox(width: 10),
             Expanded(
               child: AppText.body(
@@ -54,7 +55,7 @@ class _ImageFileSelectorState extends State<ImageFileSelector> {
                 color: _image == null ? Colors.grey : Colors.black,
               ),
             ),
-            const Icon(Icons.upload_file, color: Colors.grey),
+            const Icon(PhosphorIconsRegular.uploadSimple, color: Colors.grey),
           ],
         ),
       ),

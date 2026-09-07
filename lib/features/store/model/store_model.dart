@@ -2,6 +2,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:starter_codes/core/money/money.dart';
+
 class OpeningHours {
   final DayHours? monday;
   final DayHours? tuesday;
@@ -141,6 +143,11 @@ class Store {
   final double? lng;
   final OpeningHours? openingHours;
 
+  /// The market this record belongs to. Absent on records written before the
+  /// Canada expansion, all of which are Nigerian.
+  final Country country;
+  final Currency currency;
+
   Store({
     required this.id,
     this.email,
@@ -158,6 +165,8 @@ class Store {
     this.lat,
     this.lng,
     this.openingHours,
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
   });
 
   factory Store.fromJson(Map<String, dynamic> json) {
@@ -183,6 +192,8 @@ class Store {
       openingHours: json['openingHours'] != null
           ? OpeningHours.fromJson(json['openingHours'] as Map<String, dynamic>)
           : null,
+      country: Country.fromCode(json['country'] as String?),
+      currency: Currency.fromCode(json['currency'] as String?),
     );
   }
 
@@ -198,6 +209,8 @@ class Store {
       'bio': bio,
       'name': name,
       'phone': phone,
+      'country': country.code,
+      'currency': currency.code,
       'state': state,
       'avatar': avatar?.toJson(),
       'lga': lga,

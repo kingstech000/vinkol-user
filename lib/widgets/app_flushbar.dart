@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/models/failure.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class AppFlushBar {
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -72,7 +73,7 @@ class AppFlushBar {
       duration: duration ?? const Duration(seconds: 5),
       backgroundColor: color ?? AppColors.primary,
       icon: Icon(
-        Icons.info_outline,
+        PhosphorIconsRegular.info,
         size: 28,
         color: Colors.grey.shade100,
       ),
@@ -113,7 +114,7 @@ class AppFlushBar {
       backgroundColor: color ?? AppColors.primary,
       borderRadius: BorderRadius.circular(8),
       icon: Icon(
-        Icons.notifications_active,
+        PhosphorIconsRegular.bellRinging,
         size: 28,
         color: Colors.grey.shade100,
       ),

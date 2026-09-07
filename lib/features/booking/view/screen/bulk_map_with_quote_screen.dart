@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
@@ -19,6 +20,7 @@ import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/features/wallet/view_model/wallet_history_view_model.dart';
 import 'package:starter_codes/core/utils/text.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class BulkMapWithQuotesScreen extends ConsumerStatefulWidget {
   const BulkMapWithQuotesScreen({super.key});
@@ -33,6 +35,10 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
   final Set<Polyline> _polylines = {};
   bool _isLoading = false;
   String _selectedPaymentSource = 'Wallet';
+
+  /// The market the quote belongs to. Governs which payment sources are on
+  /// offer and whether there is a wallet at all.
+  Country _market = Country.ng;
 
   @override
   void initState() {
@@ -159,7 +165,7 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
       final bookingService = ref.read(bookingServiceProvider);
       final request = CreateNewBulkOrderRequest(
         quoteId: bulkQuote.quote,
-        paymentSource: _selectedPaymentSource,
+        paymentSource: _market.paymentSourceOrNull(_selectedPaymentSource),
       );
 
       final response = await bookingService.createBulkOrderNew(orderRequest: request);
@@ -206,11 +212,21 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
 
     final walletState = ref.watch(walletOverviewViewModelProvider);
     final double? walletBalance = walletState.walletBalance.valueOrNull;
-    final bool isWalletInsufficient = walletBalance != null && bulkQuote.totalAmount > walletBalance;
+    _market = bulkQuote.country;
+    // A selection carried over from another market would be rejected.
+    if (!_market.paymentSources.contains(_selectedPaymentSource)) {
+      _selectedPaymentSource = _market.paymentSources.first;
+    }
+
+    final bool isWalletInsufficient = _market.hasCustomerWallet &&
+        walletBalance != null &&
+        bulkQuote.amountDue.amount > walletBalance;
 
     if (isWalletInsufficient && _selectedPaymentSource == 'Wallet') {
+      final card = _market.paymentSources
+          .firstWhere((s) => s != 'Wallet', orElse: () => _selectedPaymentSource);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _selectedPaymentSource = 'Paystack');
+        if (mounted) setState(() => _selectedPaymentSource = card);
       });
     }
 
@@ -227,9 +243,8 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10.r),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
             ),
-            child: Icon(Icons.arrow_back_ios, color: AppColors.black, size: 20.w),
+            child: Icon(PhosphorIconsRegular.caretLeft, color: AppColors.black, size: 20.w),
           ),
         ),
       ),
@@ -254,7 +269,6 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(topLeft: Radius.circular(30.r), topRight: Radius.circular(30.r)),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, -5))],
                 ),
                 child: SingleChildScrollView(
                   controller: scrollController,
@@ -299,9 +313,9 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildSummaryItem('Total Amount', quote.totalAmount.toMoney(), Icons.payments_outlined),
-          _buildSummaryItem('Distance', '${quote.totalDistance} km', Icons.directions_bike),
-          _buildSummaryItem('Stops', '${quote.stops}', Icons.location_on_outlined),
+          _buildSummaryItem('Total Amount', quote.amountDue.format(), PhosphorIconsRegular.money),
+          _buildSummaryItem('Distance', '${quote.totalDistance} km', PhosphorIconsRegular.bicycle),
+          _buildSummaryItem('Stops', '${quote.stops}', PhosphorIconsRegular.mapPin),
         ],
       ),
     );
@@ -333,7 +347,7 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.circle, color: Colors.green, size: 12.sp),
+              Icon(PhosphorIconsFill.circle, color: Colors.green, size: 12.sp),
               Gap.w8,
               Expanded(child: Text(leg.from.location.address ?? 'Pickup', style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade700))),
             ],
@@ -342,7 +356,7 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.location_on, color: Colors.red, size: 12.sp),
+              Icon(PhosphorIconsRegular.mapPin, color: Colors.red, size: 12.sp),
               Gap.w8,
               Expanded(child: Text(leg.to.location.address ?? 'Drop-off', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600))),
             ],
@@ -373,7 +387,7 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
         ),
         child: Row(
           children: [
-            Icon(_selectedPaymentSource == 'Wallet' ? Icons.account_balance_wallet : Icons.credit_card, color: AppColors.primary),
+            Icon(_selectedPaymentSource == 'Wallet' ? PhosphorIconsRegular.wallet : PhosphorIconsRegular.creditCard, color: AppColors.primary),
             Gap.w16,
             Expanded(
               child: Column(
@@ -382,14 +396,14 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
                   Text(_selectedPaymentSource, style: TextStyle(fontWeight: FontWeight.bold)),
                   Text(
                     _selectedPaymentSource == 'Wallet'
-                        ? (isInsufficient ? 'Insufficient funds' : 'Balance: ${walletBalance?.toMoney() ?? "₦0.00"}')
+                        ? (isInsufficient ? 'Insufficient funds' : 'Balance: ${(walletBalance ?? 0).toMoney()}')
                         : 'Pay securely with card',
                     style: TextStyle(fontSize: 12.sp, color: isInsufficient && _selectedPaymentSource == 'Wallet' ? Colors.red : Colors.grey.shade600),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade400),
+            Icon(PhosphorIconsRegular.caretDown, color: Colors.grey.shade400),
           ],
         ),
       ),
@@ -407,9 +421,21 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
           children: [
             AppText.h3('Select Payment Method', fontSize: 16.sp, fontWeight: FontWeight.bold),
             Gap.h24,
-            _buildPaymentOption('Wallet', Icons.account_balance_wallet, isInsufficient, isInsufficient ? 'Insufficient funds' : 'Balance: ${walletBalance?.toMoney() ?? "₦0.00"}'),
-            Gap.h16,
-            _buildPaymentOption('Paystack', Icons.credit_card, false, 'Pay securely with card'),
+            for (final source in _market.paymentSources) ...[
+              _buildPaymentOption(
+                source,
+                source == 'Wallet'
+                    ? PhosphorIconsRegular.wallet
+                    : PhosphorIconsRegular.creditCard,
+                source == 'Wallet' && isInsufficient,
+                source == 'Wallet'
+                    ? (isInsufficient
+                        ? 'Insufficient funds'
+                        : 'Balance: ${(walletBalance ?? 0).toMoney()}')
+                    : 'Pay securely with card',
+              ),
+              Gap.h16,
+            ],
             Gap.h32,
           ],
         ),
@@ -442,7 +468,7 @@ class _BulkMapWithQuotesScreenState extends ConsumerState<BulkMapWithQuotesScree
               Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: disabled ? Colors.grey.shade400 : Colors.black87)),
               Text(subtitle, style: TextStyle(fontSize: 12.sp, color: disabled ? Colors.red.shade300 : Colors.grey.shade500)),
             ])),
-            if (selected) Icon(Icons.check_circle, color: AppColors.primary),
+            if (selected) Icon(PhosphorIconsFill.checkCircle, color: AppColors.primary),
           ],
         ),
       ),

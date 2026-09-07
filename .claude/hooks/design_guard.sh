@@ -20,6 +20,7 @@ case "$file" in
 esac
 case "$file" in
   */lib/core/design/*) exit 0 ;;   # the tokens themselves are allowed to hold literals
+  */lib/core/money/*) exit 0 ;;    # likewise the market layer, which defines the symbols
   */lib/*) ;;
   *) exit 0 ;;
 esac
@@ -39,7 +40,8 @@ check() { # check <regex> <message>
 
 check '0x[fF][fF][0-9a-fA-F]{6}'                   'raw hex color — use a token from lib/core/design/vinkol_color.dart'
 # grep -E has no lookahead, so the Colors.* check is done by hand
-colors=$(printf '%s\n' "$added" | grep -oE 'Colors\.[a-zA-Z]+' | grep -v 'Colors.transparent' | wc -l | tr -d ' ')
+# The leading boundary keeps AppColors.* — the sanctioned accessor — from matching.
+colors=$(printf '%s\n' "$added" | grep -oE '(^|[^A-Za-z_])Colors\.[a-zA-Z]+' | grep -v 'Colors.transparent' | wc -l | tr -d ' ')
 [ "${colors:-0}" -gt 0 ] && findings="${findings}  - ${colors}× bare Colors.* — use a design token (Colors.transparent is fine)"$'\n'
 check '\.sp\b'                                      'text sized with .sp — banned by decision D-04, use unscaled sizes'
 check '₦'                                           'hardcoded currency symbol — route through the market layer'

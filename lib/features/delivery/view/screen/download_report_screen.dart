@@ -8,6 +8,7 @@ import 'package:starter_codes/features/delivery/view_model/delivery_view_model.d
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class DownloadReportScreen extends ConsumerStatefulWidget {
   const DownloadReportScreen({super.key});
@@ -92,7 +93,7 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.error_outline,
+                  PhosphorIconsRegular.warningCircle,
                   color: AppColors.red,
                   size: 64.w,
                 ),
@@ -141,7 +142,7 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.check_circle,
+                  PhosphorIconsFill.checkCircle,
                   color: AppColors.green,
                   size: 64.w,
                 ),
@@ -209,7 +210,7 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
                 ),
               ],
             ),
-            Icon(Icons.calendar_today, color: AppColors.primary, size: 20.w),
+            Icon(PhosphorIconsRegular.calendarBlank, color: AppColors.primary, size: 20.w),
           ],
         ),
       ),
@@ -246,7 +247,7 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: AppColors.blue, size: 24.w),
+                    Icon(PhosphorIconsRegular.info, color: AppColors.blue, size: 24.w),
                     Gap.w12,
                     Expanded(
                       child: AppText.body(

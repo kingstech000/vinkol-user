@@ -9,7 +9,7 @@ import 'package:starter_codes/features/auth/data/auth_service.dart';
 import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart';
-import 'package:starter_codes/widgets/text_action_modal.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
 class ResetPasswordViewModel extends BaseViewModel {
   final AuthService _authService;
@@ -48,11 +48,12 @@ class ResetPasswordViewModel extends BaseViewModel {
     } on Failure catch (e) {
       logger.e('Failed to send password reset email: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => NavigationService.instance.goBack(),
-        dialogText: e.message,
+        e.title,
+        e.message,
         buttonText: "Dismiss",
+        onClosed: () => NavigationService.instance.goBack(),
       );
     }
   }

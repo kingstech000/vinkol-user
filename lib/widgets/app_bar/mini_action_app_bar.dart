@@ -4,6 +4,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class MiniActionAppBar extends StatelessWidget implements PreferredSizeWidget {
   final IconData? icon;
@@ -14,7 +15,7 @@ class MiniActionAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const MiniActionAppBar({
     super.key,
-    this.icon = Icons.arrow_back_ios,
+    this.icon = PhosphorIconsRegular.caretLeft,
     this.title,
     required this.action,
     this.actionOnTap,

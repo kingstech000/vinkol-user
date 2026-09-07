@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class StoreCard extends StatelessWidget {
   final Store store;
@@ -46,7 +47,7 @@ class StoreCard extends StatelessWidget {
                         ),
                         errorWidget: (context, url, error) => const Center(
                           child: Icon(
-                            Icons.storefront,
+                            PhosphorIconsRegular.storefront,
                             size: 50,
                             color: AppColors.greyLight,
                           ),
@@ -54,7 +55,7 @@ class StoreCard extends StatelessWidget {
                       )
                     : const Center(
                         child: Icon(
-                          Icons.storefront,
+                          PhosphorIconsRegular.storefront,
                           size: 50,
                           color: AppColors.greyLight,
                         ),

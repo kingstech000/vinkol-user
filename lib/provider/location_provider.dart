@@ -5,7 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:starter_codes/models/location_model.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 
 class LocationController {
   final String? BACKEND_URL;
@@ -31,23 +31,35 @@ class LocationController {
     }
   }
 
-  /// Searches for places based on input text
-  Future<List<Map<String, dynamic>>> searchPlaces(String placeName,
-      {LatLng? position}) async {
+  /// Searches for places based on input text.
+  ///
+  /// Restricted to the device's market by default, because a delivery address
+  /// in another country is never what the customer meant. Pass
+  /// `restrictToMarket: false` where the customer may legitimately be anywhere:
+  /// filtering while they are telling us where they live is circular — they
+  /// could never find the country they are trying to move to.
+  Future<List<Map<String, dynamic>>> searchPlaces(
+    String placeName, {
+    LatLng? position,
+    bool restrictToMarket = true,
+  }) async {
     List<Map<String, dynamic>> matchedLocations = [];
     final url = Uri.parse(
         'https://maps.googleapis.com/maps/api/place/autocomplete/json');
 
+    final profile = ref.read(marketProfileProvider);
     final LatLng effectivePosition = position ??
         _currentLatLng ??
-        const LatLng(6.5244, 3.3792); // Default to Lagos, Nigeria
-    final user = ref.watch(userProvider);
-    final state = user?.currentState;
+        LatLng(profile.defaultLat, profile.defaultLng);
     final input = placeName;
     final params = {
       'input': input,
       'key': GOOGLE_MAP_API_KEY,
-      'components': 'country:NG',
+      if (restrictToMarket) ...{
+        'components': 'country:${profile.placesCountryCode}',
+        'location':
+            '${effectivePosition.latitude},${effectivePosition.longitude}',
+      },
     };
 
     try {

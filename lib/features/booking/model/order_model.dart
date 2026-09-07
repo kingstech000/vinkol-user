@@ -1,4 +1,5 @@
 // lib/features/booking/model/order_model.dart
+import 'package:starter_codes/core/money/money.dart';
 
 class Guest {
   final String email;
@@ -61,6 +62,12 @@ class OrderModel {
   final String? externalDeliveryPin;
   final int? externalDeliveryFeeId;
 
+  /// The market this order belongs to, decided by the server from the pickup
+  /// coordinates. Absent on records written before the Canada expansion, all of
+  /// which are Nigerian.
+  final Country country;
+  final Currency currency;
+
   OrderModel({
     required this.id,
     required this.user,
@@ -80,7 +87,11 @@ class OrderModel {
     this.externalDeliveryStatus,
     this.externalDeliveryPin,
     this.externalDeliveryFeeId,
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
   });
+
+  Money get amountMoney => Money(amount, currency);
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     double parsedAmount;
@@ -115,6 +126,8 @@ class OrderModel {
       externalDeliveryPin:
           json['externalDeliveryPin']?.toString(), // Handle parsing safely
       externalDeliveryFeeId: json['externalDeliveryFeeId'] as int?,
+      country: Country.fromCode(json['country'] as String?),
+      currency: Currency.fromCode(json['currency'] as String?),
     );
   }
 
@@ -138,6 +151,8 @@ class OrderModel {
       'externalDeliveryStatus': externalDeliveryStatus,
       'externalDeliveryPin': externalDeliveryPin,
       'externalDeliveryFeeId': externalDeliveryFeeId,
+      'country': country.code,
+      'currency': currency.code,
     };
   }
 
@@ -160,6 +175,8 @@ class OrderModel {
     String? externalDeliveryStatus,
     String? externalDeliveryPin,
     int? externalDeliveryFeeId,
+    Country? country,
+    Currency? currency,
   }) {
     return OrderModel(
       id: id ?? this.id,
@@ -183,6 +200,8 @@ class OrderModel {
       externalDeliveryPin: externalDeliveryPin ?? this.externalDeliveryPin,
       externalDeliveryFeeId:
           externalDeliveryFeeId ?? this.externalDeliveryFeeId,
+      country: country ?? this.country,
+      currency: currency ?? this.currency,
     );
   }
 
@@ -231,10 +250,46 @@ class QuoteResponseModel {
   final String vehicleRequest;
   final double price;
   final double? discountedPrice; // Optional field
-  final int? id; // For External Chowdeck Quote ID
   final double? vinkolAmount; // For Chowdeck price
   final bool isAvailable;
   final String? unavailableMessage;
+
+  /// The server-issued quote id. Sending this on order creation is the only way
+  /// to get a Canadian price; a raw `deliveryFee` always prices as Nigerian.
+  ///
+  /// Single-use, and expires 15 minutes after it was issued.
+  final String? quoteId;
+
+  /// Chowdeck's own fee id, sent back as `externalDeliveryFeeId` on creation.
+  /// Unrelated to [quoteId] despite both once being called "the quote id".
+  final int? externalDeliveryFeeId;
+
+  /// Processing fee. Zero on Nigerian plain deliveries.
+  final double? serviceFee;
+
+  /// Tax resolved from the delivery's province. Zero in Nigeria.
+  final double? taxAmount;
+
+  /// The rate the tax was computed at, e.g. `0.13`.
+  final double? taxRate;
+
+  /// What to call the tax on the receipt, e.g. `HST` or `GST + QST`. Not always
+  /// a single tax, so it cannot be derived from the country.
+  final String? taxLabel;
+
+  /// What the customer is actually charged: fare + service fee + tax.
+  /// In Nigeria this equals [price].
+  final double? grandTotal;
+
+  final Currency currency;
+
+  /// The market the server resolved from the pickup coordinates. The client
+  /// never chooses this — it reads it off the quote.
+  final Country country;
+
+  /// When the server stops accepting this quote. It issues a 15-minute window
+  /// and returns the exact instant, so the expiry never has to be guessed.
+  final DateTime? expiresAt;
 
   QuoteResponseModel({
     required this.state,
@@ -245,11 +300,40 @@ class QuoteResponseModel {
     required this.vehicleRequest,
     required this.price,
     this.discountedPrice, // Optional parameter
-    this.id,
+    this.externalDeliveryFeeId,
     this.vinkolAmount,
     this.isAvailable = true,
     this.unavailableMessage,
+    this.quoteId,
+    this.serviceFee,
+    this.taxAmount,
+    this.taxRate,
+    this.taxLabel,
+    this.grandTotal,
+    this.currency = Currency.ngn,
+    this.country = Country.ng,
+    this.expiresAt,
   });
+
+  /// What to charge and display. Falls back to the fare when the server has not
+  /// itemised the bill, which keeps Nigerian plain deliveries rendering as before.
+  Money get amountDue =>
+      Money(grandTotal ?? discountedPrice ?? price, currency);
+
+  Money get fare => Money(discountedPrice ?? price, currency);
+
+  Money? get serviceFeeMoney =>
+      serviceFee == null ? null : Money(serviceFee!, currency);
+
+  Money? get taxMoney => taxAmount == null ? null : Money(taxAmount!, currency);
+
+  /// Whether the bill has lines worth showing beyond the fare itself.
+  bool get hasItemisedCharges => (serviceFee ?? 0) > 0 || (taxAmount ?? 0) > 0;
+
+  /// Whether this quote can still be used to create an order.
+  bool get isExpired =>
+      expiresAt != null && !DateTime.now().toUtc().isBefore(expiresAt!.toUtc());
+
 
   factory QuoteResponseModel.fromJson(Map<String, dynamic> json) {
     double parsedPrice;
@@ -284,12 +368,23 @@ class QuoteResponseModel {
       vehicleRequest: json['vehicleRequest'] as String,
       price: parsedPrice,
       discountedPrice: parsedDiscountedPrice,
-      id: json['id'] as int?,
+      externalDeliveryFeeId: json['id'] as int?,
       vinkolAmount: json['vinkol_amount'] != null
           ? (json['vinkol_amount'] as num).toDouble()
           : null,
       isAvailable: json['isAvailable'] as bool? ?? true,
       unavailableMessage: json['unavailableMessage'] as String?,
+      quoteId: json['quoteId']?.toString(),
+      serviceFee: Money.parseAmount(json['serviceFee']),
+      taxAmount: Money.parseAmount(json['taxAmount']),
+      taxRate: Money.parseAmount(json['taxRate']),
+      taxLabel: json['taxLabel'] as String?,
+      grandTotal: Money.parseAmount(json['grandTotal']),
+      currency: Currency.fromCode(json['currency'] as String?),
+      country: Country.fromCode(json['country'] as String?),
+      expiresAt: json['expiresAt'] == null
+          ? null
+          : DateTime.tryParse(json['expiresAt'].toString()),
     );
   }
 
@@ -302,10 +397,19 @@ class QuoteResponseModel {
     String? vehicleRequest,
     double? price,
     double? discountedPrice,
-    int? id,
+    int? externalDeliveryFeeId,
     double? vinkolAmount,
     bool? isAvailable,
     String? unavailableMessage,
+    String? quoteId,
+    double? serviceFee,
+    double? taxAmount,
+    double? taxRate,
+    String? taxLabel,
+    double? grandTotal,
+    Currency? currency,
+    Country? country,
+    DateTime? expiresAt,
   }) {
     return QuoteResponseModel(
       state: state ?? this.state,
@@ -316,10 +420,20 @@ class QuoteResponseModel {
       vehicleRequest: vehicleRequest ?? this.vehicleRequest,
       price: price ?? this.price,
       discountedPrice: discountedPrice ?? this.discountedPrice,
-      id: id ?? this.id,
+      externalDeliveryFeeId:
+          externalDeliveryFeeId ?? this.externalDeliveryFeeId,
       vinkolAmount: vinkolAmount ?? this.vinkolAmount,
       isAvailable: isAvailable ?? this.isAvailable,
       unavailableMessage: unavailableMessage ?? this.unavailableMessage,
+      quoteId: quoteId ?? this.quoteId,
+      serviceFee: serviceFee ?? this.serviceFee,
+      taxAmount: taxAmount ?? this.taxAmount,
+      taxRate: taxRate ?? this.taxRate,
+      taxLabel: taxLabel ?? this.taxLabel,
+      grandTotal: grandTotal ?? this.grandTotal,
+      currency: currency ?? this.currency,
+      country: country ?? this.country,
+      expiresAt: expiresAt ?? this.expiresAt,
     );
   }
 
@@ -334,12 +448,32 @@ class QuoteResponseModel {
       'price': price,
       if (discountedPrice != null)
         'discountedPrice': discountedPrice, // Only include if not null
-      if (id != null) 'id': id,
+      if (externalDeliveryFeeId != null) 'id': externalDeliveryFeeId,
       if (vinkolAmount != null) 'vinkol_amount': vinkolAmount,
       'isAvailable': isAvailable,
       if (unavailableMessage != null) 'unavailableMessage': unavailableMessage,
+      if (quoteId != null) 'quoteId': quoteId,
+      if (serviceFee != null) 'serviceFee': serviceFee,
+      if (taxAmount != null) 'taxAmount': taxAmount,
+      if (taxRate != null) 'taxRate': taxRate,
+      if (taxLabel != null) 'taxLabel': taxLabel,
+      if (grandTotal != null) 'grandTotal': grandTotal,
+      'currency': currency.code,
+      'country': country.code,
+      if (expiresAt != null) 'expiresAt': expiresAt!.toIso8601String(),
     };
   }
+}
+
+/// Whether a failed order creation was rejected because its quote was stale.
+///
+/// The server answers 400 with "Quote has expired" or "This quote has already
+/// been used". Both mean the same thing to the customer: re-price, and let them
+/// confirm the new total.
+bool isStaleQuoteMessage(String message) {
+  final lower = message.toLowerCase();
+  return lower.contains('quote') &&
+      (lower.contains('expired') || lower.contains('already been used'));
 }
 
 class LatLngLiteral {
@@ -512,11 +646,37 @@ class BulkRoute {
 }
 
 class BulkQuoteResponse {
+  /// The server-issued quote id, sent back as `quoteId` on order creation.
   final String quote;
   final double totalAmount;
   final double totalDistance;
   final List<BulkRoute> route;
   final int stops;
+
+  /// Processing fee. Zero on Nigerian plain deliveries.
+  final double? serviceFee;
+
+  /// Tax resolved from the delivery's province. Zero in Nigeria.
+  final double? taxAmount;
+
+  /// The rate the tax was computed at, e.g. `0.13`.
+  final double? taxRate;
+
+  /// What to call the tax on the receipt, e.g. `HST` or `GST + QST`.
+  final String? taxLabel;
+
+  /// What the customer is charged. Equals [totalAmount] in Nigeria.
+  final double? grandTotal;
+
+  final Currency currency;
+
+  /// The market the server resolved from the pickup coordinates. The client
+  /// never chooses this — it reads it off the quote.
+  final Country country;
+
+  /// When the server stops accepting this quote. It issues a 15-minute window
+  /// and returns the exact instant, so the expiry never has to be guessed.
+  final DateTime? expiresAt;
 
   BulkQuoteResponse({
     required this.quote,
@@ -524,7 +684,33 @@ class BulkQuoteResponse {
     required this.totalDistance,
     required this.route,
     required this.stops,
+    this.serviceFee,
+    this.taxAmount,
+    this.taxRate,
+    this.taxLabel,
+    this.grandTotal,
+    this.currency = Currency.ngn,
+    this.country = Country.ng,
+    this.expiresAt,
   });
+
+  /// What to charge and display, per the expansion guide: `grandTotal`, falling
+  /// back to the fare when the server has not itemised the bill.
+  Money get amountDue => Money(grandTotal ?? totalAmount, currency);
+
+  Money get fare => Money(totalAmount, currency);
+
+  Money? get serviceFeeMoney =>
+      serviceFee == null ? null : Money(serviceFee!, currency);
+
+  Money? get taxMoney => taxAmount == null ? null : Money(taxAmount!, currency);
+
+  bool get hasItemisedCharges => (serviceFee ?? 0) > 0 || (taxAmount ?? 0) > 0;
+
+  /// Whether this quote can still be used to create an order.
+  bool get isExpired =>
+      expiresAt != null && !DateTime.now().toUtc().isBefore(expiresAt!.toUtc());
+
 
   factory BulkQuoteResponse.fromJson(Map<String, dynamic> json) {
     return BulkQuoteResponse(
@@ -535,6 +721,16 @@ class BulkQuoteResponse {
           .map((e) => BulkRoute.fromJson(e as Map<String, dynamic>))
           .toList(),
       stops: json['stops'] as int,
+      serviceFee: Money.parseAmount(json['serviceFee']),
+      taxAmount: Money.parseAmount(json['taxAmount']),
+      taxRate: Money.parseAmount(json['taxRate']),
+      taxLabel: json['taxLabel'] as String?,
+      grandTotal: Money.parseAmount(json['grandTotal']),
+      currency: Currency.fromCode(json['currency'] as String?),
+      country: Country.fromCode(json['country'] as String?),
+      expiresAt: json['expiresAt'] == null
+          ? null
+          : DateTime.tryParse(json['expiresAt'].toString()),
     );
   }
 
@@ -545,6 +741,14 @@ class BulkQuoteResponse {
       'totalDistance': totalDistance,
       'route': route.map((e) => e.toJson()).toList(),
       'stops': stops,
+      if (serviceFee != null) 'serviceFee': serviceFee,
+      if (taxAmount != null) 'taxAmount': taxAmount,
+      if (taxRate != null) 'taxRate': taxRate,
+      if (taxLabel != null) 'taxLabel': taxLabel,
+      if (grandTotal != null) 'grandTotal': grandTotal,
+      'currency': currency.code,
+      'country': country.code,
+      if (expiresAt != null) 'expiresAt': expiresAt!.toIso8601String(),
     };
   }
 }
@@ -585,10 +789,10 @@ class MultiOrderItem {
     final receiverContact = json['receiverContact'] as Map<String, dynamic>?;
     return MultiOrderItem(
       id: json['_id'] as String?,
-      pickupLocation:
-          LatLngWithAddress.fromJson(json['pickupLocation'] as Map<String, dynamic>),
-      dropoffLocation:
-          LatLngWithAddress.fromJson(json['dropoffLocation'] as Map<String, dynamic>),
+      pickupLocation: LatLngWithAddress.fromJson(
+          json['pickupLocation'] as Map<String, dynamic>),
+      dropoffLocation: LatLngWithAddress.fromJson(
+          json['dropoffLocation'] as Map<String, dynamic>),
       pickupContactName: pickupContact?['name'] as String?,
       pickupContactPhone: pickupContact?['phone'] as String?,
       receiverContactName: receiverContact?['name'] as String?,
@@ -607,9 +811,38 @@ class MultiOrderQuoteResponse {
   final String? user;
   final Guest? guest;
   final double totalAmount;
+
+  /// The server-issued quote id, sent back as `quoteId` on order creation.
   final String quote;
   final int totalOrders;
   final List<MultiOrderItem> orders;
+
+  /// Processing fee. Zero on Nigerian plain deliveries.
+  final double? serviceFee;
+
+  /// Tax resolved from the delivery's province. Zero in Nigeria.
+  final double? taxAmount;
+
+  /// The rate the tax was computed at, e.g. `0.13`.
+  final double? taxRate;
+
+  /// What to call the tax on the receipt, e.g. `HST` or `GST + QST`.
+  final String? taxLabel;
+
+  /// What the customer is charged. Equals [totalAmount] in Nigeria.
+  final double? grandTotal;
+
+  /// Every pickup in a multi-order must be in the same country — one payment
+  /// cannot span two currencies — so a single currency covers the whole basket.
+  final Currency currency;
+
+  /// The market the server resolved from the pickup coordinates. The client
+  /// never chooses this — it reads it off the quote.
+  final Country country;
+
+  /// When the server stops accepting this quote. It issues a 15-minute window
+  /// and returns the exact instant, so the expiry never has to be guessed.
+  final DateTime? expiresAt;
 
   MultiOrderQuoteResponse({
     this.user,
@@ -618,7 +851,33 @@ class MultiOrderQuoteResponse {
     required this.quote,
     required this.totalOrders,
     this.orders = const [],
+    this.serviceFee,
+    this.taxAmount,
+    this.taxRate,
+    this.taxLabel,
+    this.grandTotal,
+    this.currency = Currency.ngn,
+    this.country = Country.ng,
+    this.expiresAt,
   });
+
+  /// What to charge and display, per the expansion guide: `grandTotal`, falling
+  /// back to the fare when the server has not itemised the bill.
+  Money get amountDue => Money(grandTotal ?? totalAmount, currency);
+
+  Money get fare => Money(totalAmount, currency);
+
+  Money? get serviceFeeMoney =>
+      serviceFee == null ? null : Money(serviceFee!, currency);
+
+  Money? get taxMoney => taxAmount == null ? null : Money(taxAmount!, currency);
+
+  bool get hasItemisedCharges => (serviceFee ?? 0) > 0 || (taxAmount ?? 0) > 0;
+
+  /// Whether this quote can still be used to create an order.
+  bool get isExpired =>
+      expiresAt != null && !DateTime.now().toUtc().isBefore(expiresAt!.toUtc());
+
 
   factory MultiOrderQuoteResponse.fromJson(Map<String, dynamic> json) {
     // Parse orders from quoteDetails.orders if present
@@ -639,6 +898,16 @@ class MultiOrderQuoteResponse {
       quote: json['quote'] as String,
       totalOrders: json['totalOrders'] as int,
       orders: parsedOrders,
+      serviceFee: Money.parseAmount(json['serviceFee']),
+      taxAmount: Money.parseAmount(json['taxAmount']),
+      taxRate: Money.parseAmount(json['taxRate']),
+      taxLabel: json['taxLabel'] as String?,
+      grandTotal: Money.parseAmount(json['grandTotal']),
+      currency: Currency.fromCode(json['currency'] as String?),
+      country: Country.fromCode(json['country'] as String?),
+      expiresAt: json['expiresAt'] == null
+          ? null
+          : DateTime.tryParse(json['expiresAt'].toString()),
     );
   }
 
@@ -647,6 +916,14 @@ class MultiOrderQuoteResponse {
       'totalAmount': totalAmount,
       'quote': quote,
       'totalOrders': totalOrders,
+      'currency': currency.code,
+      'country': country.code,
+      if (expiresAt != null) 'expiresAt': expiresAt!.toIso8601String(),
+      if (serviceFee != null) 'serviceFee': serviceFee,
+      if (taxAmount != null) 'taxAmount': taxAmount,
+      if (taxRate != null) 'taxRate': taxRate,
+      if (taxLabel != null) 'taxLabel': taxLabel,
+      if (grandTotal != null) 'grandTotal': grandTotal,
     };
     if (user != null) data['user'] = user;
     if (guest != null) data['guest'] = guest!.toJson();

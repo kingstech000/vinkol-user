@@ -6,7 +6,7 @@ import 'package:starter_codes/core/utils/base_view_model.dart';
 import 'package:starter_codes/features/auth/data/auth_service.dart'; // Your AuthService
 import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
-import 'package:starter_codes/widgets/text_action_modal.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
@@ -98,10 +98,10 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
     } on Failure catch (e) {
       logger.e('Email OTP verification failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => {},
-        dialogText: e.message,
+        e.title,
+        e.message,
         buttonText: "Try Again",
       );
     }
@@ -114,11 +114,10 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
     // Prevent resending if cooldown is active
     if (_secondsRemaining > 0) {
       // Optionally show a message to the user that they need to wait
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => {},
-        dialogText:
-            'Please wait $_secondsRemaining seconds before resending OTP.',
+        'Please wait',
+        'You can request a new code in $_secondsRemaining seconds.',
         buttonText: "Okay",
       );
       return;
@@ -134,19 +133,19 @@ class VerifyEmailOtpViewModel extends BaseViewModel {
       startResendCooldown(); // Start cooldown after successful resend
 
       // Optionally show a success message to the user
-      textActionModal(
+      AppStatusDialogs.showSuccess(
         context,
-        onPressed: () => {},
-        dialogText: 'A new OTP has been sent to $_email.',
+        'Code sent',
+        'A new verification code has been sent to $_email.',
         buttonText: "Okay",
       );
     } on Failure catch (e) {
       logger.e('Email OTP resend failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => {},
-        dialogText: e.message,
+        e.title,
+        e.message,
         buttonText: "Try Again",
       );
     }

@@ -10,7 +10,7 @@ import 'package:starter_codes/features/auth/data/auth_service.dart';
 import 'package:starter_codes/models/app_state/view_model_state.dart'; // Your ViewModelState
 import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/provider/user_provider.dart';
-import 'package:starter_codes/widgets/text_action_modal.dart'; // Your text_action_modal
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
@@ -53,10 +53,10 @@ class SignUpViewModel extends BaseViewModel {
     } on Failure catch (e) {
       logger.e('Signup failed: ${e.message}');
       changeState(ViewModelState.error(e));
-      textActionModal(
+      AppStatusDialogs.showError(
         context,
-        onPressed: () => {},
-        dialogText: e.message,
+        e.title,
+        e.message,
         buttonText: "Try Again",
       );
     }

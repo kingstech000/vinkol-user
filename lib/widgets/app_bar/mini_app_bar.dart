@@ -4,12 +4,13 @@ import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class MiniAppBar extends StatelessWidget implements PreferredSizeWidget {
   MiniAppBar({
     super.key,
     this.color = Colors.black,
-    this.icon = Icons.arrow_back_ios,
+    this.icon = PhosphorIconsRegular.caretLeft,
     this.actions,
     this.title = '',
     this.leading = true,

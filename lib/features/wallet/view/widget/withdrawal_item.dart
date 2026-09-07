@@ -4,6 +4,7 @@ import '../../model/withdrawal_model.dart';
 
 import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class WithdrawalItem extends StatelessWidget {
   final Withdrawal withdrawal;
@@ -57,7 +58,7 @@ class WithdrawalItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(10.r),
             ),
             child: Icon(
-              Icons.outbound_rounded, // or account_balance_wallet
+              PhosphorIconsRegular.arrowCircleUpRight, // or account_balance_wallet
               color: Colors.red.shade600,
               size: 20.sp,
             ),

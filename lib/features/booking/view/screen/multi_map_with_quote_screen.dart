@@ -9,6 +9,7 @@ import 'package:starter_codes/core/extensions/extensions.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
 import 'package:starter_codes/core/utils/text.dart';
@@ -21,6 +22,7 @@ import 'package:starter_codes/models/failure.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/features/wallet/view_model/wallet_history_view_model.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class MultiMapWithQuoteScreen extends ConsumerStatefulWidget {
   const MultiMapWithQuoteScreen({super.key});
@@ -37,6 +39,10 @@ class _MultiMapWithQuoteScreenState
   final Set<Polyline> _polylines = {};
   bool _isLoading = false;
   String _selectedPaymentSource = 'Wallet';
+
+  /// The market the quote belongs to. Governs which payment sources are on
+  /// offer and whether there is a wallet at all.
+  Country _market = Country.ng;
 
   // Colour palette for order pairs
   static const List<Color> _orderColors = [
@@ -164,7 +170,7 @@ class _MultiMapWithQuoteScreenState
       final bookingService = ref.read(bookingServiceProvider);
       final request = CreateNewMultiOrderRequest(
         quoteId: quote.quote,
-        paymentSource: _selectedPaymentSource,
+        paymentSource: _market.paymentSourceOrNull(_selectedPaymentSource),
       );
 
       final response =
@@ -242,12 +248,21 @@ class _MultiMapWithQuoteScreenState
 
     final walletState = ref.watch(walletOverviewViewModelProvider);
     final double? walletBalance = walletState.walletBalance.valueOrNull;
-    final bool isWalletInsufficient =
-        walletBalance != null && quote.totalAmount > walletBalance;
+    _market = quote.country;
+    // A selection carried over from another market would be rejected.
+    if (!_market.paymentSources.contains(_selectedPaymentSource)) {
+      _selectedPaymentSource = _market.paymentSources.first;
+    }
+
+    final bool isWalletInsufficient = _market.hasCustomerWallet &&
+        walletBalance != null &&
+        quote.amountDue.amount > walletBalance;
 
     if (isWalletInsufficient && _selectedPaymentSource == 'Wallet') {
+      final card = _market.paymentSources
+          .firstWhere((s) => s != 'Wallet', orElse: () => _selectedPaymentSource);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _selectedPaymentSource = 'Paystack');
+        if (mounted) setState(() => _selectedPaymentSource = card);
       });
     }
 
@@ -270,15 +285,9 @@ class _MultiMapWithQuoteScreenState
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10.r),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4))
-              ],
             ),
             child:
-                Icon(Icons.arrow_back_ios, color: AppColors.black, size: 20.w),
+                Icon(PhosphorIconsRegular.caretLeft, color: AppColors.black, size: 20.w),
           ),
         ),
       ),
@@ -313,12 +322,6 @@ class _MultiMapWithQuoteScreenState
                     topLeft: Radius.circular(28.r),
                     topRight: Radius.circular(28.r),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 20,
-                        offset: const Offset(0, -5))
-                  ],
                 ),
                 child: SingleChildScrollView(
                   controller: scrollController,
@@ -400,19 +403,19 @@ class _MultiMapWithQuoteScreenState
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStat(
-            Icons.payments_outlined,
-            quote.totalAmount.toMoney(),
+            PhosphorIconsRegular.money,
+            quote.amountDue.format(),
             'Total',
           ),
           _buildDivider(),
           _buildStat(
-            Icons.inventory_2_outlined,
+            PhosphorIconsRegular.package,
             '${quote.totalOrders}',
             'Orders',
           ),
           _buildDivider(),
           _buildStat(
-            Icons.route_outlined,
+            PhosphorIconsRegular.path,
             '${quote.orders.fold(0.0, (sum, o) => sum + o.distance).toStringAsFixed(1)} km',
             'Distance',
           ),
@@ -446,12 +449,6 @@ class _MultiMapWithQuoteScreenState
         color: Colors.white,
         borderRadius: BorderRadius.circular(18.r),
         border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2))
-        ],
       ),
       child: Column(
         children: [
@@ -523,7 +520,7 @@ class _MultiMapWithQuoteScreenState
                       children: [
                         Padding(
                           padding: EdgeInsets.only(top: 5.h),
-                          child: Icon(Icons.circle,
+                          child: Icon(PhosphorIconsFill.circle,
                               color: Colors.green, size: 11.sp),
                         ),
                         Container(
@@ -568,7 +565,7 @@ class _MultiMapWithQuoteScreenState
                   children: [
                     Padding(
                       padding: EdgeInsets.only(top: 5.h),
-                      child: Icon(Icons.location_on, color: color, size: 13.sp),
+                      child: Icon(PhosphorIconsRegular.mapPin, color: color, size: 13.sp),
                     ),
                     Gap.w10,
                     Expanded(
@@ -603,7 +600,7 @@ class _MultiMapWithQuoteScreenState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(children: [
-                      Icon(Icons.straighten,
+                      Icon(PhosphorIconsRegular.ruler,
                           size: 13.sp, color: Colors.grey.shade500),
                       Gap.w4,
                       AppText.caption(
@@ -614,7 +611,7 @@ class _MultiMapWithQuoteScreenState
                     ]),
                     if (order.vehicleRequest?.isNotEmpty == true)
                       Row(children: [
-                        Icon(Icons.two_wheeler,
+                        Icon(PhosphorIconsRegular.motorcycle,
                             size: 13.sp, color: Colors.grey.shade500),
                         Gap.w4,
                         AppText.caption(
@@ -647,8 +644,8 @@ class _MultiMapWithQuoteScreenState
           children: [
             Icon(
               _selectedPaymentSource == 'Wallet'
-                  ? Icons.account_balance_wallet
-                  : Icons.credit_card,
+                  ? PhosphorIconsRegular.wallet
+                  : PhosphorIconsRegular.creditCard,
               color: AppColors.primary,
             ),
             Gap.w16,
@@ -662,7 +659,7 @@ class _MultiMapWithQuoteScreenState
                     _selectedPaymentSource == 'Wallet'
                         ? (isInsufficient
                             ? 'Insufficient funds'
-                            : 'Balance: ${walletBalance?.toMoney() ?? "₦0.00"}')
+                            : 'Balance: ${(walletBalance ?? 0).toMoney()}')
                         : 'Pay securely with card',
                     color: isInsufficient && _selectedPaymentSource == 'Wallet'
                         ? Colors.red
@@ -672,7 +669,7 @@ class _MultiMapWithQuoteScreenState
                 ],
               ),
             ),
-            Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade400),
+            Icon(PhosphorIconsRegular.caretDown, color: Colors.grey.shade400),
           ],
         ),
       ),
@@ -692,21 +689,21 @@ class _MultiMapWithQuoteScreenState
             AppText.h3('Select Payment Method',
                 fontSize: 16.sp, fontWeight: FontWeight.bold),
             Gap.h24,
-            _buildPaymentOption(
-              'Wallet',
-              Icons.account_balance_wallet,
-              isInsufficient,
-              isInsufficient
-                  ? 'Insufficient funds'
-                  : 'Balance: ${walletBalance?.toMoney() ?? "₦0.00"}',
-            ),
-            Gap.h16,
-            _buildPaymentOption(
-              'Paystack',
-              Icons.credit_card,
-              false,
-              'Pay securely with card',
-            ),
+            for (final source in _market.paymentSources) ...[
+              _buildPaymentOption(
+                source,
+                source == 'Wallet'
+                    ? PhosphorIconsRegular.wallet
+                    : PhosphorIconsRegular.creditCard,
+                source == 'Wallet' && isInsufficient,
+                source == 'Wallet'
+                    ? (isInsufficient
+                        ? 'Insufficient funds'
+                        : 'Balance: ${(walletBalance ?? 0).toMoney()}')
+                    : 'Pay securely with card',
+              ),
+              Gap.h16,
+            ],
             Gap.h32,
           ],
         ),
@@ -755,7 +752,7 @@ class _MultiMapWithQuoteScreenState
                 ],
               ),
             ),
-            if (selected) Icon(Icons.check_circle, color: AppColors.primary),
+            if (selected) Icon(PhosphorIconsFill.checkCircle, color: AppColors.primary),
           ],
         ),
       ),

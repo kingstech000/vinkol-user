@@ -1,3 +1,5 @@
+import 'package:starter_codes/core/money/money.dart';
+
 class OrderInitiationResponse {
   final Order? order;
   final List<String>? orderIds;
@@ -14,7 +16,8 @@ class OrderInitiationResponse {
   factory OrderInitiationResponse.fromJson(Map<String, dynamic> json) {
     return OrderInitiationResponse(
       order: json['order'] != null ? Order.fromJson(json['order']) : null,
-      orderIds: json['orders'] != null ? List<String>.from(json['orders']) : null,
+      orderIds:
+          json['orders'] != null ? List<String>.from(json['orders']) : null,
       authorizationUrl: json['authorization_url'],
       reference: json['reference'],
     );
@@ -42,8 +45,8 @@ class Order {
   final String orderType;
   final String note;
   final String description;
-  final int? amount;
-  final int deliveryFee; // Changed to handle null
+  final double? amount;
+  final double deliveryFee; // Changed to handle null
   final String? paystackReference;
   final String paymentStatus;
   final List<dynamic> products;
@@ -51,7 +54,21 @@ class Order {
   final String id;
   final String orderOtp;
   final String trackingId;
-  final int totalAmount; // Changed to handle null
+  final double totalAmount; // Changed to handle null
+
+  /// What the customer is actually charged: fare + service fee + tax. Null when
+  /// the server has not itemised the bill, in which case [totalAmount] stands.
+  final double? grandTotal;
+  final double? serviceFee;
+  final double? taxAmount;
+  final double? taxRate;
+  final String? taxLabel;
+
+  /// The market this order belongs to, decided by the server from the pickup
+  /// coordinates. Absent on records written before the Canada expansion, all of
+  /// which are Nigerian.
+  final Country country;
+  final Currency currency;
 
   final int? externalDeliveryFeeId;
   final String? deliveryProvider;
@@ -92,7 +109,17 @@ class Order {
     this.externalDeliveryStatus,
     this.externalDeliveryPin,
     this.paymentSource,
+    this.grandTotal,
+    this.serviceFee,
+    this.taxAmount,
+    this.taxRate,
+    this.taxLabel,
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
   });
+
+  /// What to charge and display, per the expansion guide.
+  Money get amountDue => Money(grandTotal ?? totalAmount, currency);
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
@@ -109,9 +136,8 @@ class Order {
       orderType: json['orderType'] as String,
       note: json['note'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      amount: (json['amount'] as num?)?.toInt(),
-      deliveryFee: (json['deliveryFee'] as num?)?.toInt() ??
-          0, // Fixed: Handle null with default
+      amount: Money.parseAmount(json['amount']),
+      deliveryFee: Money.parseAmount(json['deliveryFee']) ?? 0,
       paystackReference: json['paystackReference'] as String?,
       paymentStatus: json['paymentStatus'] as String,
       products: json['products'] as List<dynamic>? ?? [],
@@ -119,8 +145,7 @@ class Order {
       id: json['_id'] ?? json['id'],
       orderOtp: json['orderOtp'].toString(),
       trackingId: json['trackingId'] as String,
-      totalAmount: (json['totalAmount'] as num?)?.toInt() ??
-          0, // Fixed: Handle null with default
+      totalAmount: Money.parseAmount(json['totalAmount']) ?? 0,
       externalDeliveryFeeId: json['externalDeliveryFeeId'] as int?,
       deliveryProvider: json['deliveryProvider'] as String?,
       externalDeliveryId: json['externalDeliveryId'] as int?,
@@ -128,6 +153,13 @@ class Order {
       externalDeliveryStatus: json['externalDeliveryStatus'] as String?,
       externalDeliveryPin: json['externalDeliveryPin'] as String?,
       paymentSource: json['paymentSource'] as String?,
+      grandTotal: Money.parseAmount(json['grandTotal']),
+      serviceFee: Money.parseAmount(json['serviceFee']),
+      taxAmount: Money.parseAmount(json['taxAmount']),
+      taxRate: Money.parseAmount(json['taxRate']),
+      taxLabel: json['taxLabel'] as String?,
+      country: Country.fromCode(json['country'] as String?),
+      currency: Currency.fromCode(json['currency'] as String?),
     );
   }
 
@@ -167,6 +199,13 @@ class Order {
         if (externalDeliveryPin != null)
           'externalDeliveryPin': externalDeliveryPin,
         if (paymentSource != null) 'paymentSource': paymentSource,
+        if (grandTotal != null) 'grandTotal': grandTotal,
+        if (serviceFee != null) 'serviceFee': serviceFee,
+        if (taxAmount != null) 'taxAmount': taxAmount,
+        if (taxRate != null) 'taxRate': taxRate,
+        if (taxLabel != null) 'taxLabel': taxLabel,
+        'country': country.code,
+        'currency': currency.code,
       };
 }
 

@@ -14,6 +14,7 @@ import 'package:starter_codes/provider/cart_provider.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({super.key});
@@ -183,13 +184,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                           AppColors.primary.withOpacity(0.05),
                         ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
                     child: Column(
                       children: [
@@ -207,16 +201,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
                                   ),
                                   child: Icon(
-                                    Icons.arrow_back_ios_new,
+                                    PhosphorIconsRegular.caretLeft,
                                     color: AppColors.primary,
                                     size: 18.w,
                                   ),
@@ -234,20 +221,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                                         ? AppColors.primary
                                         : Colors.white,
                                     borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: _isSearchVisible
-                                            ? AppColors.primary.withOpacity(0.3)
-                                            : Colors.black.withOpacity(0.05),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
                                   ),
                                   child: Icon(
                                     _isSearchVisible
-                                        ? Icons.close
-                                        : Icons.search,
+                                        ? PhosphorIconsRegular.x
+                                        : PhosphorIconsRegular.magnifyingGlass,
                                     color: _isSearchVisible
                                         ? Colors.white
                                         : AppColors.primary,
@@ -401,16 +379,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                   ],
                 ),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
               ),
               child: Icon(
-                Icons.store_outlined,
+                PhosphorIconsRegular.storefront,
                 color: Colors.orange[600],
                 size: 60.w,
               ),
@@ -440,18 +411,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                     AppColors.primary.withOpacity(0.8)
                   ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: ElevatedButton.icon(
                 onPressed: () => Navigator.of(context).pop(),
                 icon:
-                    const Icon(Icons.arrow_back, size: 20, color: Colors.white),
+                    const Icon(PhosphorIconsRegular.arrowLeft, size: 20, color: Colors.white),
                 label: const Text(
                   'Go Back',
                   style: TextStyle(
@@ -490,13 +454,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                 colors: [Colors.orange[400]!, Colors.orange[600]!],
               ),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.orange.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: Container(
               width: 56.w,
@@ -511,13 +468,13 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                         imageUrl: store.avatar!.imageUrl,
                         fit: BoxFit.cover,
                         errorWidget: (context, url, error) => Icon(
-                          Icons.store_rounded,
+                          PhosphorIconsRegular.storefront,
                           color: Colors.orange[400],
                           size: 28.w,
                         ),
                       )
                     : Icon(
-                        Icons.store_rounded,
+                        PhosphorIconsRegular.storefront,
                         color: Colors.orange[400],
                         size: 28.w,
                       ),
@@ -552,7 +509,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                       //     shape: BoxShape.circle,
                       //   ),
                       //   child: Icon(
-                      //     Icons.location_on,
+                      //     PhosphorIconsRegular.mapPin,
                       //     size: 12.w,
                       //     color: AppColors.primary,
                       //   ),
@@ -580,13 +537,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: TextField(
         controller: _searchController,
@@ -600,7 +550,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
           prefixIcon: Container(
             padding: EdgeInsets.all(12.w),
             child: Icon(
-              Icons.search_rounded,
+              PhosphorIconsRegular.magnifyingGlass,
               color: AppColors.primary,
               size: 22.w,
             ),
@@ -614,7 +564,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.close,
+                      PhosphorIconsRegular.x,
                       color: Colors.grey[700],
                       size: 16.w,
                     ),
@@ -661,7 +611,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.search_off_rounded,
+                PhosphorIconsRegular.magnifyingGlassMinus,
                 color: Colors.grey[400],
                 size: 60.w,
               ),
@@ -705,17 +655,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                     AppColors.primary.withOpacity(0.8)
                   ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: ElevatedButton.icon(
                 onPressed: () => _searchController.clear(),
-                icon: const Icon(Icons.clear, size: 20, color: Colors.white),
+                icon: const Icon(PhosphorIconsRegular.x, size: 20, color: Colors.white),
                 label: const Text(
                   'Clear Search',
                   style: TextStyle(
@@ -767,16 +710,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                 colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
               ),
               borderRadius: BorderRadius.circular(12.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Icon(
-              Icons.shopping_bag_rounded,
+              PhosphorIconsRegular.bag,
               color: Colors.white,
               size: 20.w,
             ),
@@ -813,14 +749,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                       colors: [Colors.red[400]!, Colors.red[600]!],
                     ),
               borderRadius: BorderRadius.circular(20.r),
-              boxShadow: [
-                BoxShadow(
-                  color: (store.isOpen ? Colors.green : Colors.red)
-                      .withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -896,7 +824,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.inventory_2_outlined,
+                PhosphorIconsRegular.package,
                 color: Colors.grey[400],
                 size: 60.w,
               ),
@@ -926,13 +854,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                     AppColors.primary.withOpacity(0.8)
                   ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: ElevatedButton.icon(
                 onPressed: () {
@@ -940,7 +861,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                       .read(productListViewModelProvider.notifier)
                       .refreshProducts();
                 },
-                icon: const Icon(Icons.refresh, size: 20, color: Colors.white),
+                icon: const Icon(PhosphorIconsRegular.arrowClockwise, size: 20, color: Colors.white),
                 label: const Text(
                   'Refresh',
                   style: TextStyle(
@@ -981,16 +902,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                   colors: [Colors.red[100]!, Colors.red[50]!],
                 ),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
               ),
               child: Icon(
-                Icons.error_outline_rounded,
+                PhosphorIconsRegular.warningCircle,
                 color: Colors.red[400],
                 size: 60.w,
               ),
@@ -1020,13 +934,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                     AppColors.primary.withOpacity(0.8)
                   ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
               child: ElevatedButton.icon(
                 onPressed: () {
@@ -1034,7 +941,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                       .read(productListViewModelProvider.notifier)
                       .refreshProducts();
                 },
-                icon: const Icon(Icons.refresh, size: 20, color: Colors.white),
+                icon: const Icon(PhosphorIconsRegular.arrowClockwise, size: 20, color: Colors.white),
                 label: const Text(
                   'Try Again',
                   style: TextStyle(
@@ -1124,13 +1031,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                   AppColors.primary.withOpacity(0.8),
                 ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
             ),
             child: Material(
               color: Colors.transparent,
@@ -1155,7 +1055,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
-                          Icons.shopping_cart_rounded,
+                          PhosphorIconsRegular.shoppingCart,
                           color: Colors.white,
                           size: 22,
                         ),
@@ -1193,7 +1093,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.arrow_forward_rounded,
+                          PhosphorIconsRegular.arrowRight,
                           color: Colors.white,
                           size: 18,
                         ),

@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class PaymentConfirmationDialog extends StatelessWidget {
   const PaymentConfirmationDialog({super.key, required this.isStoreOrder});
@@ -26,13 +27,6 @@ class PaymentConfirmationDialog extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -40,7 +34,7 @@ class PaymentConfirmationDialog extends StatelessWidget {
             Align(
               alignment: Alignment.topRight,
               child: InkWell(
-                child: const Icon(Icons.close),
+                child: const Icon(PhosphorIconsRegular.x),
                 onTap: () {
                   Navigator.pop(context);
                 },
@@ -54,7 +48,7 @@ class PaymentConfirmationDialog extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.payment_rounded,
+                PhosphorIconsRegular.creditCard,
                 size: 32.w,
                 color: Colors.orange,
               ),
@@ -71,10 +65,7 @@ class PaymentConfirmationDialog extends StatelessWidget {
                 color: Colors.black87,
               ),
             ),
-
             SizedBox(height: 12.h),
-
-            // Description
             Text(
               'Have you completed your payment? If yes, verify to see your order. If not, you can cancel and try again later.',
               textAlign: TextAlign.center,
@@ -84,9 +75,7 @@ class PaymentConfirmationDialog extends StatelessWidget {
                 height: 1.5,
               ),
             ),
-
             SizedBox(height: 28.h),
-
             SizedBox(
               width: double.infinity,
               height: 48.h,

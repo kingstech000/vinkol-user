@@ -5,15 +5,18 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/extensions/extensions.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/booking/data/booking_service.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/features/booking/model/order_model.dart';
 import 'package:starter_codes/features/payment/view/payment_webview.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -39,19 +42,27 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
   QuoteResponseModel? _selectedQuote;
   String _selectedPaymentSource = 'Wallet'; // Default to Wallet
 
+  /// The market the selected quote belongs to. The server decides it from the
+  /// pickup coordinates; the client only reads it. It governs which payment
+  /// sources are on offer and whether there is a wallet at all.
+  Country _market = Country.ng;
+
+
   final TextEditingController _recipientNameController =
       TextEditingController();
   final TextEditingController _recipientPhoneController =
       TextEditingController();
   bool _addRecipient = false;
 
-  final List<String> _itemTypes = [
-    'Phone', // Phone
-    'Electronics', // Electronics
-    'Food', // Food
-    'Clothes', // Clothes
-    'General', // General
-    'Documents' // Documents
+  /// The label is what goes on the wire as the package name; the glyph is
+  /// what makes the row scannable without reading it.
+  final List<({String label, IconData icon})> _itemTypes = const [
+    (label: 'Phone', icon: PhosphorIconsRegular.deviceMobile),
+    (label: 'Electronics', icon: PhosphorIconsRegular.plug),
+    (label: 'Food', icon: PhosphorIconsRegular.forkKnife),
+    (label: 'Clothes', icon: PhosphorIconsRegular.tShirt),
+    (label: 'General', icon: PhosphorIconsRegular.package),
+    (label: 'Documents', icon: PhosphorIconsRegular.fileText),
   ];
   String _selectedItemType = 'General';
 
@@ -191,6 +202,19 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
       return;
     }
 
+    // Quotes are single-use and expire 15 minutes after the server issues them.
+    // Catch it here rather than letting the customer submit into a 400.
+    if (_selectedQuote!.isExpired) {
+      setState(() => _isLoading = true);
+      final refreshed = await _refreshQuotes();
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showSnackbar(refreshed
+          ? 'That price expired. We have re-priced your delivery — please confirm again.'
+          : 'That price expired. Please go back and re-enter your trip.');
+      return;
+    }
+
     final rideLocationState = ref.read(rideLocationProvider);
     final quoteRequest = rideLocationState.quoteRequest;
     final pickupLocation = rideLocationState.pickUpLocation;
@@ -240,12 +264,16 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
             DateTime.now().toIso8601String().split('T').first,
         pickupTime: quoteRequest.pickupTime ?? 'Anytime',
         note: quoteRequest.note ?? 'No notes',
-        paymentSource: _selectedPaymentSource,
+        paymentSource: _market.paymentSourceOrNull(_selectedPaymentSource),
         deliveryProvider: deliveryProvider,
-        externalDeliveryFeeId: isPriority ? _selectedQuote!.id : null,
+        externalDeliveryFeeId:
+            isPriority ? _selectedQuote!.externalDeliveryFeeId : null,
         description: quoteRequest.note ?? "",
         recipientName: _addRecipient ? _recipientNameController.text : null,
         recipientPhone: _addRecipient ? _recipientPhoneController.text : null,
+        // Prices the order server-side. Null on Chowdeck quotes, which fall
+        // back to sending the fee.
+        quoteId: _selectedQuote!.quoteId,
       );
 
       debugPrint('[MapWithQuotesScreen] Creating order on backend...');
@@ -302,7 +330,19 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
       }
 
       if (mounted) {
-        AppStatusDialogs.showError(context, errorTitle, errorMessage);
+        if (isStaleQuoteMessage(errorMessage)) {
+          await _refreshQuotes();
+          if (mounted) {
+            AppStatusDialogs.showError(
+              context,
+              'Price expired',
+              'This quote is no longer valid. We have re-priced your delivery — '
+                  'please check the total and confirm again.',
+            );
+          }
+        } else {
+          AppStatusDialogs.showError(context, errorTitle, errorMessage);
+        }
       }
     } finally {
       if (mounted) {
@@ -310,6 +350,29 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  /// Re-prices the delivery and clears the stale selection.
+  ///
+  /// Returns whether a fresh set of quotes was obtained.
+  Future<bool> _refreshQuotes() async {
+    final quoteRequest = ref.read(rideLocationProvider).quoteRequest;
+    if (quoteRequest == null) return false;
+    try {
+      final quotes = await ref
+          .read(bookingServiceProvider)
+          .getAllQuotesForDeliveryTypes(
+        baseQuoteDetails: quoteRequest,
+        market: ref.read(marketProvider),
+      );
+      if (!mounted) return false;
+      ref.read(rideLocationProvider.notifier).setQuoteResponse(quotes);
+      setState(() => _selectedQuote = null);
+      return true;
+    } catch (e) {
+      debugPrint('[MapWithQuotesScreen] Re-quote failed: $e');
+      return false;
     }
   }
 
@@ -380,18 +443,27 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     final walletState = ref.watch(walletOverviewViewModelProvider);
     final double? walletBalance = walletState.walletBalance.valueOrNull;
 
-    // Check if wallet should be disabled based on selected quote price
-    final bool isWalletInsufficient = _selectedQuote != null &&
-        walletBalance != null &&
-        (_selectedQuote!.discountedPrice ?? _selectedQuote!.price) >
-            walletBalance;
+    _market = _selectedQuote?.country ?? Country.ng;
+    // A selection carried over from another market would be rejected, so pull it
+    // back to something this market accepts.
+    if (!_market.paymentSources.contains(_selectedPaymentSource)) {
+      _selectedPaymentSource = _market.paymentSources.first;
+    }
 
-    // Auto-switch to Paystack if Wallet is selected but insufficient
+    // Check if wallet should be disabled based on selected quote price
+    final bool isWalletInsufficient = _market.hasCustomerWallet &&
+        _selectedQuote != null &&
+        walletBalance != null &&
+        _selectedQuote!.amountDue.amount > walletBalance;
+
+    // Auto-switch to the card option if Wallet is selected but insufficient
     if (isWalletInsufficient && _selectedPaymentSource == 'Wallet') {
+      final card = _market.paymentSources.firstWhere((s) => s != 'Wallet',
+          orElse: () => _selectedPaymentSource);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
-            _selectedPaymentSource = 'Paystack';
+            _selectedPaymentSource = card;
           });
         }
       });
@@ -515,12 +587,18 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                               child: _buildQuoteCard(
                                 quote.deliveryType,
                                 "30-60 min",
-                                quote.price,
+                                // What this option actually costs, in the
+                                // currency the server priced it in. Passing a
+                                // bare double here is what put a naira sign on
+                                // a Canadian quote.
+                                quote.amountDue,
                                 'Bike Delivery\nNo mixing; just your direct stuff.',
                                 isExpress: isExpressQuote,
-                                discountedPrice: quote.discountedPrice,
+                                strikethrough: (user?.hasCoupon ?? false) &&
+                                        quote.discountedPrice != null
+                                    ? quote.fare
+                                    : null,
                                 isSelected: _selectedQuote == quote,
-                                hasDiscount: user?.hasCoupon ?? false,
                                 isAvailable: quote.isAvailable,
                                 unavailableMessage: quote.unavailableMessage,
                               ),
@@ -538,46 +616,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                         ),
                       ),
                       Gap.h12,
-                      // Item Type Dropdown
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedItemType,
-                            isExpanded: true,
-                            hint: Text(
-                              'Select Item Type',
-                              style: TextStyle(
-                                  color: Colors.grey.shade600, fontSize: 14.sp),
-                            ),
-                            icon: Icon(Icons.arrow_drop_down,
-                                color: Colors.grey.shade600),
-                            onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                setState(() {
-                                  _selectedItemType = newValue;
-                                });
-                              }
-                            },
-                            items: _itemTypes
-                                .map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: TextStyle(
-                                      fontSize: 14.sp, color: Colors.black87),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
+                      _buildPackageTypePicker(),
                       Gap.h24,
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -639,92 +678,12 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                         ),
                       ),
                       Gap.h12,
-                      // Redesigned Payment Selector
-                      GestureDetector(
-                        onTap: () {
-                          _showPaymentMethodPicker(
-                              context, walletBalance, isWalletInsufficient);
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 10.h),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16.r),
-                            border: Border.all(color: Colors.grey.shade200),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.shade100,
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(10.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  _selectedPaymentSource == 'Wallet'
-                                      ? Icons.account_balance_wallet
-                                      : Icons.credit_card,
-                                  color: AppColors.primary,
-                                  size: 20.sp,
-                                ),
-                              ),
-                              Gap.w16,
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _selectedPaymentSource,
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    if (_selectedPaymentSource == 'Wallet') ...[
-                                      Gap.h4,
-                                      Text(
-                                        isWalletInsufficient
-                                            ? 'Insufficient funds'
-                                            : 'Balance: ${walletBalance?.toMoney() ?? "₦0.00"}',
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
-                                          color: isWalletInsufficient
-                                              ? Colors.red
-                                              : Colors.grey.shade600,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ] else ...[
-                                      Gap.h4,
-                                      Text(
-                                        'Pay securely with card',
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.keyboard_arrow_down,
-                                color: Colors.grey.shade400,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      _buildPaymentSources(walletBalance, isWalletInsufficient),
 
+                      if (_selectedQuote != null) ...[
+                        Gap.h24,
+                        _buildPriceBreakdown(_selectedQuote!),
+                      ],
                       Gap.h32,
                       SizedBox(
                         width: double.infinity,
@@ -774,156 +733,257 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     );
   }
 
-  void _showPaymentMethodPicker(
-      BuildContext context, double? walletBalance, bool isWalletInsufficient) {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.h3(
-                'Select Payment Method',
-                fontSize: 14.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-              Gap.h24,
-              _buildPaymentDetailOption(
-                context,
-                'Wallet',
-                Icons.account_balance_wallet,
-                isWalletInsufficient,
-                isWalletInsufficient
-                    ? 'Insufficient funds'
-                    : 'Balance: ${walletBalance?.toMoney() ?? "₦0.00"}',
-              ),
-              Gap.h16,
-              _buildPaymentDetailOption(
-                context,
-                'Paystack',
-                Icons.credit_card,
-                false,
-                'Pay securely with card',
-              ),
-              // Gap.h16,
-              // _buildPaymentDetailOption(
-              //   context,
-              //   'Globus Bank',
-              //   Icons.account_balance,
-              //   false,
-              //   'Pay with Globus Bank',
-              // ),
-              Gap.h32,
-            ],
+  /// The payment sources this market accepts, laid out rather than hidden
+  /// behind a sheet.
+  ///
+  /// Canada accepts Stripe and nothing else, so there was a chevron, a modal
+  /// and a tap standing between the customer and a list of one. Where the
+  /// market genuinely offers a choice it is two rows, which fit on the sheet
+  /// anyway — and an unaffordable wallet is then visible before it is chosen
+  /// rather than after.
+  Widget _buildPaymentSources(double? walletBalance, bool isWalletInsufficient) {
+    final sources = _market.paymentSources;
+    return Column(
+      children: [
+        for (var i = 0; i < sources.length; i++) ...[
+          if (i > 0) Gap.h12,
+          _buildPaymentSourceRow(
+            source: sources[i],
+            walletBalance: walletBalance,
+            isWalletInsufficient: isWalletInsufficient,
+            selectable: _market.offersPaymentChoice,
           ),
-        );
-      },
+        ],
+      ],
     );
   }
 
-  Widget _buildPaymentDetailOption(BuildContext context, String title,
-      IconData icon, bool isDisabled, String subtitle) {
-    final bool isSelected = _selectedPaymentSource == title;
+  Widget _buildPaymentSourceRow({
+    required String source,
+    required double? walletBalance,
+    required bool isWalletInsufficient,
+    required bool selectable,
+  }) {
+    final isWallet = source == 'Wallet';
+    final disabled = isWallet && isWalletInsufficient;
+    final selected = _selectedPaymentSource == source;
+    final subtitle = isWallet
+        ? (isWalletInsufficient
+            ? 'Insufficient funds'
+            : 'Balance: ${(walletBalance ?? 0).toMoney()}')
+        : 'Pay securely with card';
+
     return GestureDetector(
-      onTap: isDisabled
+      onTap: !selectable || disabled
           ? null
-          : () {
-              setState(() {
-                if (title == 'Globus Bank') {
-                  _selectedPaymentSource = 'Globus';
-                } else {
-                  _selectedPaymentSource = title;
-                }
-              });
-              Navigator.pop(context);
-            },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+          : () => setState(() => _selectedPaymentSource = source),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         decoration: BoxDecoration(
-          color: isDisabled
-              ? Colors.grey.shade50
-              : (isSelected
-                  ? AppColors.primary.withOpacity(0.05)
-                  : Colors.white),
-          borderRadius: BorderRadius.circular(16.r),
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDisabled
-                ? Colors.grey.shade200
-                : (isSelected ? AppColors.primary : Colors.grey.shade200),
-            width: 1.5.w,
+            color: selected && selectable
+                ? AppColors.primary
+                : AppColors.lightgrey,
+            width: selected && selectable ? 1.5 : 1,
           ),
         ),
         child: Row(
           children: [
-            Container(
-              padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: isDisabled
-                    ? Colors.grey.shade200
-                    : (isSelected
-                        ? AppColors.primary.withOpacity(0.1)
-                        : Colors.grey.shade100),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 24.sp,
-                color: isDisabled
-                    ? Colors.grey.shade400
-                    : (isSelected ? AppColors.primary : Colors.grey.shade600),
-              ),
+            Icon(
+              isWallet
+                  ? PhosphorIconsRegular.wallet
+                  : PhosphorIconsRegular.creditCard,
+              size: 22,
+              color: disabled ? AppColors.lightgrey : AppColors.primary,
             ),
-            Gap.w16,
+            Gap.w12,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: isDisabled ? Colors.grey.shade400 : Colors.black87,
-                    ),
+                  AppText.body(
+                    source,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: disabled ? AppColors.darkgrey : AppColors.black,
                   ),
-                  Gap.h4,
-                  Text(
+                  Gap.h2,
+                  AppText.caption(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: isDisabled
-                          ? Colors.red.shade300
-                          : Colors.grey.shade500,
-                    ),
+                    fontSize: 12,
+                    color: disabled ? AppColors.red : AppColors.darkgrey,
                   ),
                 ],
               ),
             ),
-            if (isSelected)
+            // Nothing to choose in a market with one source, so nothing is
+            // drawn that suggests there is.
+            if (selectable) ...[
+              Gap.w12,
               Icon(
-                Icons.check,
-                color: AppColors.primary,
-                size: 24.sp,
-              )
+                selected ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.circle,
+                size: 20,
+                color: selected ? AppColors.primary : AppColors.lightgrey,
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
+  Widget _buildPackageTypePicker() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _itemTypes.map(_buildPackageTypePill).toList(),
+    );
+  }
+
+  Widget _buildPackageTypePill(({String label, IconData icon}) type) {
+    final selected = _selectedItemType == type.label;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedItemType = type.label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: 16,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          // Filled when chosen, outlined when not: the shape carries the
+          // selection as much as the colour does, so it survives being read
+          // without colour.
+          color: selected ? AppColors.primary : AppColors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.lightgrey,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              type.icon,
+              size: 16,
+              color: selected ? AppColors.white : AppColors.darkgrey,
+            ),
+            Gap.w8,
+            AppText.caption(
+              type.label,
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              color: selected ? AppColors.white : AppColors.darkgrey,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The bill as the server itemised it.
+  ///
+  /// Nothing here is computed on the client. The fee, the tax, the tax's name
+  /// and the total all come off the quote, because the rate depends on the
+  /// delivery's province and the label is not always a single tax — Quebec
+  /// bills "GST + QST". Markets that return no fees and no tax, which is every
+  /// plain Nigerian delivery, get no breakdown at all rather than a card of
+  /// zeroes.
+  Widget _buildPriceBreakdown(QuoteResponseModel quote) {
+    if (!quote.hasItemisedCharges) return const SizedBox.shrink();
+
+    final serviceFee = quote.serviceFeeMoney;
+    final tax = quote.taxMoney;
+
+    return Container(
+      padding: const EdgeInsetsDirectional.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.lightgrey),
+      ),
+      child: Column(
+        children: [
+          _buildBreakdownRow('Delivery fee', quote.fare.format()),
+          if (serviceFee != null && serviceFee.amount > 0) ...[
+            Gap.h8,
+            _buildBreakdownRow('Service fee', serviceFee.format()),
+          ],
+          if (tax != null && tax.amount > 0) ...[
+            Gap.h8,
+            _buildBreakdownRow(_taxRowLabel(quote), tax.format()),
+          ],
+          Gap.h12,
+          const Divider(height: 1, thickness: 1, color: AppColors.lightgrey),
+          Gap.h12,
+          _buildBreakdownRow(
+            'Total',
+            quote.amountDue.format(),
+            emphasised: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBreakdownRow(
+    String label,
+    String value, {
+    bool emphasised = false,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: AppText.caption(
+            label,
+            fontSize: 13,
+            fontWeight: emphasised ? FontWeight.w600 : FontWeight.w400,
+            color: emphasised ? AppColors.black : AppColors.darkgrey,
+          ),
+        ),
+        Gap.w12,
+        AppText.caption(
+          value,
+          fontSize: emphasised ? 16 : 13,
+          fontWeight: emphasised ? FontWeight.w700 : FontWeight.w500,
+          color: AppColors.black,
+        ),
+      ],
+    );
+  }
+
+  /// e.g. `HST (13%)`. The name is the server's; the percentage is only ever
+  /// the rate it sent back, never one derived from the country.
+  String _taxRowLabel(QuoteResponseModel quote) {
+    final label = (quote.taxLabel ?? '').trim();
+    final name = label.isEmpty ? 'Tax' : label;
+    final rate = quote.taxRate;
+    if (rate == null || rate <= 0) return name;
+
+    // Quebec's 14.975% is a real rate, so the percentage cannot just be
+    // rounded to whole numbers — but 13.000% should not be written out either.
+    final percent = rate * 100;
+    var text = percent.toStringAsFixed(3);
+    if (text.contains('.')) {
+      text = text.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+    }
+    return '$name ($text%)';
+  }
+
   Widget _buildQuoteCard(
-      String title, String time, double price, String description,
+      String title, String time, Money payable, String description,
       {required bool isExpress,
       required bool isSelected,
-      double? discountedPrice,
-      bool? hasDiscount,
+      Money? strikethrough,
       bool isAvailable = true,
       String? unavailableMessage}) {
     // Opacity for unavailable state
@@ -932,6 +992,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     // Determine type based on title/isExpress
     final bool isPriority = title.toLowerCase().contains('priority');
     final bool isDarkTheme = isExpress || isPriority;
+    final bool discounted = strikethrough != null && isAvailable;
 
     return Opacity(
       opacity: opacity,
@@ -1033,20 +1094,20 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                         ),
                       ),
                       Gap.h4,
-                      // Price Row
-                      if (hasDiscount == true &&
-                          discountedPrice != null &&
-                          isAvailable)
+                      // Price Row. The discounted case shows what is payable
+                      // first and the old price struck through beneath it;
+                      // otherwise there is one number, the payable one.
+                      if (discounted)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              discountedPrice.toMoney(),
+                              payable.format(),
                               style: TextStyle(
                                 color: isDarkTheme
                                     ? Colors.white
                                     : AppColors.black,
-                                fontSize: 20.sp,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1056,11 +1117,11 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            isAvailable ? price.toMoney() : 'Unavailable',
+                            !isAvailable
+                                ? 'Unavailable'
+                                : (strikethrough ?? payable).format(),
                             style: TextStyle(
-                              decoration: discountedPrice != null &&
-                                      hasDiscount == true &&
-                                      isAvailable
+                              decoration: discounted
                                   ? TextDecoration.lineThrough
                                   : TextDecoration.none,
                               decorationColor:
@@ -1068,19 +1129,13 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                               decorationThickness: 3,
                               color:
                                   isDarkTheme ? Colors.white : AppColors.black,
-                              fontSize: (discountedPrice != null &&
-                                      hasDiscount == true)
-                                  ? 14.sp
-                                  : 20.sp,
-                              fontWeight: (discountedPrice != null &&
-                                      hasDiscount == true)
+                              fontSize: discounted ? 14 : 20,
+                              fontWeight: discounted
                                   ? FontWeight.normal
                                   : FontWeight.bold,
                             ),
                           ),
-                          if (discountedPrice != null &&
-                              hasDiscount == true &&
-                              isAvailable) ...[
+                          if (discounted) ...[
                             Gap.w8,
                             Container(
                               padding: const EdgeInsets.symmetric(

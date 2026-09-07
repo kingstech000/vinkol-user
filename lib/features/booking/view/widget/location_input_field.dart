@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class LocationInputField extends StatelessWidget {
   final ValueChanged<String>? onLocationChanged; // If you want to pass value up
@@ -16,7 +17,7 @@ class LocationInputField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       child: Row(
         children: [
-          Icon(Icons.search, color: Colors.grey[600]),
+          Icon(PhosphorIconsRegular.magnifyingGlass, color: Colors.grey[600]),
           Gap.w10,
           Expanded(
             child: TextField(

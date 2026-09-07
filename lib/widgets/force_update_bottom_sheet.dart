@@ -6,6 +6,7 @@ import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/core/utils/launch_link.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ForceUpdateBottomSheet extends StatelessWidget {
   const ForceUpdateBottomSheet({super.key});
@@ -82,7 +83,7 @@ class ForceUpdateBottomSheet extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.system_update,
+                      PhosphorIconsRegular.arrowCircleUp,
                       size: 64.w,
                       color: AppColors.primary,
                     ),

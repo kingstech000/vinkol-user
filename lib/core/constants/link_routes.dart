@@ -2,6 +2,8 @@
 
 class LinkRoutes {
   // Customer Service & Support
+  /// Nigerian support. For market-scoped contacts prefer
+  /// `MarketProfile.supportPhone`; these remain for the existing NG links.
   static const String customerServicePhone1 = 'tel:+2348079722331';
   static const String customerServicePhone2 = 'tel:+2347018488479';
   static const String emailSupport1 = 'mailto:Vinkollogistics@gmail.com';

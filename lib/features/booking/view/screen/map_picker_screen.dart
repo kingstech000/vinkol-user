@@ -1,12 +1,13 @@
 // lib/screens/map_picker_screen.dart
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:starter_codes/core/utils/colors.dart';
+import 'package:starter_codes/core/market/market_profile.dart';
 import 'package:starter_codes/core/utils/state_boundaries.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart';
@@ -14,6 +15,7 @@ import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class MapPickerScreen extends ConsumerStatefulWidget {
   final bool? isPickupLocation;
@@ -61,6 +63,13 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
   }
 
   void _initializeMap() {
+    // Confining the pin to a region needs boundary data, and we only have it
+    // for Nigeria. Everywhere else picks freely.
+    if (!ref.read(marketProfileProvider).clampPickToRegion) {
+      _startFromCurrentLocationOrMarketCentre();
+      return;
+    }
+
     // Get user's current state
     final user = ref.read(userProvider);
     _userState = user?.currentState;
@@ -104,9 +113,25 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     _getAddressFromLatLng(_pickedLocation!);
   }
 
+  /// Opens on the device's own position when there is one, and on the market's
+  /// centre otherwise. Used by markets that do not clamp the pin.
+  void _startFromCurrentLocationOrMarketCentre() {
+    final current = ref.read(locationControllerProvider).currentLatLng;
+    if (current == null) {
+      _setDefaultLocation();
+      return;
+    }
+    _initialCameraPosition = CameraPosition(target: current, zoom: 17.0);
+    _pickedLocation = current;
+    _getAddressFromLatLng(current);
+  }
+
   void _setDefaultLocation() {
-    _initialCameraPosition = const CameraPosition(
-      target: LatLng(6.3361, 5.6125), // Benin City default
+    // Falls back to the device market's own centre. Opening a Canadian pick in
+    // Benin City is worse than useless — the customer cannot pan out of it.
+    final MarketProfile profile = ref.read(marketProfileProvider);
+    _initialCameraPosition = CameraPosition(
+      target: LatLng(profile.defaultLat, profile.defaultLng),
       zoom: 17.0, // Street-level zoom
     );
     _pickedLocation = _initialCameraPosition.target;
@@ -684,7 +709,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.primary),
+          icon: const Icon(PhosphorIconsRegular.caretLeft, color: AppColors.primary),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -693,7 +718,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
         actions: [
           // Current location button in app bar
           IconButton(
-            icon: const Icon(Icons.my_location, color: AppColors.primary),
+            icon: const Icon(PhosphorIconsRegular.crosshairSimple, color: AppColors.primary),
             onPressed: _getCurrentLocation,
             tooltip: 'Go to current location',
           ),
@@ -734,7 +759,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
           // Center crosshair
           const Center(
             child: Icon(
-              CupertinoIcons.map_pin,
+              PhosphorIconsRegular.mapPin,
               color: AppColors.primary,
               size: 40,
             ),
@@ -752,7 +777,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                     _mapController?.animateCamera(CameraUpdate.zoomIn());
                   },
                   backgroundColor: Colors.white,
-                  child: const Icon(Icons.zoom_in, color: Colors.black87),
+                  child: const Icon(PhosphorIconsRegular.magnifyingGlassPlus, color: Colors.black87),
                 ),
                 const SizedBox(height: 8),
                 FloatingActionButton.small(
@@ -761,7 +786,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                     _mapController?.animateCamera(CameraUpdate.zoomOut());
                   },
                   backgroundColor: Colors.white,
-                  child: const Icon(Icons.zoom_out, color: Colors.black87),
+                  child: const Icon(PhosphorIconsRegular.magnifyingGlassMinus, color: Colors.black87),
                 ),
               ],
             ),
@@ -777,13 +802,6 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -792,7 +810,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                   Row(
                     children: [
                       Icon(
-                        Icons.location_on,
+                        PhosphorIconsRegular.mapPin,
                         color:
                             _showingStateError ? Colors.red : AppColors.primary,
                         size: 24,

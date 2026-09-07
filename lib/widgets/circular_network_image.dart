@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/constants/assets.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class CircularNetworkImage extends StatelessWidget {
   final String imageUrl;
@@ -43,7 +44,7 @@ class CircularNetworkImage extends StatelessWidget {
               width: effectiveWidth,
               color: Colors.grey, // Solid grey box for error
               child: const Icon(
-                Icons.person, // Optional: add a person icon in the grey box
+                PhosphorIconsFill.user, // Optional: add a person icon in the grey box
                 color: Colors.white,
                 size: 24, // Adjust size as needed
               ),

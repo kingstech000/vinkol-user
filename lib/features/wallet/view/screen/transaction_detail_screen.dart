@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import '../../model/payment_history_model.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class TransactionDetailScreen extends StatelessWidget {
   final PaymentHistory transaction;
@@ -46,13 +47,6 @@ class TransactionDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
               ),
               child: Column(
                 children: [
@@ -64,7 +58,7 @@ class TransactionDetailScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      isDebit ? Icons.arrow_downward : Icons.arrow_upward,
+                      isDebit ? PhosphorIconsRegular.arrowDown : PhosphorIconsRegular.arrowUp,
                       color: isDebit ? Colors.red.shade600 : Colors.green.shade600,
                       size: 32.sp,
                     ),
@@ -82,7 +76,7 @@ class TransactionDetailScreen extends StatelessWidget {
                   ),
                   Gap.h8,
                   Text(
-                    '${isDebit ? '-' : '+'}₦${transaction.amount.toStringAsFixed(2)}',
+                    '${isDebit ? '-' : '+'}${transaction.money.format()}',
                     style: TextStyle(
                       fontSize: 32.sp,
                       fontWeight: FontWeight.bold,
@@ -122,13 +116,6 @@ class TransactionDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,7 +210,7 @@ class TransactionDetailScreen extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.copy, size: 20.sp, color: AppColors.blue),
+                  icon: Icon(PhosphorIconsRegular.copy, size: 20.sp, color: AppColors.blue),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: value));
                     ScaffoldMessenger.of(context).showSnackBar(

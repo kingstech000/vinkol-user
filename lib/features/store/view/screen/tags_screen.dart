@@ -12,6 +12,7 @@ import 'package:starter_codes/provider/store_provider.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/app_button.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class TagsScreen extends ConsumerStatefulWidget {
   const TagsScreen({super.key});
@@ -80,7 +81,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.error_outline,
+                            PhosphorIconsRegular.warningCircle,
                             size: 48.w,
                             color: Colors.red,
                           ),
@@ -121,13 +122,6 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -200,21 +194,21 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
   IconData _getTagIcon(String tagValue) {
     switch (tagValue) {
       case 'supermarket':
-        return Icons.shopping_cart;
+        return PhosphorIconsRegular.shoppingCart;
       case 'beauty':
-        return Icons.face;
+        return PhosphorIconsRegular.smiley;
       case 'fashion':
-        return Icons.checkroom;
+        return PhosphorIconsRegular.tShirt;
       case 'electronics':
-        return Icons.devices;
+        return PhosphorIconsRegular.devices;
       case 'food':
-        return Icons.restaurant;
+        return PhosphorIconsRegular.forkKnife;
       case 'bakery':
-        return Icons.cake;
+        return PhosphorIconsRegular.cake;
       case 'pharmacy':
-        return Icons.local_pharmacy;
+        return PhosphorIconsRegular.firstAid;
       default:
-        return Icons.store;
+        return PhosphorIconsRegular.storefront;
     }
   }
 }

@@ -6,6 +6,7 @@ import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/core/utils/network_client.dart';
 import 'package:starter_codes/core/constants/api_routes.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/features/booking/model/order_model.dart';
 import 'package:starter_codes/features/booking/model/request.dart';
@@ -107,40 +108,6 @@ class BookingService {
     }
   }
 
-  Future<OrderInitiationResponse> createBulkOrder({
-    required CreateBulkOrderRequest orderDetails,
-  }) async {
-    try {
-      logger.i('Bulk Order Request: ${orderDetails.toJson()}');
-      final responseData = await _networkClient.post(
-        ApiRoute.createOrderNew,
-        body: orderDetails.toJson(),
-      );
-      logger.i('Bulk Order created successfully: $responseData');
-      return OrderInitiationResponse.fromJson(responseData['data']);
-    } catch (e) {
-      logger.e('Failed to create bulk order: $e');
-      rethrow;
-    }
-  }
-
-  Future<OrderInitiationResponse> createMultiOrder({
-    required CreateMultiOrderRequest orderDetails,
-  }) async {
-    try {
-      logger.i('Multi Order Request: ${orderDetails.toJson()}');
-      final responseData = await _networkClient.post(
-        ApiRoute.createOrderNew,
-        body: orderDetails.toJson(),
-      );
-      logger.i('Multi Order created successfully: $responseData');
-      return OrderInitiationResponse.fromJson(responseData['data']);
-    } catch (e) {
-      logger.e('Failed to create multi order: $e');
-      rethrow;
-    }
-  }
-
   Future<OrderModel> getOrderDetails({
     required String orderId,
   }) async {
@@ -226,7 +193,7 @@ class BookingService {
           lat: double.parse(quoteDetails.dropoffLocation.lat),
           lng: double.parse(quoteDetails.dropoffLocation.lng),
         ),
-        id: data['id'],
+        externalDeliveryFeeId: data['id'] as int?,
         vinkolAmount: (data['vinkol_amount'] as num).toDouble(),
         isAvailable: true,
       );
@@ -236,8 +203,12 @@ class BookingService {
     }
   }
 
+  /// [market] is the device's market, used only to decide which providers to
+  /// ask. The market an order is actually priced in is resolved by the server
+  /// from the pickup coordinates and read back off each quote.
   Future<List<QuoteResponseModel>> getAllQuotesForDeliveryTypes({
     required GetQuoteRequest baseQuoteDetails,
+    Country market = Country.ng,
   }) async {
     List<QuoteResponseModel> quotes = [];
 
@@ -283,24 +254,28 @@ class BookingService {
           unavailableMessage: "Express delivery unavailable"));
     }
 
-    // 3. Priority+ Quote (Chowdeck)
-    try {
-      final priorityQuote = await _getChowdeckQuote(
-        quoteDetails: baseQuoteDetails,
-      );
-      quotes.add(priorityQuote);
-    } catch (e) {
-      logger.e('Error fetching priority quote: $e');
-      quotes.add(QuoteResponseModel(
-          state: baseQuoteDetails.state,
-          orderType: baseQuoteDetails.orderType,
-          deliveryType: 'priority',
-          vehicleRequest: baseQuoteDetails.vehicleRequest,
-          price: 0,
-          pickupLocation: LatLngLiteral(lat: 0, lng: 0),
-          dropoffLocation: LatLngLiteral(lat: 0, lng: 0),
-          isAvailable: false,
-          unavailableMessage: "Priority+ delivery unavailable"));
+    // 3. Priority+ Quote (Chowdeck), only where there is a partner courier to
+    // ask. Outside Nigeria the call is a certain 400, and an option that can
+    // never be chosen is worse than no option at all.
+    if (market.offersPartnerCourier) {
+      try {
+        final priorityQuote = await _getChowdeckQuote(
+          quoteDetails: baseQuoteDetails,
+        );
+        quotes.add(priorityQuote);
+      } catch (e) {
+        logger.e('Error fetching priority quote: $e');
+        quotes.add(QuoteResponseModel(
+            state: baseQuoteDetails.state,
+            orderType: baseQuoteDetails.orderType,
+            deliveryType: 'priority',
+            vehicleRequest: baseQuoteDetails.vehicleRequest,
+            price: 0,
+            pickupLocation: LatLngLiteral(lat: 0, lng: 0),
+            dropoffLocation: LatLngLiteral(lat: 0, lng: 0),
+            isAvailable: false,
+            unavailableMessage: "Priority+ delivery unavailable"));
+      }
     }
 
     return quotes;

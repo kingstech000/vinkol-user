@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -25,6 +26,7 @@ import 'package:starter_codes/widgets/reverse_map.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/widgets/loading_overlay.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class BookingOrderScreen extends ConsumerStatefulWidget {
   const BookingOrderScreen({super.key});
@@ -99,15 +101,8 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
-                child: Icon(Icons.arrow_back_ios_new,
+                child: Icon(PhosphorIconsRegular.caretLeft,
                     color: AppColors.black, size: 18.w),
               ),
             ),
@@ -129,7 +124,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                     borderRadius: BorderRadius.circular(18.r),
                   ),
                   child: Icon(
-                    Icons.directions_rounded,
+                    PhosphorIconsRegular.navigationArrow,
                     color: Colors.white,
                     size: 32.w,
                   ),
@@ -194,13 +189,6 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                           topLeft: Radius.circular(24.r),
                           topRight: Radius.circular(24.r),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, -5),
-                          ),
-                        ],
                       ),
                       child: Column(
                         children: [
@@ -230,7 +218,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                         padding: EdgeInsets.all(40.w),
                                         child: Column(
                                           children: [
-                                            Icon(Icons.inbox_outlined,
+                                            Icon(PhosphorIconsRegular.tray,
                                                 size: 64.w,
                                                 color: Colors.grey.shade400),
                                             Gap.h16,
@@ -266,14 +254,6 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                           ),
                                           borderRadius:
                                               BorderRadius.circular(16.r),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppColors.primary
-                                                  .withOpacity(0.3),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
                                         ),
                                         child: Row(
                                           children: [
@@ -285,7 +265,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Icon(
-                                                Icons.delivery_dining_sharp,
+                                                PhosphorIconsRegular.moped,
                                                 color: AppColors.white,
                                                 size: 24.w,
                                               ),
@@ -535,10 +515,10 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                                         (index) =>
                                                                             Icon(
                                                                           index < rating.avgRating.floor()
-                                                                              ? Icons.star
+                                                                              ? PhosphorIconsFill.star
                                                                               : (index == rating.avgRating.floor() && rating.avgRating % 1 >= 0.5)
-                                                                                  ? Icons.star_half
-                                                                                  : Icons.star_border,
+                                                                                  ? PhosphorIconsFill.starHalf
+                                                                                  : PhosphorIconsRegular.star,
                                                                           color:
                                                                               Colors.amber,
                                                                           size:
@@ -611,7 +591,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                       ),
                                                       child: IconButton(
                                                         icon: Icon(
-                                                          Icons.call,
+                                                          PhosphorIconsRegular.phone,
                                                           color: Colors.white,
                                                           size: 20.w,
                                                         ),
@@ -683,7 +663,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                 child: Column(
                                                   children: [
                                                     _EnhancedLocationInfo(
-                                                      icon: Icons.trip_origin,
+                                                      icon: PhosphorIconsRegular.circle,
                                                       iconColor: Colors.green,
                                                       title: 'Pick-up Location',
                                                       address: delivery
@@ -721,7 +701,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                       ),
                                                     ),
                                                     _EnhancedLocationInfo(
-                                                      icon: Icons.location_on,
+                                                      icon: PhosphorIconsRegular.mapPin,
                                                       iconColor:
                                                           AppColors.primary,
                                                       title:
@@ -857,7 +837,8 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                                       context,
                                                       title: 'Cancel Order',
                                                       message:
-                                                          'Are you sure you want to cancel this order? The amount will be reversed to your wallet.',
+                                                          'Are you sure you want to cancel this order? '
+                                                          '${delivery.country.refundDestination}',
                                                       confirmText: 'Confirm',
                                                       cancelText: 'No, Keep',
                                                       onConfirm: () async {
@@ -936,7 +917,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                                   child: Center(
                                     child: Column(
                                       children: [
-                                        Icon(Icons.error_outline,
+                                        Icon(PhosphorIconsRegular.warningCircle,
                                             size: 48.w, color: Colors.red),
                                         Gap.h16,
                                         Text(
@@ -981,13 +962,6 @@ class _EnhancedCard extends StatelessWidget {
           color: Colors.grey.shade200,
           width: 1.w,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: child,
     );
@@ -1094,7 +1068,7 @@ class _BulkRouteCard extends StatelessWidget {
           // Header
           Row(
             children: [
-              Icon(Icons.local_shipping_outlined,
+              Icon(PhosphorIconsRegular.truck,
                   color: AppColors.primary, size: 20.w),
               Gap.w8,
               AppText.h5(
@@ -1124,7 +1098,7 @@ class _BulkRouteCard extends StatelessWidget {
 
           // ── Pickup ──────────────────────────────────────────────────
           _LocationRow(
-            icon: Icons.trip_origin,
+            icon: PhosphorIconsRegular.circle,
             iconColor: Colors.green,
             label: 'Pickup',
             address: pickup?.location?.address,
@@ -1135,7 +1109,7 @@ class _BulkRouteCard extends StatelessWidget {
           ...List.generate(dropoffs.length, (i) {
             final drop = dropoffs[i];
             return _LocationRow(
-              icon: Icons.location_on,
+              icon: PhosphorIconsRegular.mapPin,
               iconColor: AppColors.primary,
               label: 'Drop-off ${i + 1}',
               name: drop.name,

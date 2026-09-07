@@ -7,6 +7,7 @@ import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/delivery/model/delivery_model.dart'; // Make sure this path is correct
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ProductsOrderedModal extends StatelessWidget {
   final List<ProductModel> products;
@@ -63,7 +64,7 @@ class ProductsOrderedModal extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8.r),
                               color: AppColors.white,
                             ),
-                            child: Icon(Icons.image_not_supported, size: 30.w, color: AppColors.greyLight),
+                            child: Icon(PhosphorIconsRegular.imageBroken, size: 30.w, color: AppColors.greyLight),
                           ),
                         Expanded(
                           child: Column(

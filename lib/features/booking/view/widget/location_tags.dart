@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class LocationTags extends StatelessWidget {
   const LocationTags({super.key});
@@ -14,11 +15,11 @@ class LocationTags extends StatelessWidget {
         children: [
           _buildAddButton(),
           Gap.w6,
-          _buildLocationTag('Home', Icons.home),
+          _buildLocationTag('Home', PhosphorIconsRegular.house),
           Gap.w6,
-          _buildLocationTag('Office', Icons.work),
+          _buildLocationTag('Office', PhosphorIconsRegular.briefcase),
           Gap.w6,
-          _buildLocationTag('Gym', Icons.fitness_center),
+          _buildLocationTag('Gym', PhosphorIconsRegular.barbell),
         ],
       ),
     );
@@ -29,7 +30,7 @@ class LocationTags extends StatelessWidget {
       onPressed: () {
         // Handle add button press
       },
-      icon: const Icon(Icons.add, color: AppColors.white),
+      icon: const Icon(PhosphorIconsRegular.plus, color: AppColors.white),
       label: const Text(
         'Add',
         style: TextStyle(color: AppColors.white),

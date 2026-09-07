@@ -67,7 +67,7 @@ Status: `—` not started · `AUDIT` audited · `WIP` · `DONE` passed the criti
 | wallet/bank_selection_screen | | market layer | — |
 | **Profile** |
 | profile/profile_screen | 312 | | — |
-| profile/personal_info_screen | | | — |
+| profile/personal_info_screen | 512 | God screen; market layer: State label, dial code | WIP |
 | profile/settings_screen | | | — |
 | profile/security_screen | | | — |
 | profile/notification_settings_screen | | | — |

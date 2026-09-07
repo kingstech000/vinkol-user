@@ -9,6 +9,7 @@ import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/features/booking/view/screen/location_search_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/map_picker_screen.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 const _white = AppColors.white;
 const _surface = Color(0xFFF8F9FB);
@@ -81,13 +82,6 @@ class RideDetailsInput extends ConsumerWidget {
         color: _white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: _border, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +98,7 @@ class RideDetailsInput extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child:
-                      const Icon(Icons.route_rounded, color: _accent, size: 18),
+                      const Icon(PhosphorIconsRegular.path, color: _accent, size: 18),
                 ),
                 const SizedBox(width: 12),
                 const Column(
@@ -141,7 +135,7 @@ class RideDetailsInput extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: _accent.withOpacity(0.1)),
                       ),
-                      child: const Icon(Icons.swap_vert_rounded,
+                      child: const Icon(PhosphorIconsRegular.arrowsDownUp,
                           color: _accent, size: 20),
                     ),
                   ),
@@ -462,7 +456,7 @@ class _StopInputField extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child:
-                      const Icon(Icons.close_rounded, size: 14, color: _accent),
+                      const Icon(PhosphorIconsRegular.x, size: 14, color: _accent),
                 ),
               )
             else if (onRemove != null)
@@ -475,15 +469,15 @@ class _StopInputField extends StatelessWidget {
                     color: _redDim,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Icon(Icons.delete_outline_rounded,
+                  child: const Icon(PhosphorIconsRegular.trash,
                       size: 14, color: _red),
                 ),
               )
             else
               Icon(
                 hasLocation
-                    ? Icons.check_circle_rounded
-                    : Icons.chevron_right_rounded,
+                    ? PhosphorIconsFill.checkCircle
+                    : PhosphorIconsRegular.caretRight,
                 color: hasLocation ? color : _textMuted,
                 size: 18,
               ),
@@ -514,7 +508,7 @@ class _AddStopButton extends StatelessWidget {
               color: _accentDim,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Icon(Icons.add_rounded, color: _accent, size: 14),
+            child: const Icon(PhosphorIconsRegular.plus, color: _accent, size: 14),
           ),
           const SizedBox(width: 8),
           AppText.h2(
@@ -623,7 +617,7 @@ class _LocationPickerSheet extends StatelessWidget {
 
           // Options
           _SheetOption(
-            icon: Icons.search_rounded,
+            icon: PhosphorIconsRegular.magnifyingGlass,
             title: 'Search for a place',
             subtitle: 'Type an address or landmark',
             color: _accent,
@@ -631,7 +625,7 @@ class _LocationPickerSheet extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _SheetOption(
-            icon: Icons.map_outlined,
+            icon: PhosphorIconsRegular.mapTrifold,
             title: 'Pick on map',
             subtitle: 'Drop a pin anywhere',
             color: const Color(0xFF6E8FFF),
@@ -671,14 +665,10 @@ class _SheetOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
+            SizedBox(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(width: 14),
             Column(
@@ -703,7 +693,7 @@ class _SheetOption extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            const Icon(Icons.chevron_right_rounded,
+            const Icon(PhosphorIconsRegular.caretRight,
                 color: _textMuted, size: 20),
           ],
         ),

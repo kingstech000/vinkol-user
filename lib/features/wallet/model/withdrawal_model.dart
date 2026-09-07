@@ -1,3 +1,5 @@
+import 'package:starter_codes/core/money/money.dart';
+
 class Withdrawal {
   final String? id;
   final String? userId;
@@ -10,6 +12,11 @@ class Withdrawal {
   final String? bankName;
   final String? accountNumber;
 
+  /// The market this withdrawal belongs to. Absent on records written before the
+  /// Canada expansion, all of which are Nigerian.
+  final Country country;
+  final Currency currency;
+
   Withdrawal({
     this.id,
     this.userId,
@@ -21,7 +28,11 @@ class Withdrawal {
     this.updatedAt,
     this.bankName,
     this.accountNumber,
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
   });
+
+  Money get money => Money(amount, currency);
 
   factory Withdrawal.fromJson(Map<String, dynamic> json) {
     String? getObjectId(dynamic value) {
@@ -50,6 +61,8 @@ class Withdrawal {
           (json['bank'] is Map ? json['bank']['bankName'] : null),
       accountNumber: json['accountNumber'] ??
           (json['bank'] is Map ? json['bank']['accountNumber'] : null),
+      country: Country.fromCode(json['country']?.toString()),
+      currency: Currency.fromCode(json['currency']?.toString()),
     );
   }
 
@@ -65,6 +78,8 @@ class Withdrawal {
       'updatedAt': updatedAt?.toIso8601String(),
       'bankName': bankName,
       'accountNumber': accountNumber,
+      'country': country.code,
+      'currency': currency.code,
     };
   }
 }

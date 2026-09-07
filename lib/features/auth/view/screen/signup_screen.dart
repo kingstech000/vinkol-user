@@ -8,6 +8,7 @@ import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   // Changed to ConsumerStatefulWidget
@@ -69,7 +70,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       suffixIcon: const Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Icon(
-                          Icons.email,
+                          PhosphorIconsRegular.envelope,
                           size: 20, // Adjusted size for better visibility
                           color: AppColors.greyLight,
                         ),

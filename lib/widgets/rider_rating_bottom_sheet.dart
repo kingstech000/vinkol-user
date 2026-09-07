@@ -8,6 +8,7 @@ import 'package:starter_codes/features/delivery/model/rider_rating_model.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class RiderRatingBottomSheet extends ConsumerStatefulWidget {
   final String riderId;
@@ -193,8 +194,8 @@ class _RiderRatingBottomSheetState
                               margin: EdgeInsets.symmetric(horizontal: 4.w),
                               child: Icon(
                                 index < _selectedRating
-                                    ? Icons.star
-                                    : Icons.star_border,
+                                    ? PhosphorIconsFill.star
+                                    : PhosphorIconsRegular.star,
                                 color: Colors.amber,
                                 size: 48.w,
                               ),

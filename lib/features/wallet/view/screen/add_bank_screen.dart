@@ -6,6 +6,7 @@ import 'package:starter_codes/widgets/gap.dart';
 import '../../model/bank_model.dart';
 import '../../view_model/withdrawal_view_model.dart';
 import 'bank_selection_screen.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class AddBankScreen extends ConsumerStatefulWidget {
   const AddBankScreen({Key? key}) : super(key: key);
@@ -155,7 +156,7 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
                                 ),
                               ),
                               Icon(
-                                Icons.arrow_forward_ios,
+                                PhosphorIconsRegular.caretRight,
                                 size: 16.sp,
                                 color: Colors.grey.shade400,
                               ),
@@ -176,7 +177,7 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
                           child: Row(
                             children: [
                               Icon(
-                                Icons.check_circle,
+                                PhosphorIconsFill.checkCircle,
                                 color: Colors.green.shade600,
                                 size: 24.sp,
                               ),
@@ -229,7 +230,7 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: Colors.red.shade600),
+                      Icon(PhosphorIconsRegular.warningCircle, color: Colors.red.shade600),
                       Gap.w12,
                       Expanded(
                         child: Text(
@@ -262,7 +263,7 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
                 enabled: !withdrawalState.isLoading && selectedBank != null,
                 decoration: InputDecoration(
                   hintText: 'Enter 10-digit account number',
-                  prefixIcon: Icon(Icons.account_circle_outlined,
+                  prefixIcon: Icon(PhosphorIconsRegular.userCircle,
                       color: Colors.grey.shade600),
                   suffixIcon: accountNumberController.text.length == 10 &&
                           selectedBank != null
@@ -285,12 +286,12 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
                                     .validationResult.valueOrNull;
                                 if (result != null &&
                                     result['success'] == true) {
-                                  return Icon(Icons.check_circle,
+                                  return Icon(PhosphorIconsFill.checkCircle,
                                       color: Colors.green.shade600,
                                       size: 24.sp);
                                 } else if (result != null &&
                                     result['success'] == false) {
-                                  return Icon(Icons.error,
+                                  return Icon(PhosphorIconsFill.warningCircle,
                                       color: Colors.red.shade600, size: 24.sp);
                                 }
                                 return SizedBox.shrink();
@@ -370,7 +371,7 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          validated ? Icons.check_circle : Icons.error_outline,
+                          validated ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.warningCircle,
                           color: validated
                               ? Colors.green.shade600
                               : Colors.red.shade600,
@@ -448,7 +449,7 @@ class _AddBankScreenState extends ConsumerState<AddBankScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline,
+                      Icon(PhosphorIconsRegular.warningCircle,
                           color: Colors.red.shade600, size: 24.sp),
                       Gap.w12,
                       Expanded(

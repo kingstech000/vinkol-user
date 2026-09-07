@@ -66,6 +66,7 @@ class AppInterceptors extends Interceptor {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         err = DeadlineExceededException(err.requestOptions);
         break;
       case DioExceptionType.badCertificate:

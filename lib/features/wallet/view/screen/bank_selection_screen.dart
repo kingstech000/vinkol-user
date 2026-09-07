@@ -5,6 +5,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import '../../model/bank_model.dart';
 import '../../view_model/withdrawal_view_model.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class BankSelectionScreen extends ConsumerStatefulWidget {
   const BankSelectionScreen({Key? key}) : super(key: key);
@@ -63,7 +64,7 @@ class _BankSelectionScreenState extends ConsumerState<BankSelectionScreen> {
               controller: searchController,
               decoration: InputDecoration(
                 hintText: 'Search bank...',
-                prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
+                prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass, color: Colors.grey.shade600),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
                   borderSide: BorderSide(color: Colors.grey.shade300),
@@ -101,7 +102,7 @@ class _BankSelectionScreenState extends ConsumerState<BankSelectionScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off, size: 64.sp, color: Colors.grey.shade300),
+                          Icon(PhosphorIconsRegular.magnifyingGlassMinus, size: 64.sp, color: Colors.grey.shade300),
                           Gap.h16,
                           Text(
                             'No banks found',
@@ -157,7 +158,7 @@ class _BankSelectionScreenState extends ConsumerState<BankSelectionScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+                      Icon(PhosphorIconsRegular.warningCircle, size: 64.sp, color: Colors.red),
                       Gap.h16,
                       Text(
                         'Error loading banks',

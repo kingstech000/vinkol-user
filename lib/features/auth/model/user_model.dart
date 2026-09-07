@@ -1,5 +1,7 @@
 // lib/features/auth/model/user_model.dart
 
+import 'package:starter_codes/core/money/money.dart';
+
 class User {
   final String id;
   final String email;
@@ -23,6 +25,11 @@ class User {
   final Wallet? wallet;
   final dynamic kyc; // Can be null or an object
 
+  /// The market this customer belongs to. Absent on accounts created before
+  /// the Canada expansion, all of which are Nigerian.
+  final Country country;
+  final Currency currency;
+
   User({
     required this.id,
     required this.email,
@@ -45,6 +52,8 @@ class User {
     this.avatar,
     this.wallet,
     this.kyc,
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
   });
 
   // Getter to get the first word of the 'state' field
@@ -91,6 +100,8 @@ class User {
           ? Wallet.fromJson(json['wallet'] as Map<String, dynamic>)
           : null,
       kyc: json['kyc'],
+      country: Country.fromCode(json['country'] as String?),
+      currency: Currency.fromCode(json['currency'] as String?),
     );
   }
 
@@ -117,6 +128,8 @@ class User {
       'avatar': avatar?.toJson(),
       'wallet': wallet?.toJson(),
       'kyc': kyc,
+      'country': country.code,
+      'currency': currency.code,
     };
   }
 
@@ -142,6 +155,8 @@ class User {
     Avatar? avatar,
     Wallet? wallet,
     dynamic kyc,
+    Country? country,
+    Currency? currency,
   }) {
     return User(
       id: id ?? this.id,
@@ -165,6 +180,8 @@ class User {
       avatar: avatar ?? this.avatar,
       wallet: wallet ?? this.wallet,
       kyc: kyc ?? this.kyc,
+      country: country ?? this.country,
+      currency: currency ?? this.currency,
     );
   }
 

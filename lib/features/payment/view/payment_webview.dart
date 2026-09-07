@@ -9,6 +9,7 @@ import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class PaymentWebViewScreen extends ConsumerStatefulWidget {
   final String paymentUrl;
@@ -37,6 +38,7 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
   bool _hasNavigatedAway = false;
+  String _currentUrl = '';
 
   @override
   void initState() {
@@ -62,6 +64,7 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
           },
           onPageFinished: (String url) {
             debugPrint('[PaymentWebView] Page finished loading: $url');
+            _currentUrl = url;
             setState(() {
               _isLoading = false;
             });
@@ -82,7 +85,20 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
       ..loadRequest(Uri.parse(widget.paymentUrl));
   }
 
+  /// Whether the page being shown is the gateway's own checkout, as opposed to
+  /// a redirect back to us. Stripe and Paystack both host their own pages.
+  bool _isGatewayCheckoutPage(String url) =>
+      url.contains('checkout.stripe.com') || url.contains('paystack.com');
+
   void _checkForPaymentCompletion(String url) {
+    // A gateway's own checkout page is not a completion, whatever words happen
+    // to appear in its URL. Stripe's session ids in particular are opaque.
+    if (_isGatewayCheckoutPage(url) &&
+        !url.contains('charge/success') &&
+        !url.contains('pay/success')) {
+      return;
+    }
+
     // Check for Paystack success indicators
     if (url.contains('success') ||
         url.contains('callback') ||
@@ -111,6 +127,13 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
   }
 
   void _injectPaymentDetectionScript() {
+    // Scrapes page text for Paystack's wording. Stripe's checkout has its own
+    // copy and its own redirect, so running this there only risks a false
+    // positive — the customer would see "payment complete" before it was.
+    if (!_currentUrl.contains('paystack.com')) {
+      return;
+    }
+
     // Inject JavaScript to detect payment completion on Paystack pages
     _controller.runJavaScript('''
       (function() {
@@ -236,7 +259,7 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
           backgroundColor: AppColors.primary,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: const Icon(PhosphorIconsRegular.x, color: Colors.white),
             onPressed: () async {
               final shouldPop = await _onWillPop();
               if (shouldPop && mounted) {

@@ -8,7 +8,6 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 class LocalCacheImpl implements LocalCache {
   static const _tokenKey = 'userToken';
   static const _userDataKey = 'userData';
-  static const _onBoardedKey = 'isOnboarded';
   static const _authenticatedKey = 'isAuthenticated';
   static const _guestModeKey = 'guestModeKey';
 
@@ -226,31 +225,6 @@ class LocalCacheImpl implements LocalCache {
     } catch (e) {
       _log.e('Error saving user data: $e');
       rethrow;
-    }
-  }
-
-  // ==================== Onboarding ====================
-
-  @override
-  Future<void> onBoarded() async {
-    try {
-      _ensureInitialized();
-      await _settingsBox.put(_onBoardedKey, true);
-      _log.i('Onboarding completed and saved');
-    } catch (e) {
-      _log.e('Error saving onboarding status: $e');
-    }
-  }
-
-  @override
-  Future<bool> isOnBoarded() async {
-    try {
-      _ensureInitialized();
-      final value = _settingsBox.get(_onBoardedKey, defaultValue: false);
-      return value as bool;
-    } catch (e) {
-      _log.e('Error fetching onboarding status: $e');
-      return false;
     }
   }
 

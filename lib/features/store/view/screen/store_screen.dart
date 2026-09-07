@@ -12,6 +12,7 @@ import 'package:starter_codes/provider/store_provider.dart';
 import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'dart:async';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class StoresScreen extends ConsumerStatefulWidget {
   const StoresScreen({super.key});
@@ -129,7 +130,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                     onTap: () {
                       NavigationService.instance.goBack();
                     },
-                    child: Icon(Icons.arrow_back_ios_new,
+                    child: Icon(PhosphorIconsRegular.caretLeft,
                         color: AppColors.primary, size: 20.w),
                   ),
                   Gap.h16,
@@ -145,16 +146,9 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                             ],
                           ),
                           borderRadius: BorderRadius.circular(16.r),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
                         ),
                         child: Icon(
-                          Icons.store,
+                          PhosphorIconsRegular.storefront,
                           color: Colors.white,
                           size: 20.w,
                         ),
@@ -189,13 +183,6 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -208,7 +195,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                         prefixIcon: Container(
                           padding: const EdgeInsets.only(top: 12, bottom: 12),
                           child: Icon(
-                            Icons.search,
+                            PhosphorIconsRegular.magnifyingGlass,
                             color: Colors.grey[400],
                             size: 20,
                           ),
@@ -216,7 +203,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: Icon(
-                                  Icons.clear,
+                                  PhosphorIconsRegular.x,
                                   color: Colors.grey[400],
                                   size: 20,
                                 ),
@@ -434,7 +421,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.store_outlined,
+              PhosphorIconsRegular.storefront,
               color: Colors.grey[400],
               size: 40,
             ),
@@ -462,7 +449,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
             onPressed: () {
               ref.read(storesViewModelProvider.notifier).refreshStores();
             },
-            icon: const Icon(Icons.refresh, size: 18),
+            icon: const Icon(PhosphorIconsRegular.arrowClockwise, size: 18),
             label: const Text('Refresh'),
             style: TextButton.styleFrom(
               foregroundColor: AppColors.primary,
@@ -490,7 +477,7 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
               ),
             ),
             child: Icon(
-              Icons.wifi_off,
+              PhosphorIconsRegular.wifiSlash,
               color: Colors.red[400],
               size: 40,
             ),
@@ -525,20 +512,13 @@ class _StoresScreenState extends ConsumerState<StoresScreen> {
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: ElevatedButton.icon(
               onPressed: () {
                 ref.read(storesViewModelProvider.notifier).refreshStores();
               },
               icon: const Icon(
-                Icons.refresh,
+                PhosphorIconsRegular.arrowClockwise,
                 size: 18,
                 color: Colors.white,
               ),

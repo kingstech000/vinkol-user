@@ -8,14 +8,14 @@ import 'package:starter_codes/features/auth/view/screen/reset_password_screen.da
 import 'package:starter_codes/features/auth/view/screen/set_new_password_screen.dart';
 import 'package:starter_codes/features/auth/view/screen/signup_screen.dart';
 import 'package:starter_codes/features/auth/view/screen/verify_email_otp_screen.dart';
-import 'package:starter_codes/features/auth/view/screens/auth_choice_screen.dart';
+import 'package:starter_codes/features/auth/view/screen/auth_choice_screen.dart';
 import 'package:starter_codes/features/delivery/view/screen/booking_order_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/map_with_quote_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/bulk_map_with_quote_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/multi_map_with_quote_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/package_info_screen.dart';
 import 'package:starter_codes/features/dashboard/view/screen/dashboard_screen.dart';
-import 'package:starter_codes/features/onboarding/view/screen/onboarding_screen.dart';
+import 'package:starter_codes/features/onboarding/view/screen/location_setup_screen.dart';
 import 'package:starter_codes/features/payment/view/payment_veification_screen.dart';
 import 'package:starter_codes/features/payment/view/payment_webview.dart';
 import 'package:starter_codes/features/profile/view/screen/SupportAndHelpScreen.dart';
@@ -93,10 +93,10 @@ class AppRouter {
             settings: settings,
             viewToShow: const SplashScreen(),
             transition: transition);
-      case NavigatorRoutes.onboardingScreen:
+      case NavigatorRoutes.locationSetupScreen:
         return _getPageRoute(
             settings: settings,
-            viewToShow: const OnboardingScreen(),
+            viewToShow: const LocationSetupScreen(),
             transition: transition);
       case NavigatorRoutes.authChoiceScreen:
         return _getPageRoute(

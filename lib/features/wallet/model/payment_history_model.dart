@@ -1,5 +1,6 @@
 // lib/features/wallet/model/payment_history_model.dart
 import 'package:equatable/equatable.dart';
+import 'package:starter_codes/core/money/money.dart';
 
 class PaymentHistory extends Equatable {
   final String id;
@@ -13,6 +14,11 @@ class PaymentHistory extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// The market this payment belongs to. Absent on records written before the
+  /// Canada expansion, all of which are Nigerian.
+  final Country country;
+  final Currency currency;
+
   const PaymentHistory({
     required this.id,
     required this.orderId,
@@ -24,7 +30,11 @@ class PaymentHistory extends Equatable {
     required this.narration,
     required this.createdAt,
     required this.updatedAt,
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
   });
+
+  Money get money => Money(amount, currency);
 
   factory PaymentHistory.fromJson(Map<String, dynamic> json) {
     return PaymentHistory(
@@ -57,6 +67,8 @@ class PaymentHistory extends Equatable {
         if (raw is String) return DateTime.tryParse(raw) ?? DateTime.now();
         return DateTime.now();
       })(),
+      country: Country.fromCode(json['country']?.toString()),
+      currency: Currency.fromCode(json['currency']?.toString()),
     );
   }
 
@@ -70,6 +82,8 @@ class PaymentHistory extends Equatable {
       'reference': reference,
       'type': type,
       'narration': narration,
+      'country': country.code,
+      'currency': currency.code,
       'createdAt':
           createdAt.toIso8601String(), // Convert DateTime to ISO 8601 string
       'updatedAt':
@@ -91,5 +105,7 @@ class PaymentHistory extends Equatable {
         narration,
         createdAt,
         updatedAt,
+        country,
+        currency,
       ];
 }

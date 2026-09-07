@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/extensions/currency_formatter.dart';
 import 'package:starter_codes/core/extensions/double_extension.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/payment/view/payment_webview.dart';
@@ -10,6 +11,12 @@ import 'package:starter_codes/features/wallet/view_model/wallet_history_view_mod
 import 'package:starter_codes/features/wallet/view_model/withdrawal_view_model.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
+
+/// There are no customer wallets in Canada, so wallet amounts are always naira.
+/// The symbol and decimal places still come from the market layer rather than
+/// being written into the screen.
+const Currency _walletCurrency = Currency.ngn;
+const double _minimumTopUp = 100;
 
 void showFundDialog(BuildContext context, WidgetRef ref, bool mounted) {
   final amountController = TextEditingController();
@@ -130,7 +137,7 @@ void showFundDialog(BuildContext context, WidgetRef ref, bool mounted) {
                   inputFormatters: [CurrencyFormatter.amountFormatter],
                   decoration: InputDecoration(
                     hintText: 'Enter amount',
-                    prefixText: '₦ ',
+                    prefixText: '${_walletCurrency.symbol} ',
                     prefixStyle: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
@@ -168,8 +175,9 @@ void showFundDialog(BuildContext context, WidgetRef ref, bool mounted) {
                     if (amount <= 0) {
                       return 'Please enter a valid amount';
                     }
-                    if (amount < 100) {
-                      return 'Minimum amount is ₦100';
+                    if (amount < _minimumTopUp) {
+                      return 'Minimum amount is '
+                          '${Money(_minimumTopUp, _walletCurrency).format()}';
                     }
                     return null;
                   },

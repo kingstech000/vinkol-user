@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/core/constants/assets.dart';
 import 'package:starter_codes/core/utils/app_version_checker.dart';
 import 'package:starter_codes/features/splash/view_model/splash_view_model.dart';
@@ -19,6 +20,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
     _checkAppVersion();
+    // Offers a market detected from the account or the device's position. Does
+    // nothing if the customer has already chosen one in Settings.
+    detectDeviceMarket(ref);
     _proceedWithInitialization();
   }
 
@@ -64,16 +68,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        body: Center(
-          child: Container(
-            height: 250,
-            width: 250,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage(ImageAsset.splash), fit: BoxFit.contain),
-            ),
-          ),
-        ),
+        body: Center(child: Image.asset(ImageAsset.splash)),
       ),
     );
   }

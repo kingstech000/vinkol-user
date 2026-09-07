@@ -5,6 +5,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class CartItemCard extends StatelessWidget {
   final StoreProduct product;
@@ -51,7 +52,7 @@ class CartItemCard extends StatelessWidget {
                           AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   ),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                  errorWidget: (context, url, error) => const Icon(PhosphorIconsFill.warningCircle),
                 ),
               ),
             ),
@@ -120,7 +121,7 @@ class CartItemCard extends StatelessWidget {
                                   onRemoveCompletely?.call(product);
                                 }
                               },
-                              child: const Icon(Icons.remove,
+                              child: const Icon(PhosphorIconsRegular.minus,
                                   size: 20, color: Colors.black),
                             ),
                             Padding(
@@ -135,7 +136,7 @@ class CartItemCard extends StatelessWidget {
                             GestureDetector(
                               onTap: () => onQuantityChanged(
                                   (product.quantity ?? 0) + 1),
-                              child: const Icon(Icons.add,
+                              child: const Icon(PhosphorIconsRegular.plus,
                                   size: 20, color: Colors.black),
                             ),
                           ],
@@ -147,7 +148,7 @@ class CartItemCard extends StatelessWidget {
                         GestureDetector(
                           onTap: () => onRemoveCompletely!(product),
                           // Using a normal Icon and GestureDetector for consistent sizing with buttons
-                          child: const Icon(Icons.delete_outline,
+                          child: const Icon(PhosphorIconsRegular.trash,
                               color: Colors.grey, size: 24),
                         ),
                     ],

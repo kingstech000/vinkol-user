@@ -1,6 +1,6 @@
 class NavigatorRoutes {
   /// Routing constants for authentication view
-  static const String onboardingScreen = "/onboarding-screen";
+  static const String locationSetupScreen = "/location-setup-screen";
   static const String splashScreen = 'splash-screen';
   // AUTH
   static const String authChoiceScreen = '/auth-choice-screen';
@@ -39,7 +39,7 @@ class NavigatorRoutes {
   static const String mapWithQuoteScreen = 'map-with-quote-screen';
   static const String bookingOrderScreen = 'booking-order-screen';
 
-// PAYMENT SCREEN
+  // PAYMENT SCREEN
   static const deliveryPaymentScreen = 'delivery-payment-screen';
   static const storePaymentScreen = 'store-payment-screen';
   // STORE
@@ -54,5 +54,4 @@ class NavigatorRoutes {
   static const paymentVerificationScreen = 'payment-verification-screen';
   static const String bulkMapWithQuoteScreen = 'bulk-map-with-quote-screen';
   static const String multiMapWithQuoteScreen = 'multi-map-with-quote-screen';
-  
 }

@@ -1,7 +1,11 @@
 // lib/features/profile/view/screens/settings_screen.dart
 // For CupertinoSwitch
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_codes/core/market/market_profile.dart';
+import 'package:starter_codes/core/money/money.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/core/constants/link_routes.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
@@ -10,19 +14,79 @@ import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final bool _darkModeEnabled = false; // Initial state for Dark Mode
+
+  /// Lets the customer say which market they are in.
+  ///
+  /// This changes what is easy to type — address search, phone format, the map's
+  /// starting point — and nothing about what an order costs. Prices follow the
+  /// pickup, which the server resolves for itself.
+  void _showRegionPicker() {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        final selected = ref.read(marketProvider);
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 8.h),
+                child: AppText.h3('Region'),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: AppText.caption(
+                  'Sets address search, phone format and the map. Delivery '
+                  'prices always follow the pickup address.',
+                  color: AppColors.darkgrey,
+                ),
+              ),
+              Gap.h16,
+              for (final country in Country.values)
+                ListTile(
+                  title: AppText.body(country.profile.displayName),
+                  subtitle: AppText.caption(
+                    '${country.profile.dialCode} · '
+                    '${country.defaultCurrency.code}',
+                    color: AppColors.darkgrey,
+                  ),
+                  trailing: country == selected
+                      ? const Icon(PhosphorIconsFill.checkCircle,
+                          color: AppColors.primary)
+                      : null,
+                  onTap: () async {
+                    await ref
+                        .read(marketProvider.notifier)
+                        .selectMarket(country);
+                    if (sheetContext.mounted) Navigator.pop(sheetContext);
+                  },
+                ),
+              Gap.h16,
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final profile = ref.watch(marketProfileProvider);
     return Scaffold(
       appBar: MiniAppBar(
         title: "Setting",
@@ -35,6 +99,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             AppText.h1(
                 'Notification'), // Title as per image, even though it's "Settings"
             Gap.h24,
+            _SettingsRow(
+              title: 'Region',
+              trailingWidget: AppText.body(
+                profile.displayName,
+                color: AppColors.darkgrey,
+              ),
+              onTap: _showRegionPicker,
+            ),
             _SettingsRow(
               title: 'Language',
               trailingWidget: Container(
@@ -156,7 +228,7 @@ class _SettingsLink extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             AppText.body(title, color: color),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 18.w),
+            Icon(PhosphorIconsRegular.caretRight, color: Colors.grey, size: 18.w),
           ],
         ),
       ),

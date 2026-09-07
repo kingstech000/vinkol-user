@@ -11,6 +11,7 @@ import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/logout_modal.dart';
 import 'package:starter_codes/features/auth/model/user_model.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -63,13 +64,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
                 ),
                 child: Column(
                   children: [
@@ -84,13 +78,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             color: Colors.white,
                             width: 4.r,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
                         ),
                         child: profileImageProvider != null
                             ? ClipOval(
@@ -101,7 +88,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Icon(
-                                      Icons.person,
+                                      PhosphorIconsFill.user,
                                       size: 50.w,
                                       color: AppColors.primary,
                                     );
@@ -110,7 +97,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                       (context, child, loadingProgress) {
                                     if (loadingProgress == null) return child;
                                     return Icon(
-                                      Icons.person,
+                                      PhosphorIconsFill.user,
                                       size: 50.w,
                                       color: AppColors.primary,
                                     );
@@ -118,7 +105,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 ),
                               )
                             : Icon(
-                                Icons.person,
+                                PhosphorIconsFill.user,
                                 size: 50.w,
                                 color: AppColors.primary,
                               ),
@@ -165,18 +152,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
                 ),
                 child: Column(
                   children: [
                     _ProfileOption(
-                      icon: Icons.person_outline,
+                      icon: PhosphorIconsRegular.user,
                       title: 'Personal Info',
                       subtitle: 'Manage your personal information',
                       onTap: () {
@@ -185,7 +165,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       },
                     ),
                     _ProfileOption(
-                      icon: Icons.security,
+                      icon: PhosphorIconsRegular.shieldCheck,
                       title: 'Security',
                       subtitle: 'Password and security settings',
                       onTap: () {
@@ -194,7 +174,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       },
                     ),
                     _ProfileOption(
-                      icon: Icons.settings_outlined,
+                      icon: PhosphorIconsRegular.gear,
                       title: 'Settings',
                       subtitle: 'App preferences and configuration',
                       onTap: () {
@@ -203,7 +183,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       },
                     ),
                     _ProfileOption(
-                      icon: Icons.help_outline,
+                      icon: PhosphorIconsRegular.question,
                       title: 'Support & Help',
                       subtitle: 'Get help and contact support',
                       onTap: () {
@@ -212,7 +192,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       },
                     ),
                     _ProfileOption(
-                      icon: Icons.logout,
+                      icon: PhosphorIconsRegular.signOut,
                       title: 'Log Out',
                       subtitle: 'Sign out of your account',
                       onTap: () {
@@ -266,18 +246,9 @@ class _ProfileOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              padding: EdgeInsets.all(10.r),
-              decoration: BoxDecoration(
-                color: isDestructive
-                    ? Colors.red.withOpacity(0.1)
-                    : AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(icon,
-                  color: isDestructive ? Colors.red : AppColors.primary,
-                  size: 24.w),
-            ),
+            Icon(icon,
+                color: isDestructive ? Colors.red : AppColors.primary,
+                size: 24.w),
             Gap.w16,
             Expanded(
               child: Column(
@@ -299,7 +270,7 @@ class _ProfileOption extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios,
+            Icon(PhosphorIconsRegular.caretRight,
                 color: isDestructive
                     ? Colors.red.withOpacity(0.6)
                     : Colors.grey.withOpacity(0.6),

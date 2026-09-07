@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:starter_codes/core/market/market_profile.dart';
 import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/data_utils.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/utils/phone_number_utils.dart';
 import 'package:starter_codes/widgets/app_bar/empty_app_bar.dart';
@@ -33,7 +34,8 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final List<String> _states = nigerianStates; // Example states, expanded
+  /// The region picker is not a FormField, so its error is tracked here.
+  String? _stateError;
 
   // final List<String> _countries = [
   //   'Nigeria',
@@ -51,22 +53,34 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
     _surnameController.text = viewModel.surname;
     // _countryController.text = viewModel.country;
     _stateController.text = viewModel.selectedState;
-    _phoneNumberPrefixController.text = viewModel.phoneNumberPrefix;
     _phoneNumberController.text = viewModel.phoneNumber;
+    _adoptMarket(ref.read(marketProfileProvider), viewModel);
 
     // Add listeners to update ViewModel on text field changes
-    _firstNameController
-        .addListener(() => viewModel.setFirstName(_firstNameController.text));
-    _surnameController
-        .addListener(() => viewModel.setSurname(_surnameController.text));
+    _firstNameController.addListener(
+      () => viewModel.setFirstName(_firstNameController.text),
+    );
+    _surnameController.addListener(
+      () => viewModel.setSurname(_surnameController.text),
+    );
     // _countryController
     //     .addListener(() => viewModel.setCountry(_countryController.text));
-    _stateController
-        .addListener(() => viewModel.setSelectedState(_stateController.text));
-    _phoneNumberPrefixController.addListener(() =>
-        viewModel.setPhoneNumberPrefix(_phoneNumberPrefixController.text));
+    _stateController.addListener(
+      () => viewModel.setSelectedState(_stateController.text),
+    );
     _phoneNumberController.addListener(
-        () => viewModel.setPhoneNumber(_phoneNumberController.text));
+      () => viewModel.setPhoneNumber(_phoneNumberController.text),
+    );
+  }
+
+  /// The dial code is the market's, never the customer's to type. The box is
+  /// display-only, so it and the value that is actually submitted are set from
+  /// the same place and cannot drift apart — which is how a Canadian customer
+  /// ended up looking at +234.
+  void _adoptMarket(MarketProfile profile, ProfileSettingViewModel viewModel) {
+    _phoneNumberPrefixController.text = profile.dialCode;
+    viewModel.setPhoneNumberPrefix(profile.dialCode);
+    viewModel.setLocalPhoneDigits(profile.localPhoneDigits);
   }
 
   @override
@@ -85,6 +99,13 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
   Widget build(BuildContext context) {
     // Watch the ViewModel to react to state changes (busy, error, idle, image updates)
     final viewModel = ref.watch(profileSettingViewModelProvider);
+    final profile = ref.watch(marketProfileProvider);
+    // Moving market mid-form is rare but real: the location screen can be
+    // reached from anywhere, and the dial code has to follow it.
+    ref.listen<MarketProfile>(
+      marketProfileProvider,
+      (_, next) => _adoptMarket(next, viewModel),
+    );
 
     return Scaffold(
       appBar: const EmptyAppBar(),
@@ -100,7 +121,8 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppText.h1(
-                          'Complete Profile'), // Updated title as per image
+                        'Complete Profile',
+                      ), // Updated title as per image
                       Gap.h6,
                       // Subtitle from image is missing, keeping original subtitle for now
                       AppText.body('Complete details to complete profile'),
@@ -153,40 +175,36 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                       //   }, // Control ModalFormField's text
                       // ),
                       Gap.h16,
-                      AppText.caption('State'),
+                      AppText.caption(profile.regionLabel),
                       Gap.h4,
                       ModalFormField(
-                        title: viewModel.selectedState.isEmpty
-                            ? 'Select State'
-                            : viewModel.selectedState,
-                        textColor: viewModel.selectedState.isEmpty
-                            ? AppColors.darkgrey.withOpacity(0.5)
-                            : AppColors.black,
-                        options: _states, // Get states from ViewModel
+                        title: 'Select ${profile.regionLabel}',
+                        options: profile.regions,
                         controller: _stateController,
                         enableSearch: true,
                         modalHeightFactor: 0.9,
                         onOptionSelected: (option) {
                           viewModel.setSelectedState(option);
-                        }, // Control ModalFormField's text
+                          setState(() => _stateError = null);
+                        },
                       ),
+                      if (_stateError != null) ...[
+                        Gap.h4,
+                        AppText.caption(_stateError!, color: AppColors.red),
+                      ],
                       Gap.h16,
                       AppText.caption('Phone number'),
                       Gap.h4,
                       Row(
                         children: [
                           SizedBox(
-                            width: 80,
+                            width: 84,
+                            // Read-only rather than disabled: a disabled field
+                            // falls back to Material's underline and stops
+                            // looking like the fields around it.
                             child: AppTextField(
                               controller: _phoneNumberPrefixController,
-                              hint: '+234',
-                              enabled: false,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return '';
-                                }
-                                return null;
-                              },
+                              readOnly: true,
                             ),
                           ),
                           Gap.w8,
@@ -195,22 +213,27 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                             child: AppTextField(
                               formatter: [
                                 FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(10),
+                                LengthLimitingTextInputFormatter(
+                                  profile.localPhoneDigits,
+                                ),
                                 NoLeadingZeroFormatter(),
                               ],
                               controller: _phoneNumberController,
-                              hint: '901 234 5678',
+                              hint: profile.phoneExample,
                               keyboardType: TextInputType.phone,
                               autofillHints: const [
-                                AutofillHints.telephoneNumberLocal
+                                AutofillHints.telephoneNumberLocal,
                               ],
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Phone number cannot be empty';
                                 }
-                                // Basic phone number validation
-                                if (value.length < 10 || value.length > 15) {
-                                  return 'Invalid phone number length';
+                                if (!PhoneNumberUtils.isValidPhoneNumber(
+                                  value,
+                                  profile.dialCode,
+                                  expectedLength: profile.localPhoneDigits,
+                                )) {
+                                  return 'Enter ${profile.localPhoneDigits} digits';
                                 }
                                 return null;
                               },
@@ -227,7 +250,17 @@ class _ProfileSettingScreenState extends ConsumerState<ProfileSettingScreen> {
                           onTap: viewModel.state.maybeWhen(
                             busy: () => null, // Disable button if busy
                             orElse: () => () {
-                              if (_formKey.currentState?.validate() ?? false) {
+                              final formValid =
+                                  _formKey.currentState?.validate() ?? false;
+                              final regionChosen =
+                                  _stateController.text.trim().isNotEmpty;
+                              setState(
+                                () => _stateError = regionChosen
+                                    ? null
+                                    : 'Select your '
+                                        '${profile.regionLabel.toLowerCase()}',
+                              );
+                              if (formValid && regionChosen) {
                                 viewModel.submitProfile(context: context);
                               }
                             },

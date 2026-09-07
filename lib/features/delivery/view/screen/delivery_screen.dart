@@ -13,6 +13,7 @@ import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/empty_content.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/features/delivery/view/screen/download_report_screen.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class DeliveryScreen extends ConsumerStatefulWidget {
   const DeliveryScreen({super.key});
@@ -78,7 +79,7 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.error_outline_rounded,
+                PhosphorIconsRegular.warningCircle,
                 color: Colors.red[400],
                 size: 64.w,
               ),
@@ -147,7 +148,7 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                 ),
               );
             },
-            child: Icon(Icons.file_download, color: AppColors.blue, size: 20.w),
+            child: Icon(PhosphorIconsRegular.downloadSimple, color: AppColors.blue, size: 20.w),
           )
         ],
       ),
@@ -225,7 +226,7 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                                       child: EmptyContent(
                                         contentText:
                                             'No package deliveries found.\nStart by creating a new order!',
-                                        icon: Icons.delivery_dining,
+                                        icon: PhosphorIconsRegular.moped,
                                       ),
                                     )
                                   : DeliveryListView(
@@ -252,7 +253,7 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                                       child: EmptyContent(
                                         contentText:
                                             'No store deliveries found.\nBrowse stores to place an order!',
-                                        icon: Icons.store,
+                                        icon: PhosphorIconsRegular.storefront,
                                       ),
                                     )
                                   : DeliveryListView(

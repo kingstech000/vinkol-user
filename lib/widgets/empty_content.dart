@@ -4,12 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class EmptyContent extends StatelessWidget {
   const EmptyContent({
     super.key,
     this.contentText = '',
-    this.icon = Icons.inbox,
+    this.icon = PhosphorIconsRegular.tray,
   });
   final String contentText;
   final IconData icon;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
 import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/features/delivery/model/delivery_model.dart';
 
@@ -23,24 +24,30 @@ class DeliveryItem {
 
   /// Factory constructor to convert [DeliveryModel] to [DeliveryItem].
   factory DeliveryItem.fromDeliveryModel(DeliveryModel delivery) {
+    // Status colors come off the token ramp, never from Material's palette. The
+    // shape and the label are added by the widget that draws them — status is
+    // never carried by color alone (decision D-05).
     Color statusColor;
     switch (delivery.status?.toLowerCase()) {
       case 'delivered':
-        statusColor = Colors.blue;
+        statusColor = VinkolPalette.successText;
         break;
       case 'pending':
-        statusColor = Colors.orange;
+        statusColor = VinkolPalette.warningText;
         break;
       case 'with rider':
       case 'with shopper':
-        statusColor = Colors.green;
+        statusColor = VinkolPalette.brand600;
+        break;
+      case 'unattended':
+        statusColor = VinkolPalette.dangerText;
         break;
       case 'cancelled':
-      case 'unattended':
-        statusColor = Colors.red;
+        // Cancellation is an outcome, not an error, so it reads neutral.
+        statusColor = VinkolPalette.neutral600;
         break;
       default:
-        statusColor = Colors.grey;
+        statusColor = VinkolPalette.neutral500;
     }
 
     // Use totalAmount for the display amount

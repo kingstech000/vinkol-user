@@ -5,6 +5,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class LocationSearchScreen extends ConsumerStatefulWidget {
   final bool isPickupLocation;
@@ -139,7 +140,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
           onTap: () {
             Navigator.pop(context);
           },
-          child: const Icon(Icons.arrow_back_ios),
+          child: const Icon(PhosphorIconsRegular.caretLeft),
         ),
       ),
       body: Container(
@@ -187,13 +188,6 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
       padding: EdgeInsets.fromLTRB(24.w, 0.h, 24.w, 20.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,18 +195,15 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
           // Header
           Row(
             children: [
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
+              SizedBox(
+                width: 44.w,
+                height: 44.w,
                 child: Icon(
                   widget.isPickupLocation
-                      ? Icons.location_on_rounded
-                      : Icons.location_city_rounded,
+                      ? PhosphorIconsRegular.mapPin
+                      : PhosphorIconsRegular.buildings,
                   color: AppColors.primary,
-                  size: 24.w,
+                  size: 28.w,
                 ),
               ),
               SizedBox(width: 12.w),
@@ -272,7 +263,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                 prefixIcon: Padding(
                   padding: EdgeInsets.all(12.w),
                   child: Icon(
-                    Icons.search_rounded,
+                    PhosphorIconsRegular.magnifyingGlass,
                     color: AppColors.primary,
                     size: 24.w,
                   ),
@@ -280,7 +271,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: Icon(
-                          Icons.clear_rounded,
+                          PhosphorIconsRegular.x,
                           color: Colors.grey[400],
                           size: 20.w,
                         ),
@@ -350,7 +341,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
 
     if (_predictions.isEmpty && _searchController.text.isNotEmpty) {
       return _buildEmptyState(
-        icon: Icons.search_off_rounded,
+        icon: PhosphorIconsRegular.magnifyingGlassMinus,
         title: 'No results found',
         subtitle: 'Try searching with a different keyword or address',
       );
@@ -358,7 +349,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
 
     if (_predictions.isEmpty && _searchController.text.isEmpty) {
       return _buildEmptyState(
-        icon: Icons.location_searching_rounded,
+        icon: PhosphorIconsRegular.crosshair,
         title: 'Start searching',
         subtitle: 'Type an address or location name to find places',
       );
@@ -413,7 +404,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Icon(
-                  Icons.location_on_rounded,
+                  PhosphorIconsRegular.mapPin,
                   color: AppColors.primary,
                   size: 24.w,
                 ),
@@ -430,8 +421,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.visible,
                     ),
                     if (secondaryText.isNotEmpty) ...[
                       SizedBox(height: 4.h),
@@ -450,7 +440,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
               ),
               SizedBox(width: 8.w),
               Icon(
-                Icons.arrow_forward_ios_rounded,
+                PhosphorIconsRegular.caretRight,
                 size: 16.w,
                 color: Colors.grey[400],
               ),

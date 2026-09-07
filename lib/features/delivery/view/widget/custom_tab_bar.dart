@@ -18,13 +18,6 @@ class CustomTabBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.grey[200],
           borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: TabBar(
           controller: tabController,
@@ -39,13 +32,6 @@ class CustomTabBar extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
           labelColor: Colors.white,
           unselectedLabelColor: Colors.grey[700],

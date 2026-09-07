@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/utils/colors.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/utils/phone_number_utils.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
 
-/// Custom phone number input widget that splits +234 prefix from the local number
-class PhoneNumberInput extends StatefulWidget {
+/// Phone input that splits the dial code from the local number.
+///
+/// Both the dial code and the number of digits accepted come from the device's
+/// market, so a Canadian customer is offered `+1` and ten digits rather than
+/// `+234`.
+class PhoneNumberInput extends ConsumerStatefulWidget {
   final String initialPhoneNumber;
   final ValueChanged<String> onPhoneNumberChanged;
   final bool enabled;
@@ -22,17 +28,18 @@ class PhoneNumberInput extends StatefulWidget {
   });
 
   @override
-  State<PhoneNumberInput> createState() => _PhoneNumberInputState();
+  ConsumerState<PhoneNumberInput> createState() => _PhoneNumberInputState();
 }
 
-class _PhoneNumberInputState extends State<PhoneNumberInput> {
+class _PhoneNumberInputState extends ConsumerState<PhoneNumberInput> {
   late TextEditingController _localNumberController;
-  String _countryCode = '+234';
+  late String _countryCode;
   String _localNumber = '';
 
   @override
   void initState() {
     super.initState();
+    _countryCode = ref.read(marketProfileProvider).dialCode;
     _parseInitialPhoneNumber();
     _localNumberController = TextEditingController(text: _localNumber);
 
@@ -44,19 +51,17 @@ class _PhoneNumberInputState extends State<PhoneNumberInput> {
   }
 
   void _parseInitialPhoneNumber() {
-    String phoneNumber = widget.initialPhoneNumber;
+    String phoneNumber = widget.initialPhoneNumber.trim();
 
-    // Remove any whitespace
-    phoneNumber = phoneNumber.trim();
-
-    if (phoneNumber.startsWith('+234')) {
-      // Extract the local number part (everything after +234)
-      _localNumber = phoneNumber.substring(4);
-    } else if (phoneNumber.startsWith('234')) {
-      // Handle case where + is missing
-      _localNumber = phoneNumber.substring(3);
+    // A stored number may carry any market's dial code, not just this device's
+    // — a customer who moved keeps the number they signed up with.
+    final digits = _countryCode.replaceAll('+', '');
+    if (phoneNumber.startsWith(_countryCode)) {
+      _localNumber = phoneNumber.substring(_countryCode.length);
+    } else if (phoneNumber.startsWith(digits)) {
+      _localNumber = phoneNumber.substring(digits.length);
     } else if (phoneNumber.startsWith('0')) {
-      // Handle local format (remove the leading 0)
+      // Local form: the trunk prefix is dropped in international form.
       _localNumber = phoneNumber.substring(1);
     } else {
       // Assume it's already the local number
@@ -78,6 +83,7 @@ class _PhoneNumberInputState extends State<PhoneNumberInput> {
 
   @override
   Widget build(BuildContext context) {
+    final localDigits = ref.watch(marketProfileProvider).localPhoneDigits;
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
@@ -115,7 +121,7 @@ class _PhoneNumberInputState extends State<PhoneNumberInput> {
             child: TextField(
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
+                LengthLimitingTextInputFormatter(localDigits),
                 NoLeadingZeroFormatter(),
               ],
               controller: _localNumberController,
@@ -141,7 +147,7 @@ class _PhoneNumberInputState extends State<PhoneNumberInput> {
                 fontSize: 14.sp,
                 color: AppColors.black,
               ),
-              maxLength: 10, // Limit to 10 digits for Nigerian numbers
+              maxLength: localDigits,
               buildCounter: (context,
                   {required currentLength, required isFocused, maxLength}) {
                 return null; // Hide character counter
@@ -154,7 +160,10 @@ class _PhoneNumberInputState extends State<PhoneNumberInput> {
   }
 }
 
-/// Alternative implementation using AppTextField with prefix
+/// Alternative implementation using AppTextField with prefix.
+///
+/// Unused as of Sep 2026, and still hardcoded to `+234`. Convert it the same way
+/// as [PhoneNumberInput] before using it, or delete it.
 class PhoneNumberInputWithPrefix extends StatefulWidget {
   final String initialPhoneNumber;
   final ValueChanged<String> onPhoneNumberChanged;

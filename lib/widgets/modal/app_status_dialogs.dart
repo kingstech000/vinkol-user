@@ -2,30 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class AppStatusDialogs {
-  static void showError(BuildContext context, String title, String message) {
+  static void showError(
+    BuildContext context,
+    String title,
+    String message, {
+    String buttonText = 'Close',
+    VoidCallback? onClosed,
+  }) {
     _showDialog(
       context: context,
       title: title,
       message: message,
-      icon: Icons.error_outline,
+      icon: PhosphorIconsRegular.warningCircle,
       iconColor: Colors.red,
       iconBgColor: Colors.red.withOpacity(0.1),
       buttonColor: AppColors.primary,
+      buttonText: buttonText,
+      onClosed: onClosed,
     );
   }
 
   static void showSuccess(BuildContext context, String title, String message,
-      {VoidCallback? onClosed}) {
+      {String buttonText = 'Close', VoidCallback? onClosed}) {
     _showDialog(
       context: context,
       title: title,
       message: message,
-      icon: Icons.check_circle_outline,
+      icon: PhosphorIconsRegular.checkCircle,
       iconColor: Colors.green,
       iconBgColor: Colors.green.withOpacity(0.1),
       buttonColor: AppColors.primary,
+      buttonText: buttonText,
       onClosed: onClosed,
     );
   }
@@ -51,13 +61,6 @@ class AppStatusDialogs {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -69,7 +72,7 @@ class AppStatusDialogs {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.help_outline,
+                  PhosphorIconsRegular.question,
                   color: Colors.orange,
                   size: 32.sp,
                 ),
@@ -187,6 +190,7 @@ class AppStatusDialogs {
     required Color iconColor,
     required Color iconBgColor,
     required Color buttonColor,
+    String buttonText = 'Close',
     VoidCallback? onClosed,
   }) {
     showDialog(
@@ -202,13 +206,6 @@ class AppStatusDialogs {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -263,7 +260,7 @@ class AppStatusDialogs {
                     elevation: 0,
                   ),
                   child: Text(
-                    'Close',
+                    buttonText,
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.bold,

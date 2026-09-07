@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 // Main Promotion Banner with two states
 class PromotionBanner extends StatelessWidget {
@@ -61,13 +62,6 @@ class _PromotionEarnedBanner extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF10B981).withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Stack(
           children: [
@@ -197,7 +191,7 @@ class _PromotionEarnedBanner extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           const Icon(
-                            Icons.arrow_forward,
+                            PhosphorIconsRegular.arrowRight,
                             color: Color(0xFF10B981),
                             size: 16,
                           ),
@@ -249,13 +243,6 @@ class _PromotionProgressBanner extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6366F1).withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Stack(
           children: [
@@ -437,7 +424,7 @@ class _PromotionProgressBanner extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           const Icon(
-                            Icons.arrow_forward,
+                            PhosphorIconsRegular.arrowRight,
                             color: Color(0xFF6366F1),
                             size: 16,
                           ),

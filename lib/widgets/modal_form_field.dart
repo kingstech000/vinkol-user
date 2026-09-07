@@ -1,9 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/core/utils/textstyles.dart';
+import 'package:starter_codes/widgets/app_textfield.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ModalFormField extends StatefulWidget {
   const ModalFormField({
@@ -12,7 +14,7 @@ class ModalFormField extends StatefulWidget {
     required this.options,
     required this.controller,
     this.onOptionSelected,
-    this.textColor = AppColors.darkgrey,
+    this.textColor,
     this.modalHeightFactor = 0.6,
     this.enableSearch = false,
   });
@@ -20,7 +22,10 @@ class ModalFormField extends StatefulWidget {
   final String title;
   final List<String> options;
   final TextEditingController controller;
-  final Color textColor;
+
+  /// Overrides the shared placeholder colour. Left null the picker's
+  /// placeholder matches every other field on the form.
+  final Color? textColor;
   final Function(String)? onOptionSelected;
   final double modalHeightFactor;
   final bool enableSearch;
@@ -62,7 +67,8 @@ class _ModalFormFieldState extends State<ModalFormField> {
       } else {
         _filteredOptions = widget.options
             .where(
-                (option) => option.toLowerCase().contains(query.toLowerCase()))
+              (option) => option.toLowerCase().contains(query.toLowerCase()),
+            )
             .toList();
       }
     });
@@ -108,24 +114,31 @@ class _ModalFormFieldState extends State<ModalFormField> {
                           controller: _searchController,
                           decoration: InputDecoration(
                             hintText: 'Search...',
-                            prefixIcon: const Icon(Icons.search),
+                            prefixIcon: const Icon(
+                              PhosphorIconsRegular.magnifyingGlass,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.r),
-                              borderSide:
-                                  const BorderSide(color: AppColors.lightgrey),
+                              borderSide: const BorderSide(
+                                color: AppColors.lightgrey,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.r),
-                              borderSide:
-                                  const BorderSide(color: AppColors.lightgrey),
+                              borderSide: const BorderSide(
+                                color: AppColors.lightgrey,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.r),
                               borderSide: const BorderSide(
-                                  color: AppColors.darkgrey),
+                                color: AppColors.darkgrey,
+                              ),
                             ),
                             contentPadding: EdgeInsets.symmetric(
-                                vertical: 10.h, horizontal: 12.w),
+                              vertical: 10.h,
+                              horizontal: 12.w,
+                            ),
                           ),
                           onChanged: (value) {
                             modalSetState(() {
@@ -181,49 +194,24 @@ class _ModalFormFieldState extends State<ModalFormField> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.options.isEmpty
+    final enabled = widget.options.isNotEmpty;
+    // A read-only AppTextField rather than a container dressed to look like
+    // one: the picker then inherits the fill, radius, padding and type of every
+    // other field in the form for free, and cannot drift away from them.
+    return AppTextField(
+      controller: widget.controller,
+      readOnly: true,
+      onTap: enabled ? _showOptionsModal : null,
+      hint: widget.title,
+      hintStyle: widget.textColor == null
           ? null
-          : _showOptionsModal,
-      child: Container(
-        height: 45.h,
-        width: double.infinity,
-        padding: EdgeInsets.only(top: 12.h, bottom: 12.w, left: 12.w),
-        decoration: BoxDecoration(
-          color: AppColors.formWhite,
-          border: Border.fromBorderSide(
-            BorderSide(
-              color: AppColors.black.withOpacity(0.4),
-            ),
-          ),
-          borderRadius: BorderRadius.circular(8.r),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: AppText.button(
-                widget.controller.text.isEmpty
-                    ? widget.title
-                    : widget.controller.text,
-                color: widget.controller.text.isEmpty
-                    ? widget.textColor
-                    : AppColors.black,
-                fontSize: 14.sp,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            IconButton(
-              onPressed: widget.options.isEmpty
-                  ? null
-                  : _showOptionsModal, // Disable if no options
-              icon: const Icon(CupertinoIcons.chevron_down),
-              color: AppColors.formFillColor,
-              iconSize: 20.r,
-            )
-          ],
+          : headingStyle6.copyWith(color: widget.textColor, fontSize: 14),
+      suffixIcon: Padding(
+        padding: const EdgeInsetsDirectional.only(end: 12),
+        child: Icon(
+          PhosphorIconsRegular.caretDown,
+          size: 20,
+          color: enabled ? AppColors.darkgrey : AppColors.lightgrey,
         ),
       ),
     );

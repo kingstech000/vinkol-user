@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/core/utils/network_client.dart';
 import 'package:starter_codes/core/constants/api_routes.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/features/payment/model/order_initiation_response_model.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
 import 'package:starter_codes/features/store/model/store_request_model.dart';
@@ -177,12 +178,16 @@ class StoreService {
     }
   }
 
-  /// Fetches the shopping delivery fee (Legacy / Regular logic support).
-  /// Used internally as fallback for Express logic.
-  Future<double> fetchShoppingDeliveryFee({
+  /// Fetches the shopping delivery quote for a store order.
+  ///
+  /// Returns the whole quote rather than the bare fee: order creation needs the
+  /// server-issued `quoteId`, and the tax and currency travel with it.
+  Future<QuoteResponseModel> fetchShoppingDeliveryQuote({
     required String storeId,
     required LocationModel dropoffLocation,
     required String deliveryType,
+    required double pickupLat,
+    required double pickupLng,
   }) async {
     try {
       final Map<String, dynamic> data = {
@@ -203,12 +208,39 @@ class StoreService {
 
       logger.i('Delivery Fee API response: $responseData');
 
-      if (responseData['data'] != null &&
-          responseData['data']['price'] != null) {
-        return (responseData['data']['price'] as num).toDouble();
-      } else {
+      final quoteData = responseData['data'] as Map<String, dynamic>?;
+      final price =
+          quoteData == null ? null : Money.parseAmount(quoteData['price']);
+      if (quoteData == null || price == null) {
         throw Exception("Delivery fee not found in the response.");
       }
+
+      return QuoteResponseModel(
+        price: price,
+        deliveryType: deliveryType,
+        vinkolAmount: price,
+        state: '',
+        orderType: 'Shopping',
+        vehicleRequest: 'bike',
+        externalDeliveryFeeId: null, // Internal provider
+        pickupLocation: LatLngLiteral(lat: pickupLat, lng: pickupLng),
+        dropoffLocation: LatLngLiteral(
+          lat: dropoffLocation.coordinates!.latitude,
+          lng: dropoffLocation.coordinates!.longitude,
+        ),
+        isAvailable: true,
+        quoteId: quoteData['quoteId']?.toString(),
+        serviceFee: Money.parseAmount(quoteData['serviceFee']),
+        taxAmount: Money.parseAmount(quoteData['taxAmount']),
+        taxRate: Money.parseAmount(quoteData['taxRate']),
+        taxLabel: quoteData['taxLabel'] as String?,
+        grandTotal: Money.parseAmount(quoteData['grandTotal']),
+        currency: Currency.fromCode(quoteData['currency'] as String?),
+        country: Country.fromCode(quoteData['country'] as String?),
+        expiresAt: quoteData['expiresAt'] == null
+            ? null
+            : DateTime.tryParse(quoteData['expiresAt'].toString()),
+      );
     } on DioException catch (e) {
       logger.e(
           'Failed to fetch shopping delivery fee: ${e.response?.data ?? e.message}');
@@ -237,25 +269,12 @@ class StoreService {
 
     // 2. Fetch Internal Express Quote (Always try to get this)
     try {
-      final internalFee = await fetchShoppingDeliveryFee(
+      quotes.add(await fetchShoppingDeliveryQuote(
         storeId: storeId,
         dropoffLocation: dropoffLocation,
         deliveryType: 'express',
-      );
-
-      quotes.add(QuoteResponseModel(
-        price: internalFee,
-        deliveryType: 'express',
-        vinkolAmount: internalFee,
-        state: '',
-        orderType: 'Shopping',
-        vehicleRequest: 'bike',
-        id: null, // Internal provider
-        pickupLocation: LatLngLiteral(lat: store.lat!, lng: store.lng!),
-        dropoffLocation: LatLngLiteral(
-            lat: dropoffLocation.coordinates!.latitude,
-            lng: dropoffLocation.coordinates!.longitude),
-        isAvailable: true,
+        pickupLat: store.lat!,
+        pickupLng: store.lng!,
       ));
     } catch (e) {
       logger.e('Internal Express quote failed: $e');
@@ -268,7 +287,7 @@ class StoreService {
         state: '',
         orderType: 'Shopping',
         vehicleRequest: 'bike',
-        id: null,
+        externalDeliveryFeeId: null,
         pickupLocation: LatLngLiteral(lat: store.lat!, lng: store.lng!),
         dropoffLocation: LatLngLiteral(
             lat: dropoffLocation.coordinates!.latitude,
@@ -299,7 +318,7 @@ class StoreService {
         state: '',
         orderType: 'Shopping',
         vehicleRequest: 'bike',
-        id: null, // No ID means no external booking possible
+        externalDeliveryFeeId: null, // No ID means no external booking possible
         pickupLocation: LatLngLiteral(lat: store.lat!, lng: store.lng!),
         dropoffLocation: LatLngLiteral(
             lat: dropoffLocation.coordinates!.latitude,
@@ -348,8 +367,7 @@ class StoreService {
         price: (data['vinkol_amount'] as num).toDouble(),
         pickupLocation: LatLngLiteral(lat: pickupLat, lng: pickupLng),
         dropoffLocation: LatLngLiteral(lat: dropoffLat, lng: dropoffLng),
-        id: data[
-            'id'], // If using External, this should map to externalDeliveryFeeId
+        externalDeliveryFeeId: data['id'] as int?,
         vinkolAmount: (data['vinkol_amount'] as num).toDouble(),
       );
     } catch (e) {
