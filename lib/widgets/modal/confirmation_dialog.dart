@@ -5,18 +5,6 @@ import 'package:starter_codes/core/design/design.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 
-/// Asked when the payment webview closes and the app does not know whether payment
-/// completed.
-///
-/// Reworked to the token system. Two things changed beyond the styling:
-///
-/// - **The primary action is the one that helps.** Verifying was previously an
-///   `OutlinedButton` filled with the brand and cancelling was an `ElevatedButton` outlined
-///   in red — two buttons both claiming primacy, in opposite widget types. Verify is the
-///   primary pill now; cancelling is the quiet path.
-/// - **The caveat is a warning banner, not orange body text.** The note that an already-paid
-///   order still processes is the most important sentence in the dialog, and it was the
-///   faintest thing on it.
 class PaymentConfirmationDialog extends StatelessWidget {
   const PaymentConfirmationDialog({super.key, required this.isStoreOrder});
 
