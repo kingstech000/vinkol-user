@@ -51,6 +51,6 @@ class LinkRoutes {
   static const String twitterProfile =
       'https://x.com/vinkolltd?s=21&t=fwDDLMrWPBCeOetcu1W7Gw';
   static const String linkedInProfile =
-      'https://www.linkedin.com/in/vinkol-materials-and-commercial-ventures-limited-8224441b6?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app'; // Replace with actual company/profile
+      'https://www.linkedin.com/in/vinkol-group-inc-8224441b6';
   // Add other social media links as needed, e.g., TikTok, YouTube, etc.
 }
