@@ -322,6 +322,10 @@ class QuoteResponseModel {
 
   Money get fare => Money(discountedPrice ?? price, currency);
 
+  /// The fare before any coupon was applied. Only meaningful to show when
+  /// [discountedPrice] is set, as the struck-through "was" price.
+  Money get originalFare => Money(price, currency);
+
   Money? get serviceFeeMoney =>
       serviceFee == null ? null : Money(serviceFee!, currency);
 

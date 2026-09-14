@@ -1,33 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:starter_codes/core/money/money.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:starter_codes/core/constants/assets.dart';
-import 'package:starter_codes/core/extensions/double_extension.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/copy_to_clipboard_util.dart';
-import 'package:starter_codes/core/utils/launch_link.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/dashboard/view/screen/dashboard_screen.dart';
 import 'package:starter_codes/features/delivery/model/delivery_model.dart';
+import 'package:starter_codes/features/delivery/model/order_status.dart';
+import 'package:starter_codes/features/delivery/view/widget/order_detail_widgets.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_detail_view_model.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_view_model.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
 import 'package:starter_codes/provider/navigation_provider.dart';
-import 'package:starter_codes/widgets/circular_network_image.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
-import 'package:starter_codes/widgets/reverse_map.dart';
 import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
+import 'package:starter_codes/widgets/content_sized_sheet.dart';
+import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/loading_overlay.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/widgets/map_control.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
+import 'package:starter_codes/widgets/reverse_map.dart';
 
+/// A package delivery on its own screen: the route on a full-bleed map, and a
+/// sheet that answers the questions a customer opens it for, in order — where
+/// is it, who has it, where is it going, what did it cost, and what they need
+/// at handover. Everything on it is a field the API returns (decision D-10).
 class BookingOrderScreen extends ConsumerStatefulWidget {
   const BookingOrderScreen({super.key});
 
@@ -36,6 +39,16 @@ class BookingOrderScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
+  /// Past this extent the sheet is under the map controls, so they step aside.
+  static const _controlsHideAt = 0.82;
+
+  bool _controlsHidden = false;
+
+  void _onSheetExtent(double extent) {
+    final hidden = extent >= _controlsHideAt;
+    if (hidden != _controlsHidden) setState(() => _controlsHidden = hidden);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -51,16 +64,58 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
     });
   }
 
+  void _goBack() {
+    if (ref.read(comingFromBookingsScreenProvider)) {
+      ref.read(comingFromBookingsScreenProvider.notifier).state = false;
+      NavigationService.instance
+          .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+    } else {
+      NavigationService.instance.goBack();
+    }
+  }
+
   void _openGoogleMapsDirections() {
-    final deliveryDetailsAsync = ref.watch(deliveryDetailsViewModelProvider);
-    deliveryDetailsAsync.when(
-      data: (delivery) {
-        if (delivery == null) return;
-        openGoogleMapsDirections(
-            delivery.pickupLocation, delivery.dropoffLocation);
+    final delivery = ref.read(deliveryDetailsViewModelProvider).value;
+    if (delivery == null) return;
+    openGoogleMapsDirections(delivery.pickupLocation, delivery.dropoffLocation);
+  }
+
+  Future<void> _cancelOrder(DeliveryModel delivery) async {
+    AppStatusDialogs.showConfirmation(
+      context,
+      title: 'Cancel Order',
+      message: 'Are you sure you want to cancel this order? '
+          '${delivery.country.refundDestination}',
+      confirmText: 'Confirm',
+      cancelText: 'No, Keep',
+      onConfirm: () async {
+        ref.read(isCancellingProvider.notifier).state = true;
+        final success = await ref
+            .read(deliveryDetailsViewModelProvider.notifier)
+            .cancelOrder(delivery.id!);
+        ref.read(isCancellingProvider.notifier).state = false;
+
+        if (!context.mounted) return;
+        if (success) {
+          AppStatusDialogs.showSuccess(
+            context,
+            'Order Cancelled',
+            'Your order has been cancelled successfully.',
+            onClosed: () {
+              ref.read(deliveryViewModelProvider).fetchPackageDeliveries();
+              ref.read(navigationIndexProvider.notifier).state = 2;
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                (_) => false,
+              );
+            },
+          );
+        } else {
+          AppStatusDialogs.showError(context, 'Cancellation Failed',
+              'Failed to cancel order. Please try again.');
+        }
       },
-      loading: () {},
-      error: (error, stack) {},
     );
   }
 
@@ -70,1183 +125,257 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
     final isFromBookingScreen = ref.watch(comingFromBookingsScreenProvider);
 
     return PopScope(
-        canPop: !isFromBookingScreen,
-        onPopInvoked: (didPop) {
-          if (didPop) return;
-          if (isFromBookingScreen) {
-            ref.read(comingFromBookingsScreenProvider.notifier).state = false;
-            NavigationService.instance
-                .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
-          } else {
-            NavigationService.instance.goBack();
-          }
-        },
-        child: Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: GestureDetector(
-              onTap: () {
-                if (isFromBookingScreen) {
-                  NavigationService.instance
-                      .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
-                } else {
-                  NavigationService.instance.goBack();
-                }
-              },
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                margin: EdgeInsets.only(left: 20.w, top: 10.h),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(PhosphorIconsRegular.caretLeft,
-                    color: AppColors.black, size: 18.w),
+      canPop: !isFromBookingScreen,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        _goBack();
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leadingWidth: 76.w,
+          leading: Padding(
+            padding: EdgeInsetsDirectional.only(start: 20.w),
+            child: Center(
+              child: MapControl(
+                icon: PhosphorIconsRegular.caretLeft,
+                semanticLabel: 'Back',
+                hidden: _controlsHidden,
+                onTap: _goBack,
               ),
             ),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  _openGoogleMapsDirections();
-                },
-                icon: Container(
-                  width: 60.w,
-                  height: 80.w,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primary.withOpacity(0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(18.r),
-                  ),
-                  child: Icon(
-                    PhosphorIconsRegular.navigationArrow,
-                    color: Colors.white,
-                    size: 32.w,
-                  ),
+          ),
+          actions: [
+            Padding(
+              padding: EdgeInsetsDirectional.only(end: 20.w),
+              child: Center(
+                child: MapControl(
+                  icon: PhosphorIconsRegular.navigationArrow,
+                  semanticLabel: 'Open directions',
+                  hidden: _controlsHidden,
+                  onTap: _openGoogleMapsDirections,
                 ),
               ),
-            ],
-          ),
-          body: LoadingOverlay(
-            isLoading: ref.watch(isCancellingProvider),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: deliveryDetailsAsync.when(
-                    data: (delivery) {
-                      if (delivery == null) {
-                        return Container(color: Colors.grey.shade300);
-                      }
-                      // For bulk orders use the exact lat/lng from the API
-                      // to avoid unreliable geocoding of Nigerian addresses.
-                      final isBulk = delivery.isBulkOrder == true;
-                      final pickupLat = delivery.pickup?.location?.lat;
-                      final pickupLng = delivery.pickup?.location?.lng;
-                      final dropoffLat =
-                          delivery.dropoffs?.isNotEmpty == true
-                              ? delivery.dropoffs!.first.location?.lat
-                              : null;
-                      final dropoffLng =
-                          delivery.dropoffs?.isNotEmpty == true
-                              ? delivery.dropoffs!.first.location?.lng
-                              : null;
+            ),
+          ],
+        ),
+        body: LoadingOverlay(
+          isLoading: ref.watch(isCancellingProvider),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: deliveryDetailsAsync.when(
+                  data: (delivery) {
+                    if (delivery == null) return const OrderMapPlaceholder();
+                    final isBulk = delivery.isBulkOrder == true;
+                    final pickupLat = delivery.pickup?.location?.lat;
+                    final pickupLng = delivery.pickup?.location?.lng;
+                    final dropoffLat = delivery.dropoffs?.isNotEmpty == true
+                        ? delivery.dropoffs!.first.location?.lat
+                        : null;
+                    final dropoffLng = delivery.dropoffs?.isNotEmpty == true
+                        ? delivery.dropoffs!.first.location?.lng
+                        : null;
 
-                      return ReverseLocationStringMap(
-                        pickupLocationString: delivery.pickupLocation,
-                        dropoffLocationString: delivery.dropoffLocation,
-                        pickupLatLng: (isBulk &&
-                                pickupLat != null &&
-                                pickupLng != null)
-                            ? LatLng(pickupLat, pickupLng)
-                            : null,
-                        dropoffLatLng: (isBulk &&
-                                dropoffLat != null &&
-                                dropoffLng != null)
-                            ? LatLng(dropoffLat, dropoffLng)
-                            : null,
-                      );
-                    },
-                    loading: () => Container(color: Colors.grey.shade300),
-                    error: (err, stack) =>
-                        Container(color: Colors.red.shade100),
-                  ),
-                ),
-                DraggableScrollableSheet(
-                  initialChildSize: 0.55,
-                  minChildSize: 0.35,
-                  maxChildSize: 0.95,
-                  builder: (BuildContext context,
-                      ScrollController scrollController) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(24.r),
-                          topRight: Radius.circular(24.r),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          // Drag Handle
-                          Container(
-                            padding: EdgeInsets.symmetric(vertical: 12.h),
-                            child: Center(
-                              child: Container(
-                                width: 40.w,
-                                height: 4.h,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade300,
-                                  borderRadius: BorderRadius.circular(2.r),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              controller: scrollController,
-                              physics: const BouncingScrollPhysics(),
-                              child: deliveryDetailsAsync.when(
-                                data: (delivery) {
-                                  if (delivery == null) {
-                                    return Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(40.w),
-                                        child: Column(
-                                          children: [
-                                            Icon(PhosphorIconsRegular.tray,
-                                                size: 64.w,
-                                                color: Colors.grey.shade400),
-                                            Gap.h16,
-                                            Text(
-                                              'No delivery details found',
-                                              style: TextStyle(
-                                                color: Colors.grey.shade600,
-                                                fontSize: 16.sp,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }
-
-                                  return Column(
-                                    children: [
-                                      // Status Banner with gradient
-                                      Container(
-                                        margin: EdgeInsets.symmetric(
-                                            horizontal: 20.w),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 20.w,
-                                          vertical: 16.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              AppColors.primary,
-                                              Color(0xFF6C63FF),
-                                            ],
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(16.r),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: EdgeInsets.all(8.r),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white
-                                                    .withOpacity(0.2),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                PhosphorIconsRegular.moped,
-                                                color: AppColors.white,
-                                                size: 24.w,
-                                              ),
-                                            ),
-                                            Gap.w12,
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  AppText.caption(
-                                                    'Delivery Status',
-                                                    color: Colors.white
-                                                        .withOpacity(0.9),
-                                                    fontSize: 11.sp,
-                                                  ),
-                                                  AppText.h5(
-                                                    delivery.status ??
-                                                        'Pending',
-                                                    color: AppColors.white,
-                                                    fontSize: 16.sp,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Gap.h24,
-                                      Padding(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 20.w),
-                                        child: Column(
-                                          children: [
-                                            // Tracking Card
-                                            _EnhancedCard(
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        AppText.caption(
-                                                          'Tracking ID',
-                                                          color: Colors
-                                                              .grey.shade600,
-                                                          fontSize: 11.sp,
-                                                        ),
-                                                        Gap.h4,
-                                                        GestureDetector(
-                                                          onTap: () {
-                                                            final trackingId =
-                                                                delivery
-                                                                    .trackingId;
-                                                            if (trackingId !=
-                                                                    null &&
-                                                                trackingId
-                                                                    .isNotEmpty) {
-                                                              copyToClipboard(
-                                                                context,
-                                                                trackingId,
-                                                                successMessage:
-                                                                    'Tracking ID copied!',
-                                                              );
-                                                            }
-                                                          },
-                                                          child: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              AppText.h5(
-                                                                delivery.trackingId ??
-                                                                    'N/A',
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize: 18.sp,
-                                                              ),
-                                                              Gap.w8,
-                                                              Icon(
-                                                                Icons
-                                                                    .copy_all_rounded,
-                                                                size: 18.w,
-                                                                color: AppColors
-                                                                    .primary,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        Gap.h4,
-                                                        AppText.caption(
-                                                          delivery.vehicleRequest ??
-                                                              '',
-                                                          color: Colors
-                                                              .grey.shade600,
-                                                          fontSize: 12.sp,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Column(
-                                                    children: [
-                                                      Image.asset(
-                                                        ImageAsset.riderBike,
-                                                        height: 45.h,
-                                                        width: 70.w,
-                                                      ),
-                                                      Gap.h8,
-                                                      Container(
-                                                        padding: EdgeInsets
-                                                            .symmetric(
-                                                          horizontal: 12.w,
-                                                          vertical: 6.h,
-                                                        ),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: AppColors
-                                                              .primary
-                                                              .withOpacity(0.1),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12.r),
-                                                        ),
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .check_circle,
-                                                              color: AppColors
-                                                                  .primary,
-                                                              size: 16.w,
-                                                            ),
-                                                            Gap.w6,
-                                                            AppText.button(
-                                                              delivery.deliveryType ??
-                                                                  'N/A',
-                                                              fontSize: 12.sp,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Gap.h16,
-
-                                            // Delivery Agent Card
-                                            if (delivery.deliveryAgent !=
-                                                    null &&
-                                                delivery.status
-                                                        ?.toLowerCase() !=
-                                                    'delivered') ...[
-                                              _EnhancedCard(
-                                                child: Row(
-                                                  children: [
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                          color:
-                                                              AppColors.primary,
-                                                          width: 2.w,
-                                                        ),
-                                                      ),
-                                                      child:
-                                                          CircularNetworkImage(
-                                                        imageUrl: delivery
-                                                                .deliveryAgent
-                                                                ?.imageUrl ??
-                                                            'https://via.placeholder.com/150',
-                                                        width: 50.w,
-                                                        height: 50.w,
-                                                      ),
-                                                    ),
-                                                    Gap.w16,
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          AppText.caption(
-                                                            'Your Delivery Agent',
-                                                            color: Colors
-                                                                .grey.shade600,
-                                                            fontSize: 11.sp,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                          Gap.h4,
-                                                          AppText.body(
-                                                            delivery.deliveryAgent
-                                                                    ?.fullName ??
-                                                                'N/A',
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 16.sp,
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                          ),
-                                                          AppText.caption(
-                                                            delivery.deliveryAgent
-                                                                    ?.phone ??
-                                                                'N/A',
-                                                            color: Colors
-                                                                .grey.shade600,
-                                                            fontSize: 12.sp,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                          if (delivery
-                                                                  .deliveryAgent
-                                                                  ?.id !=
-                                                              null) ...[
-                                                            Gap.h4,
-                                                            ref
-                                                                .watch(
-                                                                  riderRatingProvider(
-                                                                    delivery
-                                                                        .deliveryAgent!
-                                                                        .id!,
-                                                                  ),
-                                                                )
-                                                                .when(
-                                                                  data:
-                                                                      (rating) =>
-                                                                          Row(
-                                                                    children: [
-                                                                      ...List
-                                                                          .generate(
-                                                                        5,
-                                                                        (index) =>
-                                                                            Icon(
-                                                                          index < rating.avgRating.floor()
-                                                                              ? PhosphorIconsFill.star
-                                                                              : (index == rating.avgRating.floor() && rating.avgRating % 1 >= 0.5)
-                                                                                  ? PhosphorIconsFill.starHalf
-                                                                                  : PhosphorIconsRegular.star,
-                                                                          color:
-                                                                              Colors.amber,
-                                                                          size:
-                                                                              14.w,
-                                                                        ),
-                                                                      ),
-                                                                      Gap.w4,
-                                                                      AppText
-                                                                          .caption(
-                                                                        rating
-                                                                            .avgRating
-                                                                            .toStringAsFixed(1),
-                                                                        color: Colors
-                                                                            .grey
-                                                                            .shade700,
-                                                                        fontSize:
-                                                                            12.sp,
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
-                                                                      ),
-                                                                      if (rating
-                                                                              .ratingsCount >
-                                                                          0) ...[
-                                                                        Gap.w4,
-                                                                        AppText
-                                                                            .caption(
-                                                                          '(${rating.ratingsCount})',
-                                                                          color: Colors
-                                                                              .grey
-                                                                              .shade600,
-                                                                          fontSize:
-                                                                              11.sp,
-                                                                        ),
-                                                                      ],
-                                                                    ],
-                                                                  ),
-                                                                  loading: () =>
-                                                                      SizedBox(
-                                                                    width: 14.w,
-                                                                    height:
-                                                                        14.w,
-                                                                    child:
-                                                                        const CircularProgressIndicator(
-                                                                      strokeWidth:
-                                                                          2,
-                                                                      valueColor:
-                                                                          AlwaysStoppedAnimation<
-                                                                              Color>(
-                                                                        AppColors
-                                                                            .primary,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                  error: (_,
-                                                                          __) =>
-                                                                      const SizedBox
-                                                                          .shrink(),
-                                                                ),
-                                                          ],
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            AppColors.primary,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12.r),
-                                                      ),
-                                                      child: IconButton(
-                                                        icon: Icon(
-                                                          PhosphorIconsRegular.phone,
-                                                          color: Colors.white,
-                                                          size: 20.w,
-                                                        ),
-                                                        onPressed: () {
-                                                          if (delivery
-                                                                  .deliveryAgent
-                                                                  ?.phone !=
-                                                              null) {
-                                                            final phoneNumber =
-                                                                delivery
-                                                                    .deliveryAgent!
-                                                                    .phone!
-                                                                    .toString()
-                                                                    .trim();
-
-                                                            try {
-                                                              if (phoneNumber
-                                                                  .startsWith(
-                                                                      '+')) {
-                                                                makePhoneCall(
-                                                                    phoneNumber);
-                                                              } else {
-                                                                // Handle local format, validate and format
-                                                                final validatedPhone =
-                                                                    validateAndFormatPhoneNumber(
-                                                                        phoneNumber);
-                                                                if (validatedPhone !=
-                                                                    null) {
-                                                                  makePhoneCall(
-                                                                      validatedPhone);
-                                                                } else {
-                                                                  AppStatusDialogs.showError(
-                                                                      context,
-                                                                      'Invalid Format',
-                                                                      'Invalid phone number format.');
-                                                                }
-                                                              }
-                                                            } catch (e) {
-                                                              AppStatusDialogs
-                                                                  .showError(
-                                                                      context,
-                                                                      'Call Failed',
-                                                                      'Unable to make phone call. Please try again.');
-                                                            }
-                                                          } else {
-                                                            AppStatusDialogs.showError(
-                                                                context,
-                                                                'No Phone Number',
-                                                                'Phone number not available.');
-                                                          }
-                                                        },
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Gap.h16,
-                                            ],
-
-                                            // Location Card – bulk vs standard
-                                            if (delivery.isBulkOrder == true &&
-                                                delivery.route != null &&
-                                                delivery.route!.isNotEmpty) ...[
-                                              _BulkRouteCard(
-                                                  delivery: delivery),
-                                              Gap.h16,
-                                            ] else ...[
-                                              _EnhancedCard(
-                                                child: Column(
-                                                  children: [
-                                                    _EnhancedLocationInfo(
-                                                      icon: PhosphorIconsRegular.circle,
-                                                      iconColor: Colors.green,
-                                                      title: 'Pick-up Location',
-                                                      address: delivery
-                                                              .pickupLocation ??
-                                                          'N/A',
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              vertical: 16.h),
-                                                      child: Row(
-                                                        children: [
-                                                          SizedBox(
-                                                              width: 8.w + 8.w),
-                                                          Container(
-                                                            width: 2.w,
-                                                            height: 40.h,
-                                                            decoration:
-                                                                const BoxDecoration(
-                                                              gradient:
-                                                                  LinearGradient(
-                                                                colors: [
-                                                                  Colors.green,
-                                                                  AppColors
-                                                                      .primary
-                                                                ],
-                                                                begin: Alignment
-                                                                    .topCenter,
-                                                                end: Alignment
-                                                                    .bottomCenter,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    _EnhancedLocationInfo(
-                                                      icon: PhosphorIconsRegular.mapPin,
-                                                      iconColor:
-                                                          AppColors.primary,
-                                                      title:
-                                                          'Drop-off Location',
-                                                      address: delivery
-                                                              .dropoffLocation ??
-                                                          'N/A',
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Gap.h16,
-                                            ],
-
-                                            // Package Details Card
-                                            _EnhancedCard(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .inventory_2_outlined,
-                                                        color:
-                                                            AppColors.primary,
-                                                        size: 20.w,
-                                                      ),
-                                                      Gap.w8,
-                                                      AppText.h5(
-                                                        'Package Details',
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 16.sp,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Gap.h16,
-                                                  _DetailRow(
-                                                      label: 'Delivery Fee',
-                                                      value: delivery
-                                                              .deliveryFee
-                                                              ?.toMoney() ??
-                                                          ''),
-                                                  Gap.h12,
-                                                  _DetailRow(
-                                                    label: 'Note',
-                                                    value: (delivery.note !=
-                                                                null &&
-                                                            delivery.note!
-                                                                .isNotEmpty)
-                                                        ? delivery.note!
-                                                        : 'No Notes',
-                                                  ),
-                                                  Gap.h12,
-                                                  _DetailRow(
-                                                    label: 'Date & Time',
-                                                    value:
-                                                        '${delivery.date ?? '-'} • ${delivery.time ?? '-'}',
-                                                  ),
-                                                  Gap.h16,
-                                                  Container(
-                                                    padding:
-                                                        EdgeInsets.all(16.w),
-                                                    decoration: BoxDecoration(
-                                                      color: AppColors.primary
-                                                          .withOpacity(0.1),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12.r),
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .lock_outline,
-                                                              color: AppColors
-                                                                  .primary,
-                                                              size: 20.w,
-                                                            ),
-                                                            Gap.w8,
-                                                            AppText.body(
-                                                              'Delivery Code',
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        AppText.h4(
-                                                          delivery.orderOtp
-                                                              .toString(),
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color:
-                                                              AppColors.primary,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Gap.h16,
-
-                                            // Cancel Order Button
-                                            if (delivery.status
-                                                            ?.toLowerCase() ==
-                                                        'pending' &&
-                                                    delivery.deliveryAgent ==
-                                                        null &&
-                                                    delivery.deliveryType ==
-                                                        'regular' ||
-                                                delivery.deliveryType ==
-                                                    'express')
-                                              Container(
-                                                width: double.infinity,
-                                                margin: EdgeInsets.only(
-                                                    bottom: 32.h),
-                                                child: AppButton.outline(
-                                                  title: 'Cancel Order',
-                                                  textColor: Colors.red,
-                                                  outlineColor: Colors.red,
-                                                  onTap: () {
-                                                    AppStatusDialogs
-                                                        .showConfirmation(
-                                                      context,
-                                                      title: 'Cancel Order',
-                                                      message:
-                                                          'Are you sure you want to cancel this order? '
-                                                          '${delivery.country.refundDestination}',
-                                                      confirmText: 'Confirm',
-                                                      cancelText: 'No, Keep',
-                                                      onConfirm: () async {
-                                                        ref
-                                                            .read(
-                                                                isCancellingProvider
-                                                                    .notifier)
-                                                            .state = true;
-
-                                                        final success = await ref
-                                                            .read(
-                                                                deliveryDetailsViewModelProvider
-                                                                    .notifier)
-                                                            .cancelOrder(
-                                                                delivery.id!);
-
-                                                        ref
-                                                            .read(
-                                                                isCancellingProvider
-                                                                    .notifier)
-                                                            .state = false;
-
-                                                        if (success) {
-                                                          if (context.mounted) {
-                                                            AppStatusDialogs
-                                                                .showSuccess(
-                                                              context,
-                                                              'Order Cancelled',
-                                                              'Your order has been cancelled successfully.',
-                                                              onClosed: () {
-                                                                ref
-                                                                    .read(
-                                                                        deliveryViewModelProvider)
-                                                                    .fetchPackageDeliveries();
-                                                                ref
-                                                                    .read(navigationIndexProvider
-                                                                        .notifier)
-                                                                    .state = 2;
-                                                                Navigator.pushAndRemoveUntil(
-                                                                    context,
-                                                                    MaterialPageRoute(
-                                                                        builder:
-                                                                            (context) =>
-                                                                                const DashboardScreen()),
-                                                                    (_) =>
-                                                                        false);
-                                                              },
-                                                            );
-                                                          }
-                                                        } else {
-                                                          if (context.mounted) {
-                                                            AppStatusDialogs.showError(
-                                                                context,
-                                                                'Cancellation Failed',
-                                                                'Failed to cancel order. Please try again.');
-                                                          }
-                                                        }
-                                                      },
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                                loading: () => Padding(
-                                  padding: EdgeInsets.all(40.w),
-                                  child: const Center(
-                                      child: DotSpinningIndicator()),
-                                ),
-                                error: (err, stack) => Padding(
-                                  padding: EdgeInsets.all(40.w),
-                                  child: Center(
-                                    child: Column(
-                                      children: [
-                                        Icon(PhosphorIconsRegular.warningCircle,
-                                            size: 48.w, color: Colors.red),
-                                        Gap.h16,
-                                        Text(
-                                          'Unable to load delivery details',
-                                          style: TextStyle(
-                                            color: Colors.red,
-                                            fontSize: 14.sp,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    return ReverseLocationStringMap(
+                      pickupLocationString: delivery.pickupLocation,
+                      dropoffLocationString: delivery.dropoffLocation,
+                      pickupLatLng:
+                          (isBulk && pickupLat != null && pickupLng != null)
+                              ? LatLng(pickupLat, pickupLng)
+                              : null,
+                      dropoffLatLng:
+                          (isBulk && dropoffLat != null && dropoffLng != null)
+                              ? LatLng(dropoffLat, dropoffLng)
+                              : null,
                     );
                   },
+                  loading: () => const OrderMapPlaceholder(),
+                  error: (err, stack) => const OrderMapPlaceholder(),
                 ),
-              ],
-            ),
-          ),
-        ));
-  }
-}
-
-class _EnhancedCard extends StatelessWidget {
-  const _EnhancedCard({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1.w,
-        ),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _EnhancedLocationInfo extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String address;
-
-  const _EnhancedLocationInfo({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.address,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: EdgeInsets.all(8.w),
-          decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: iconColor, size: 18.w),
-        ),
-        Gap.w12,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppText.caption(
-                title,
-                color: Colors.grey.shade600,
-                fontSize: 11.sp,
               ),
-              Gap.h4,
-              AppText.body(
-                address,
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
+              ContentSizedSheet(
+                color: AppColors.background,
+                onExtentChanged: _onSheetExtent,
+                child: deliveryDetailsAsync.when(
+                  data: (delivery) => delivery == null
+                      ? const OrderSheetMessage(
+                          icon: PhosphorIconsRegular.tray,
+                          message: 'No delivery details found',
+                        )
+                      : _SheetBody(
+                          delivery: delivery,
+                          onCancel: () => _cancelOrder(delivery),
+                        ),
+                  loading: () => SizedBox(
+                    height: 160.h,
+                    child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                  ),
+                  error: (err, stack) => const OrderSheetMessage(
+                    icon: PhosphorIconsRegular.warningCircle,
+                    message: 'Unable to load delivery details',
+                    isError: true,
+                  ),
+                ),
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String value;
+// ---------------------------------------------------------------------------
+// Sheet body
+// ---------------------------------------------------------------------------
 
-  const _DetailRow({
-    required this.label,
-    required this.value,
+class _SheetBody extends ConsumerWidget {
+  const _SheetBody({
+    required this.delivery,
+    required this.onCancel,
   });
+
+  final DeliveryModel delivery;
+  final VoidCallback onCancel;
+
+  /// A customer can only walk away from an order nobody has picked up yet.
+  bool get _canCancel {
+    final status = OrderStatus.parse(delivery.status);
+    final type = delivery.deliveryType?.toLowerCase();
+    return status.kind == OrderStatusKind.pending &&
+        delivery.deliveryAgent == null &&
+        (type == 'regular' || type == 'express');
+  }
+
+  /// `Package delivery · Regular · Bike` — only the parts the order carries.
+  String get _subtitle {
+    final parts = <String>['Package delivery'];
+    for (final raw in [delivery.deliveryType, delivery.vehicleRequest]) {
+      final value = raw?.trim();
+      if (value != null && value.isNotEmpty) parts.add(orderTitleCase(value));
+    }
+    return parts.join(' · ');
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final status = OrderStatus.parse(delivery.status);
+    final agent = delivery.deliveryAgent;
+    final showAgent = agent != null && status.kind != OrderStatusKind.delivered;
+    final isBulk = delivery.isBulkOrder == true &&
+        delivery.route != null &&
+        delivery.route!.isNotEmpty;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        4.h,
+        20.w,
+        20.h + MediaQuery.paddingOf(context).bottom,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OrderHeaderCard(
+            delivery: delivery,
+            status: status,
+            subtitle: _subtitle,
+          ),
+          Gap.h12,
+          if (showAgent) ...[
+            OrderAgentCard(agent: agent),
+            Gap.h12,
+          ],
+          OrderDetailCard(
+            child: isBulk
+                ? _BulkRoute(delivery: delivery)
+                : OrderRouteLine(stops: [
+                    OrderStop(
+                      label: 'Pick-up',
+                      address: delivery.pickupLocation,
+                      isOrigin: true,
+                    ),
+                    OrderStop(
+                      label: 'Drop-off',
+                      address: delivery.dropoffLocation,
+                    ),
+                  ]),
+          ),
+          Gap.h12,
+          OrderSummaryCard(delivery: delivery),
+          if (delivery.orderOtp != null &&
+              status.isOnTrack &&
+              status.kind != OrderStatusKind.delivered) ...[
+            Gap.h12,
+            OrderDeliveryCode(code: delivery.orderOtp!),
+          ],
+          if (_canCancel) ...[
+            Gap.h20,
+            AppButton.outline(
+              title: 'Cancel Order',
+              textColor: VinkolPalette.dangerText,
+              outlineColor: VinkolPalette.dangerText,
+              onTap: onCancel,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Bulk route — one pick-up, numbered drop-offs
+// ---------------------------------------------------------------------------
+
+class _BulkRoute extends StatelessWidget {
+  const _BulkRoute({required this.delivery});
+
+  final DeliveryModel delivery;
 
   @override
   Widget build(BuildContext context) {
+    final dropoffs = delivery.dropoffs ?? const <BulkContact>[];
+    final stops = <OrderStop>[
+      OrderStop(
+        label: 'Pick-up',
+        address: delivery.pickup?.location?.address,
+        isOrigin: true,
+      ),
+      for (var i = 0; i < dropoffs.length; i++)
+        OrderStop(
+          label: 'Drop-off ${i + 1}',
+          address: dropoffs[i].location?.address,
+          ordinal: i + 1,
+          contact: [
+            dropoffs[i].name?.trim(),
+            dropoffs[i].contact?.trim(),
+          ].where((s) => s != null && s.isNotEmpty).join(' · '),
+        ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.caption(
-          label,
-          color: Colors.grey.shade600,
-          fontSize: 12.sp,
-        ),
-        Gap.h4,
-        AppText.body(
-          value,
-          fontSize: 15.sp,
-          fontWeight: FontWeight.w500,
-        ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Bulk Location Card – pickup + numbered dropoffs
-// ---------------------------------------------------------------------------
-
-class _BulkRouteCard extends StatelessWidget {
-  final DeliveryModel delivery;
-  const _BulkRouteCard({required this.delivery});
-
-  @override
-  Widget build(BuildContext context) {
-    final pickup = delivery.pickup;
-    final dropoffs = delivery.dropoffs ?? [];
-
-    return _EnhancedCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Icon(PhosphorIconsRegular.truck,
-                  color: AppColors.primary, size: 20.w),
-              Gap.w8,
-              AppText.h5(
-                'Locations',
-                fontWeight: FontWeight.bold,
-                fontSize: 16.sp,
-              ),
-              const Spacer(),
-              if (dropoffs.isNotEmpty)
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: AppText.caption(
-                    '${dropoffs.length} drop-off${dropoffs.length > 1 ? 's' : ''}',
-                    color: AppColors.primary,
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-            ],
-          ),
-          Gap.h16,
-
-          // ── Pickup ──────────────────────────────────────────────────
-          _LocationRow(
-            icon: PhosphorIconsRegular.circle,
-            iconColor: Colors.green,
-            label: 'Pickup',
-            address: pickup?.location?.address,
-            isLast: false,
-          ),
-
-          // ── Dropoffs ────────────────────────────────────────────────
-          ...List.generate(dropoffs.length, (i) {
-            final drop = dropoffs[i];
-            return _LocationRow(
-              icon: PhosphorIconsRegular.mapPin,
-              iconColor: AppColors.primary,
-              label: 'Drop-off ${i + 1}',
-              name: drop.name,
-              phone: drop.contact,
-              address: drop.location?.address,
-              isLast: i == dropoffs.length - 1,
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Single location row (pickup or dropoff)
-// ---------------------------------------------------------------------------
-
-class _LocationRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String? name;
-  final String? phone;
-  final String? address;
-  final bool isLast;
-
-  const _LocationRow({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.isLast,
-    this.name,
-    this.phone,
-    this.address,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icon + connector
-          Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(7.r),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 16.w),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2.w,
-                    margin: EdgeInsets.symmetric(vertical: 4.h),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          iconColor.withOpacity(0.5),
-                          AppColors.primary.withOpacity(0.3)
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          Gap.w12,
-
-          // Content
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 20.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Label chip
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-                    decoration: BoxDecoration(
-                      color: iconColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6.r),
-                    ),
-                    child: AppText.caption(
-                      label,
-                      color: iconColor,
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Gap.h6,
-                  // Name + phone on one line
-                  if (name != null || phone != null)
-                    Row(
-                      children: [
-                        if (name != null)
-                          AppText.body(
-                            name!,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        if (name != null && phone != null)
-                          AppText.caption(
-                            '  •  ',
-                            color: Colors.grey.shade400,
-                            fontSize: 13.sp,
-                          ),
-                        if (phone != null)
-                          AppText.body(
-                            phone!,
-                            color: AppColors.primary,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                      ],
-                    ),
-                  if (name != null || phone != null) Gap.h4,
-                  // Address
-                  AppText.body(
-                    address ?? 'Address not available',
-                    color: Colors.grey.shade600,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ],
-              ),
+        Row(
+          children: [
+            const Expanded(child: OrderDetailLabel('Route')),
+            AppText.caption(
+              dropoffs.length == 1
+                  ? '1 drop-off'
+                  : '${dropoffs.length} drop-offs',
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: VinkolPalette.neutral500,
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+        Gap.h12,
+        OrderRouteLine(stops: stops),
+      ],
     );
   }
 }

@@ -1,34 +1,42 @@
-// lib/features/cart/screens/cart_screen.dart
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:starter_codes/core/constants/assets.dart';
-import 'package:starter_codes/core/extensions/double_extension.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
+import 'package:starter_codes/core/design/vinkol_space.dart';
 import 'package:starter_codes/core/money/money.dart';
-import 'package:starter_codes/core/utils/app_logger.dart';
-import 'package:starter_codes/provider/user_provider.dart';
-import 'package:starter_codes/utils/guest_mode_utils.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
-import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
+import 'package:starter_codes/core/services/navigation_service.dart';
+import 'package:starter_codes/core/utils/app_logger.dart';
+import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/features/booking/model/order_model.dart';
+import 'package:starter_codes/features/booking/view/screen/location_search_screen.dart';
+import 'package:starter_codes/features/payment/view/payment_webview.dart';
 import 'package:starter_codes/features/profile/view_model/personal_info_view_model.dart';
 import 'package:starter_codes/features/store/data/store_service.dart';
-import 'package:starter_codes/features/store/model/store_request_model.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
-import 'package:starter_codes/features/store/view/widget/cart_item_card.dart';
-import 'package:starter_codes/features/booking/view/screen/location_search_screen.dart';
-import 'package:starter_codes/features/store/view_model/order_view_model.dart';
-import 'package:starter_codes/models/location_model.dart';
-import 'package:starter_codes/features/booking/model/order_model.dart';
-import 'package:starter_codes/features/payment/view/payment_webview.dart';
-import 'package:starter_codes/provider/cart_provider.dart';
-import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/features/store/model/store_request_model.dart';
 import 'package:starter_codes/features/store/model/store_response_model.dart';
+import 'package:starter_codes/features/store/view/widget/cart_item_card.dart';
+import 'package:starter_codes/features/store/view/widget/checkout_widgets.dart';
+import 'package:starter_codes/features/store/view/widget/store_ui.dart';
+import 'package:starter_codes/features/store/view_model/order_view_model.dart';
 import 'package:starter_codes/features/wallet/view_model/wallet_history_view_model.dart';
+import 'package:starter_codes/models/location_model.dart';
+import 'package:starter_codes/provider/cart_provider.dart';
+import 'package:starter_codes/provider/market_provider.dart';
+import 'package:starter_codes/provider/user_provider.dart';
+import 'package:starter_codes/utils/guest_mode_utils.dart';
+import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
+import 'package:starter_codes/widgets/app_button.dart';
+import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
+/// The basket and the checkout, on one scrolling page: what is in it, where
+/// it is going, how it gets there, how it is paid for, and what it comes to.
+/// The pay button is pinned underneath, and when it cannot be pressed the
+/// bar says which step is missing rather than going quiet.
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
 
@@ -36,63 +44,60 @@ class CartScreen extends ConsumerStatefulWidget {
   ConsumerState<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends ConsumerState<CartScreen>
-    with SingleTickerProviderStateMixin {
-  // State for selected delivery option
+class _CartScreenState extends ConsumerState<CartScreen> {
   QuoteResponseModel? _selectedQuote;
   String _selectedPaymentMethod = 'Paystack';
 
   /// The market the selected quote belongs to. Governs which payment sources
   /// are on offer and whether there is a wallet at all.
   Country _market = Country.ng;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
 
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _showLocationSelectionOptions() async {
-    final result = await Navigator.of(context).push(
+  Future<void> _pickAddress() async {
+    final result = await Navigator.of(context).push<LocationModel?>(
       MaterialPageRoute(
-        builder: (context) =>
-            const LocationSearchScreen(isPickupLocation: false),
+        builder: (_) => const LocationSearchScreen(isPickupLocation: false),
       ),
     );
-
-    if (result != null && result is LocationModel) {
+    if (result != null) {
       ref.read(cartProvider.notifier).setDropOffLocation(result);
-      // Reset selected quote when location changes
-      setState(() {
-        _selectedQuote = null;
-      });
+      // A new address means new prices.
+      setState(() => _selectedQuote = null);
     }
   }
 
-  void _showSnackbar(String message) {
-    if (mounted) {
-      AppStatusDialogs.showError(context, 'Error', message);
+  void _showError(String message) {
+    if (mounted) AppStatusDialogs.showError(context, 'Error', message);
+  }
+
+  void _confirmClear() {
+    AppStatusDialogs.showConfirmation(
+      context,
+      title: 'Empty your cart?',
+      message: 'Everything in it will be removed.',
+      confirmText: 'Empty cart',
+      cancelText: 'Keep',
+      onConfirm: () => ref.read(cartProvider.notifier).clearCart(),
+    );
+  }
+
+  Future<void> _changePaymentMethod(Money? walletBalance) async {
+    final insufficient = _market.hasCustomerWallet &&
+        _selectedQuote != null &&
+        walletBalance != null &&
+        _selectedQuote!.amountDue.amount > walletBalance.amount;
+    final picked = await showPaymentSourceSheet(
+      context,
+      sources: _market.paymentSources,
+      selected: _selectedPaymentMethod,
+      walletBalance: walletBalance,
+      walletInsufficient: insufficient,
+    );
+    if (picked != null && mounted) {
+      setState(() => _selectedPaymentMethod = picked);
     }
   }
 
   Future<void> _handleProceedToPayment() async {
-    ref.read(appLoggerProvider);
     final cartState = ref.read(cartProvider);
     final cartProducts = cartState.products;
     final dropOffLocation = cartState.dropOffLocation;
@@ -100,36 +105,32 @@ class _CartScreenState extends ConsumerState<CartScreen>
     final initialPersonalInfo = ref.read(personalInfoViewModelProvider);
 
     if (!GuestModeUtils.requireAuthForBuying(context)) return;
+
     if (cartProducts.isEmpty) {
-      _showSnackbar('Your cart is empty.');
+      _showError('Your cart is empty.');
       return;
     }
     if (dropOffLocation == null) {
-      _showSnackbar('Please add a drop-off location.');
+      _showError('Add a delivery address first.');
       return;
     }
     if (currentUser == null) {
-      _showSnackbar('User information is missing. Please log in again.');
+      _showError('User information is missing. Please log in again.');
       return;
     }
-
-    // Ensure a quote is selected
     if (_selectedQuote == null) {
-      _showSnackbar('Please select a delivery option.');
+      _showError('Choose a delivery option.');
       return;
     }
-
-    // Validate selected quote (re-verify if needed or just trust state)
     if (!_selectedQuote!.isAvailable) {
-      _showSnackbar('Selected delivery option is unavailable.');
+      _showError('That delivery option is unavailable.');
       return;
     }
-
     // Quotes are single-use and expire 15 minutes after the server issues them.
     if (_selectedQuote!.isExpired) {
       setState(() => _selectedQuote = null);
       ref.invalidate(deliveryFeeProvider);
-      _showSnackbar(
+      _showError(
           'That price expired. We have re-priced your delivery — please confirm again.');
       return;
     }
@@ -140,27 +141,23 @@ class _CartScreenState extends ConsumerState<CartScreen>
     final String deliveryProvider =
         externalDeliveryFeeId != null ? 'Chowdeck' : 'Internal';
 
-    final String? storeId =
-        cartProducts.isNotEmpty ? cartProducts.first.store : '';
+    final String? storeId = cartProducts.first.store;
     if (storeId == null || storeId.isEmpty) {
-      _showSnackbar('Unable to determine store for the order.');
+      _showError('Unable to determine store for the order.');
       return;
     }
 
-    double subtotal = cartProducts.fold(
+    final double subtotal = cartProducts.fold(
         0.0, (sum, item) => sum + (item.price * (item.quantity ?? 0)));
 
-    final productPayloads = cartProducts.map((item) {
-      return ProductOrderPayload(
-        product: item.id,
-        quantity: item.quantity ?? 1,
-      );
-    }).toList();
+    final productPayloads = cartProducts
+        .map((item) => ProductOrderPayload(
+              product: item.id,
+              quantity: item.quantity ?? 1,
+            ))
+        .toList();
 
     final now = DateTime.now();
-    final String formattedDate = DateFormat('MMMM dd, yyyy').format(now);
-    final String formattedTime = DateFormat('h:mm a').format(now);
-
     final orderPayload = CreateStoreOrderPayload(
       state: initialPersonalInfo.address,
       store: storeId,
@@ -170,8 +167,8 @@ class _CartScreenState extends ConsumerState<CartScreen>
       dropoffLocation: dropOffLocation.formattedAddress!,
       deliveryType: deliveryType,
       orderType: 'Shopping',
-      date: formattedDate,
-      time: formattedTime,
+      date: DateFormat('MMMM dd, yyyy').format(now),
+      time: DateFormat('h:mm a').format(now),
       note: 'Order from App',
       description: '',
       paymentSource: _market.paymentSourceOrNull(_selectedPaymentMethod),
@@ -188,799 +185,444 @@ class _CartScreenState extends ConsumerState<CartScreen>
         .read(storeOrderViewModelProvider.notifier)
         .createOrder(orderPayload);
 
+    if (!mounted) return;
+
     if (orderResponse != null) {
-      if (mounted) {
-        if (orderResponse.authorizationUrl != null &&
-            orderResponse.authorizationUrl!.isNotEmpty) {
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (context) => PaymentWebViewScreen(
-                    paymentUrl: orderResponse.authorizationUrl!,
-                    orderId: orderResponse.order?.id ?? '',
-                    reference: orderResponse.reference ?? '',
-                    isStoreOrder: true,
-                  )));
-        } else {
-          NavigationService.instance.navigateToReplaceAll(
-            NavigatorRoutes.paymentVerificationScreen,
-            argument: {
-              'orderId': orderResponse.order?.id ?? '',
-              'reference': orderResponse.reference ?? '',
-              'isStoreOrder': true,
-            },
-          );
-        }
+      final url = orderResponse.authorizationUrl;
+      if (url != null && url.isNotEmpty) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (_) => PaymentWebViewScreen(
+            paymentUrl: url,
+            orderId: orderResponse.order?.id ?? '',
+            reference: orderResponse.reference ?? '',
+            isStoreOrder: true,
+          ),
+        ));
+      } else {
+        NavigationService.instance.navigateToReplaceAll(
+          NavigatorRoutes.paymentVerificationScreen,
+          argument: {
+            'orderId': orderResponse.order?.id ?? '',
+            'reference': orderResponse.reference ?? '',
+            'isStoreOrder': true,
+          },
+        );
       }
+      return;
+    }
+
+    final errorMessage = ref.read(storeOrderViewModelProvider).error;
+    if (errorMessage == null) return;
+    if (isStaleQuoteMessage(errorMessage)) {
+      setState(() => _selectedQuote = null);
+      ref.invalidate(deliveryFeeProvider);
+      _showError(
+          'That price expired. We have re-priced your delivery — please confirm again.');
     } else {
-      final errorMessage = ref.read(storeOrderViewModelProvider).error;
-      if (errorMessage != null) {
-        if (isStaleQuoteMessage(errorMessage)) {
-          setState(() => _selectedQuote = null);
-          ref.invalidate(deliveryFeeProvider);
-          _showSnackbar(
-              'That price expired. We have re-priced your delivery — please confirm again.');
-        } else {
-          _showSnackbar('Failed to create order: $errorMessage');
-        }
-      }
+      _showError('Failed to create order: $errorMessage');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
-    ref.watch(appLoggerProvider); // Maintain logging
     final storeOrderState = ref.watch(storeOrderViewModelProvider);
     final walletState = ref.watch(walletOverviewViewModelProvider);
+    final store = ref.watch(currentStoreProvider);
 
-    final cartItems = cartState.products;
+    final items = cartState.products;
     final dropOffLocation = cartState.dropOffLocation;
 
-    final deliveryFeeParams = DeliveryFeeParams(
+    final quotes = ref.watch(deliveryFeeProvider(DeliveryFeeParams(
       dropOffLocation: dropOffLocation,
-      products: cartItems,
-      deliveryType:
-          'express', // This param might be redundant now as we fetch all
-    );
+      products: items,
+      deliveryType: 'express',
+    )));
 
-    final AsyncValue<List<QuoteResponseModel>> deliveryQuotesAsync = ref.watch(
-      deliveryFeeProvider(deliveryFeeParams),
-    );
-
-    double subtotal = cartItems.fold(
-        0.0, (sum, item) => sum + (item.price * (item.quantity ?? 0)));
-
-    // Render every amount in the quote's own currency, and charge what the
-    // server says to charge: the delivery's grandTotal already carries its
-    // processing fee and tax.
-    final Currency currency = _selectedQuote?.currency ?? Currency.ngn;
-    _market = _selectedQuote?.country ?? Country.ng;
+    // Every amount renders in the quote's currency once there is one, and in
+    // the products' own currency before that — the cart is single-store, so
+    // the lines all agree.
+    final Currency currency = _selectedQuote?.currency ??
+        (items.isEmpty ? Currency.ngn : items.first.currency);
+    _market = _selectedQuote?.country ??
+        (items.isEmpty ? Country.ng : items.first.country);
     // A selection carried over from another market would be rejected.
     if (!_market.paymentSources.contains(_selectedPaymentMethod)) {
       _selectedPaymentMethod = _market.paymentSources.first;
     }
-    final double deliveryFee = _selectedQuote?.fare.amount ?? 0.0;
-    final double deliveryDue = _selectedQuote?.amountDue.amount ?? 0.0;
-    final double total = subtotal + deliveryDue;
+
+    final subtotal = Money(
+      items.fold<double>(0, (sum, p) => sum + p.price * (p.quantity ?? 0)),
+      currency,
+    );
+    final delivery = _selectedQuote?.fare;
+    final due = _selectedQuote?.amountDue.amount ?? 0;
+    final total = Money(subtotal.amount + due, currency);
+
+    final walletBalance = walletState.walletBalance.valueOrNull;
+    final walletMoney =
+        walletBalance == null ? null : Money(walletBalance, currency);
+
+    final String? blocker = items.isEmpty
+        ? 'Your cart is empty'
+        : dropOffLocation == null
+            ? 'Add a delivery address to continue'
+            : _selectedQuote == null
+                ? 'Choose a delivery option to continue'
+                : null;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        title: const Text(
-          'Shopping Cart',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: MiniAppBar(
+        title: 'Cart',
         actions: [
-          if (cartItems.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.delete_outline, color: Colors.red[400]),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    title: const Text('Clear Cart'),
-                    content: const Text(
-                        'Are you sure you want to remove all items?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          ref.read(cartProvider.notifier).clearCart();
-                          Navigator.pop(context);
-                        },
-                        child: Text('Clear',
-                            style: TextStyle(color: Colors.red[400])),
-                      ),
-                    ],
-                  ),
-                );
-              },
+          if (items.isNotEmpty)
+            TextButton(
+              onPressed: _confirmClear,
+              child: AppText.button(
+                'Clear',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: VinkolPalette.neutral600,
+              ),
             ),
         ],
       ),
-      body: cartItems.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      body: items.isEmpty
+          ? StoreStateView(
+              icon: PhosphorIconsRegular.basket,
+              title: 'Your cart is empty',
+              message: 'Anything you add from a store will show up here.',
+              actionLabel: 'Browse stores',
+              onAction: () => Navigator.of(context).maybePop(),
+            )
+          : SafeArea(
+              top: false,
+              bottom: false,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  VinkolSpace.pageMargin,
+                  VinkolSpace.xs,
+                  VinkolSpace.pageMargin,
+                  VinkolSpace.xxxl,
+                ),
                 children: [
-                  Icon(Icons.shopping_cart_outlined,
-                      size: 100, color: Colors.grey[300]),
-                  Gap.h16,
-                  Text(
-                    'Your cart is empty',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                  _BasketHeader(storeName: store?.name, items: items),
+                  Gap.h8,
+                  _Card(
+                    child: Column(
+                      children: [
+                        for (final item in items) ...[
+                          CartItemCard(
+                            product: item,
+                            onIncrement: () => ref
+                                .read(cartProvider.notifier)
+                                .addProduct(item),
+                            onDecrement: () => ref
+                                .read(cartProvider.notifier)
+                                .removeProduct(item),
+                          ),
+                          if (item != items.last)
+                            const Divider(
+                                height: 1, color: VinkolPalette.neutral100),
+                        ],
+                      ],
                     ),
                   ),
-                  Gap.h8,
-                  Text(
-                    'Add items to get started',
-                    style: TextStyle(color: Colors.grey[500]),
+                  const Gap.h(VinkolSpace.sectionGap),
+                  const CheckoutSectionLabel('Deliver to'),
+                  Gap.h10,
+                  DeliveryAddressRow(
+                    address: dropOffLocation?.formattedAddress,
+                    onTap: _pickAddress,
+                  ),
+                  if (dropOffLocation != null) ...[
+                    const Gap.h(VinkolSpace.sectionGap),
+                    const CheckoutSectionLabel('Delivery'),
+                    Gap.h10,
+                    _DeliveryOptions(
+                      quotes: quotes,
+                      selected: _selectedQuote,
+                      onSelect: (q) => setState(() => _selectedQuote = q),
+                      onRetry: () => ref.invalidate(deliveryFeeProvider),
+                    ),
+                  ],
+                  const Gap.h(VinkolSpace.sectionGap),
+                  const CheckoutSectionLabel('Payment'),
+                  Gap.h10,
+                  PaymentMethodRow(
+                    method: _selectedPaymentMethod,
+                    detail: _selectedPaymentMethod == 'Wallet' &&
+                            walletMoney != null
+                        ? 'Balance ${walletMoney.format()}'
+                        : null,
+                    onTap: _market.offersPaymentChoice
+                        ? () => _changePaymentMethod(walletMoney)
+                        : null,
+                  ),
+                  const Gap.h(VinkolSpace.sectionGap),
+                  const CheckoutSectionLabel('Summary'),
+                  Gap.h12,
+                  _Card(
+                    padded: true,
+                    child: OrderSummary(
+                      subtotal: subtotal,
+                      delivery: delivery,
+                      deliveryPlaceholder: dropOffLocation == null
+                          ? 'Add an address'
+                          : 'Choose an option',
+                      serviceFee: _selectedQuote?.serviceFeeMoney,
+                      tax: _selectedQuote?.taxMoney,
+                      taxLabel: _selectedQuote?.taxLabel,
+                      total: total,
+                    ),
                   ),
                 ],
               ),
-            )
-          : SafeArea(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    Gap.h10,
-                    // Cart Items
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: cartItems.length,
-                        itemBuilder: (context, index) {
-                          final item = cartItems[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: CartItemCard(
-                              product: item,
-                              onQuantityChanged: (newQty) {
-                                if (newQty > (item.quantity ?? 0)) {
-                                  ref
-                                      .read(cartProvider.notifier)
-                                      .addProduct(item);
-                                } else {
-                                  ref
-                                      .read(cartProvider.notifier)
-                                      .removeProduct(item);
-                                }
-                              },
-                              onRemoveCompletely: (itemToRemove) {
-                                ref
-                                    .read(cartProvider.notifier)
-                                    .removeProductCompletely(itemToRemove);
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    // Bottom Section with Location, Payment, and Summary
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(24)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, -5),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Delivery Location Card
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                            child: InkWell(
-                              onTap: _showLocationSelectionOptions,
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  gradient: dropOffLocation == null
-                                      ? LinearGradient(
-                                          colors: [
-                                            AppColors.primary.withOpacity(0.1),
-                                            AppColors.primary.withOpacity(0.05),
-                                          ],
-                                        )
-                                      : null,
-                                  color: dropOffLocation == null
-                                      ? null
-                                      : Colors.grey[50],
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: dropOffLocation == null
-                                        ? AppColors.primary
-                                        : Colors.grey.shade300,
-                                    width: dropOffLocation == null ? 2 : 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: dropOffLocation == null
-                                            ? AppColors.primary
-                                            : Colors.green,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        dropOffLocation == null
-                                            ? Icons.add_location_alt_outlined
-                                            : Icons.location_on,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    Gap.w12,
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            dropOffLocation == null
-                                                ? 'Add Delivery Location'
-                                                : 'Delivering to',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 13,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                          if (dropOffLocation != null) ...[
-                                            Gap.h4,
-                                            Text(
-                                              dropOffLocation
-                                                      .formattedAddress ??
-                                                  '',
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black87,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                    Icon(
-                                      dropOffLocation == null
-                                          ? Icons.add
-                                          : Icons.edit_outlined,
-                                      color: AppColors.primary,
-                                      size: 20,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Delivery Options Selector
-                          if (dropOffLocation != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Delivery Options',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Gap.h12,
-                                  SizedBox(
-                                    height: 90,
-                                    child: deliveryQuotesAsync.when(
-                                      data: (quotes) {
-                                        if (quotes.isEmpty) {
-                                          return const Text(
-                                              'No delivery options available');
-                                        }
-
-                                        // Auto-select first available if none selected
-                                        if (_selectedQuote == null &&
-                                            quotes.any((q) => q.isAvailable)) {
-                                          WidgetsBinding.instance
-                                              .addPostFrameCallback((_) {
-                                            if (mounted) {
-                                              setState(() {
-                                                _selectedQuote =
-                                                    quotes.firstWhere(
-                                                        (q) => q.isAvailable);
-                                              });
-                                            }
-                                          });
-                                        }
-
-                                        return ListView.builder(
-                                          scrollDirection: Axis.horizontal,
-                                          itemCount: quotes.length,
-                                          itemBuilder: (context, index) {
-                                            final quote = quotes[index];
-                                            // Map deliveryType to display title
-                                            String displayTitle = "Standard";
-                                            if (quote.deliveryType
-                                                    .toLowerCase() ==
-                                                'express') {
-                                              displayTitle = "Express";
-                                            }
-                                            if (quote.deliveryType
-                                                    .toLowerCase() ==
-                                                'priority') {
-                                              displayTitle = "Priority+";
-                                            }
-
-                                            return _DeliveryOptionCard(
-                                              title: displayTitle,
-                                              price: quote.amountDue.format(),
-                                              isSelected:
-                                                  _selectedQuote == quote,
-                                              isAvailable: quote.isAvailable,
-                                              onTap: () {
-                                                setState(() {
-                                                  _selectedQuote = quote;
-                                                });
-                                              },
-                                            );
-                                          },
-                                        );
-                                      },
-                                      loading: () => const Center(
-                                          child: CircularProgressIndicator()),
-                                      error: (e, s) => Text(
-                                          'Error loading options: $e',
-                                          style: const TextStyle(
-                                              color: Colors.red)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                          Gap.h12,
-
-                          // Payment Method Selection
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Payment Method',
-                                  style: TextStyle(
-                                    fontSize: 15.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey[800],
-                                  ),
-                                ),
-                                Gap.h12,
-                                InkWell(
-                                  onTap: () {
-                                    final double? walletBalance =
-                                        walletState.walletBalance.valueOrNull;
-                                    final bool isWalletInsufficient =
-                                        _market.hasCustomerWallet &&
-                                            _selectedQuote != null &&
-                                            walletBalance != null &&
-                                            _selectedQuote!.amountDue.amount >
-                                                walletBalance;
-
-                                    _showPaymentMethodPicker(context,
-                                        walletBalance, isWalletInsufficient);
-                                  },
-                                  borderRadius: BorderRadius.circular(16.r),
-                                  child: Container(
-                                    padding: EdgeInsets.all(16.w),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16.r),
-                                      border: Border.all(
-                                          color: Colors.grey.shade300),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: EdgeInsets.all(8.w),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary
-                                                .withOpacity(0.1),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            _selectedPaymentMethod == 'Wallet'
-                                                ? Icons.account_balance_wallet
-                                                : Icons.credit_card,
-                                            color: AppColors.primary,
-                                            size: 20.sp,
-                                          ),
-                                        ),
-                                        Gap.w12,
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              _selectedPaymentMethod,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 16.sp,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                            if (_selectedPaymentMethod ==
-                                                'Wallet')
-                                              Text(
-                                                'Balance: ${(walletState.walletBalance.valueOrNull ?? 0).toMoney()}',
-                                                style: TextStyle(
-                                                  fontSize: 12.sp,
-                                                  color: Colors.grey[600],
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        const Spacer(),
-                                        Icon(Icons.keyboard_arrow_down,
-                                            color: Colors.grey.shade600),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          Gap.h20,
-
-                          // Order Summary
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[50],
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                _buildSummaryRow(
-                                    'Subtotal', subtotal.toMoney(currency)),
-                                Gap.h12,
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      'Delivery Fee',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    Text(
-                                      deliveryFee.toMoney(currency),
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                // Itemised by the server. Zero and therefore
-                                // absent on Nigerian plain deliveries.
-                                if ((_selectedQuote?.serviceFee ?? 0) > 0) ...[
-                                  Gap.h12,
-                                  _buildSummaryRow(
-                                    'Processing fee',
-                                    _selectedQuote!.serviceFee!
-                                        .toMoney(currency),
-                                  ),
-                                ],
-                                if ((_selectedQuote?.taxAmount ?? 0) > 0) ...[
-                                  Gap.h12,
-                                  _buildSummaryRow(
-                                    _selectedQuote!.taxLabel?.isNotEmpty == true
-                                        ? _selectedQuote!.taxLabel!
-                                        : 'Tax',
-                                    _selectedQuote!.taxAmount!
-                                        .toMoney(currency),
-                                  ),
-                                ],
-                                Gap.h12,
-                                Divider(color: Colors.grey[300], thickness: 1),
-                                Gap.h12,
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      'Total',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    Text(
-                                      total.toMoney(currency),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          Gap.h20,
-
-                          // Checkout Button
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: ElevatedButton(
-                                onPressed: (storeOrderState.isLoading ||
-                                        dropOffLocation == null ||
-                                        _selectedQuote == null)
-                                    ? null
-                                    : _handleProceedToPayment,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  disabledBackgroundColor: Colors.grey[300],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: storeOrderState.isLoading
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      )
-                                    : const Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'Proceed to Checkout',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            ),
+      bottomNavigationBar: items.isEmpty
+          ? null
+          : _PayBar(
+              total: total,
+              blocker: blocker,
+              loading: storeOrderState.isLoading,
+              onPay: _handleProceedToPayment,
             ),
     );
   }
+}
 
-  Widget _buildSummaryRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black87,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+/// A white surface on the canvas, holding rows that are not cards themselves.
+class _Card extends StatelessWidget {
+  const _Card({required this.child, this.padded = false});
+
+  final Widget child;
+
+  /// Full card padding, for content that has no row padding of its own.
+  final bool padded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: VinkolSpace.lg,
+        vertical: padded ? VinkolSpace.lg : VinkolSpace.xs,
+      ),
+      decoration: const BoxDecoration(
+        color: VinkolPalette.white,
+        borderRadius: VinkolRadius.brMd,
+      ),
+      child: child,
     );
   }
+}
 
-  void _showPaymentMethodPicker(
-      BuildContext context, double? walletBalance, bool isWalletInsufficient) {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+/// "From Cole World Stores · 3 items" — the basket is single-store, so the
+/// store is named once at the top rather than on every row.
+class _BasketHeader extends StatelessWidget {
+  const _BasketHeader({required this.storeName, required this.items});
+
+  final String? storeName;
+  final List<StoreProduct> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = items.fold<int>(0, (sum, p) => sum + (p.quantity ?? 0));
+    final name = storeName?.trim();
+    final parts = [
+      if (name != null && name.isNotEmpty) 'From $name',
+      count == 1 ? '1 item' : '$count items',
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: VinkolSpace.xs),
+      child: AppText.caption(
+        parts.join(' · '),
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: VinkolPalette.neutral500,
+        maxLines: 1,
       ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Select Payment Method',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+    );
+  }
+}
+
+/// The priced options, or why there are none yet.
+class _DeliveryOptions extends StatelessWidget {
+  const _DeliveryOptions({
+    required this.quotes,
+    required this.selected,
+    required this.onSelect,
+    required this.onRetry,
+  });
+
+  final AsyncValue<List<QuoteResponseModel>> quotes;
+  final QuoteResponseModel? selected;
+  final ValueChanged<QuoteResponseModel> onSelect;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return quotes.when(
+      loading: () => const DeliveryOptionsSkeleton(),
+      error: (_, __) => _InlineNotice(
+        icon: PhosphorIconsRegular.warningCircle,
+        text: 'We couldn’t price this delivery.',
+        actionLabel: 'Try again',
+        onAction: onRetry,
+      ),
+      data: (list) {
+        if (list.isEmpty) {
+          return const _InlineNotice(
+            icon: PhosphorIconsRegular.prohibit,
+            text: 'No delivery options reach this address yet.',
+          );
+        }
+        // Pre-select the first usable option so the customer only has to act
+        // if they want something else.
+        if (selected == null && list.any((q) => q.isAvailable)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            onSelect(list.firstWhere((q) => q.isAvailable));
+          });
+        }
+        return Column(
+          children: [
+            for (final quote in list) ...[
+              DeliveryOptionTile(
+                quote: quote,
+                selected: selected == quote,
+                onTap: () => onSelect(quote),
               ),
-              Gap.h24,
-              for (final source in _market.paymentSources) ...[
-                _buildPaymentDetailOption(
-                  context,
-                  source,
-                  source == 'Wallet'
-                      ? Icons.account_balance_wallet
-                      : Icons.credit_card,
-                  source == 'Wallet' && isWalletInsufficient,
-                  source == 'Wallet'
-                      ? (isWalletInsufficient
-                          ? 'Insufficient funds'
-                          : 'Balance: ${(walletBalance ?? 0).toMoney()}')
-                      : 'Pay securely with card',
-                ),
-                Gap.h16,
-              ],
-              // Gap.h16,
-              // _buildPaymentDetailOption(
-              //   context,
-              //   'Globus Bank',
-              //   Icons.account_balance,
-              //   false,
-              //   'Pay with Globus Bank',
-              // ),
-              Gap.h32,
+              if (quote != list.last) Gap.h10,
             ],
-          ),
+          ],
         );
       },
     );
   }
+}
 
-  Widget _buildPaymentDetailOption(BuildContext context, String title,
-      IconData icon, bool isDisabled, String subtitle) {
-    final bool isSelected = _selectedPaymentMethod == title;
-    return GestureDetector(
-      onTap: isDisabled
-          ? null
-          : () {
-              setState(() {
-                if (title == 'Globus Bank') {
-                  _selectedPaymentMethod = 'Globus';
-                } else {
-                  _selectedPaymentMethod = title;
-                }
-              });
-              Navigator.pop(context);
-            },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        decoration: BoxDecoration(
-          color: isDisabled
-              ? Colors.grey.shade50
-              : (isSelected
-                  ? AppColors.primary.withOpacity(0.05)
-                  : Colors.white),
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-            color: isDisabled
-                ? Colors.grey.shade200
-                : (isSelected ? AppColors.primary : Colors.grey.shade200),
-            width: 1.5.w,
+class _InlineNotice extends StatelessWidget {
+  const _InlineNotice({
+    required this.icon,
+    required this.text,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final String text;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(VinkolSpace.lg),
+      decoration: BoxDecoration(
+        borderRadius: VinkolRadius.brMd,
+        border: Border.all(color: VinkolPalette.neutral200),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: VinkolPalette.neutral500),
+          Gap.w12,
+          Expanded(
+            child: AppText.body(
+              text,
+              fontSize: 14,
+              color: VinkolPalette.neutral700,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: isDisabled
-                    ? Colors.grey.shade200
-                    : (isSelected
-                        ? AppColors.primary.withOpacity(0.1)
-                        : Colors.grey.shade100),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 24.sp,
-                color: isDisabled
-                    ? Colors.grey.shade400
-                    : (isSelected ? AppColors.primary : Colors.grey.shade600),
+          if (actionLabel != null && onAction != null)
+            TextButton(
+              onPressed: onAction,
+              child: AppText.button(
+                actionLabel!,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: VinkolPalette.brand600,
               ),
             ),
-            Gap.w16,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: isDisabled ? Colors.grey.shade400 : Colors.black87,
+        ],
+      ),
+    );
+  }
+}
+
+/// The pinned pay button. Blocked, it keeps its shape and says what is
+/// missing above it; nothing on this screen is ever disabled in silence.
+class _PayBar extends StatelessWidget {
+  const _PayBar({
+    required this.total,
+    required this.blocker,
+    required this.loading,
+    required this.onPay,
+  });
+
+  final Money total;
+  final String? blocker;
+  final bool loading;
+  final VoidCallback onPay;
+
+  @override
+  Widget build(BuildContext context) {
+    final blocked = blocker != null;
+    return Container(
+      decoration: const BoxDecoration(
+        color: VinkolPalette.white,
+        border: Border(top: BorderSide(color: VinkolPalette.neutral100)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            VinkolSpace.pageMargin,
+            VinkolSpace.md,
+            VinkolSpace.pageMargin,
+            VinkolSpace.md,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (blocked) ...[
+                Row(
+                  children: [
+                    const Icon(
+                      PhosphorIconsRegular.info,
+                      size: 16,
+                      color: VinkolPalette.neutral500,
                     ),
-                  ),
-                  Gap.h4,
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: isDisabled
-                          ? Colors.red.shade300
-                          : Colors.grey.shade500,
+                    Gap.w6,
+                    Expanded(
+                      child: AppText.caption(
+                        blocker!,
+                        fontSize: 13,
+                        color: VinkolPalette.neutral600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                Gap.h10,
+              ],
+              AppButton.primary(
+                title: blocked ? 'Pay' : 'Pay ${total.format()}',
+                disable: blocked,
+                loading: loading,
+                onTap: onPay,
               ),
-            ),
-            if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: AppColors.primary,
-                size: 24.sp,
-              )
-            else
-              Icon(
-                Icons.radio_button_off,
-                color: Colors.grey.shade300,
-                size: 24.sp,
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// Provider classes remain the same
+// ---------------------------------------------------------------------------
+// Providers
+// ---------------------------------------------------------------------------
+
 class DeliveryFeeParams extends Equatable {
   final LocationModel? dropOffLocation;
   final List<StoreProduct> products;
@@ -1000,14 +642,11 @@ final deliveryFeeProvider =
     FutureProvider.family<List<QuoteResponseModel>, DeliveryFeeParams>(
   (ref, params) async {
     final appLogger = ref.read(appLoggerProvider);
-    appLogger.d('>>> DELIVERY FEE PROVIDER FUNCTION STARTED <<<');
-
     final dropOffLocation = params.dropOffLocation;
     final cartProducts = params.products;
 
     if (dropOffLocation == null) {
-      appLogger.d(
-          'DeliveryFeeProvider: dropOffLocation is null. Returning empty list.');
+      appLogger.d('DeliveryFeeProvider: no drop-off yet, nothing to price.');
       return [];
     }
     if (cartProducts.isEmpty) {
@@ -1022,21 +661,17 @@ final deliveryFeeProvider =
     }
 
     final storeService = ref.read(storeServiceProvider);
-
     try {
-      appLogger.d(
-          '  Calling storeService.fetchDeliveryQuote (Express + Priority)...');
       final quotes = await storeService.fetchDeliveryQuote(
         storeId: storeId,
+        country: ref.read(marketProvider),
         dropoffLocation: dropOffLocation,
       );
-      appLogger.d('  Fetched ${quotes.length} delivery quotes.');
-      appLogger.d('<<< DELIVERY FEE PROVIDER FUNCTION ENDED (SUCCESS) >>>');
+      appLogger.d('DeliveryFeeProvider: ${quotes.length} quotes.');
       return quotes;
     } catch (e, st) {
       appLogger.e('Failed to fetch delivery quotes: $e',
           error: e, stackTrace: st);
-      appLogger.d('<<< DELIVERY FEE PROVIDER FUNCTION ENDED (ERROR) >>>');
       rethrow;
     }
   },
@@ -1045,129 +680,8 @@ final deliveryFeeProvider =
 final storeDetailsProvider =
     FutureProvider.family<SingleStoreData, String>((ref, storeId) async {
   final storeService = ref.read(storeServiceProvider);
-  return storeService.getSingleStore(storeId);
+  return storeService.getSingleStore(
+    storeId,
+    country: ref.read(marketProvider),
+  );
 });
-
-// New Widget for Delivery Option Card
-// New Widget for Delivery Option Card
-class _DeliveryOptionCard extends StatelessWidget {
-  final String title;
-  final String price;
-  final bool isSelected;
-  final bool isAvailable;
-  final VoidCallback? onTap;
-
-  const _DeliveryOptionCard({
-    required this.title,
-    required this.price,
-    required this.isSelected,
-    this.isAvailable = true,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Determine styles based on type (simulated by title checking or passed color)
-    final bool isExpress = title.toLowerCase() == 'express';
-    // Check if title contains priority or Priority+
-    final bool isPriority = title.toLowerCase().contains('priority');
-
-    Color backgroundColor = Colors.white;
-    Color textColor = Colors.black87;
-
-    if (isExpress) {
-      // Express is Black
-      backgroundColor = Colors.black;
-      textColor = Colors.white;
-    } else if (isPriority) {
-      // Priority+ is Gradient (Purple/Green) - applied to container
-      // Use a solid fallback if needed, but here we set textColor
-      textColor = Colors.white;
-    }
-
-    // Override for selection border
-    final borderColor = isSelected ? AppColors.primary : Colors.grey.shade300;
-
-    return GestureDetector(
-      onTap: isAvailable ? onTap : null,
-      child: Opacity(
-        opacity: isAvailable ? 1.0 : 0.5,
-        child: Container(
-          margin: const EdgeInsets.only(right: 12),
-          width: 140,
-          padding: const EdgeInsets.only(left: 12, top: 12, bottom: 12),
-          decoration: BoxDecoration(
-            color: isPriority ? null : backgroundColor,
-            gradient: isPriority
-                ? const LinearGradient(
-                    colors: [
-                      Color(0xFF9C27B0),
-                      Color(0xFF00C853)
-                    ], // Purple to Green
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: borderColor,
-              width: isSelected ? 2 : 1,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                left: 70.h,
-                top: 20.h,
-                right: 2,
-                bottom: 2,
-                child: Image.asset(ImageAsset.riderBikeImg),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title == 'Express' ? 'Regular' : title,
-                    style: TextStyle(
-                      color: textColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (isAvailable)
-                    Text(
-                      price,
-                      style: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    )
-                  else
-                    Text(
-                      'Unavailable',
-                      style: TextStyle(
-                          color: textColor.withOpacity(0.7),
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

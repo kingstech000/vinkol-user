@@ -7,7 +7,6 @@ void main() {
   group('every market has a complete client profile', () {
     test('Nigeria', () {
       final p = Country.ng.profile;
-      expect(p.placesCountryCode, 'NG');
       expect(p.dialCode, '+234');
       expect(p.regionLabel, 'State');
       expect(p.regions, contains('Lagos'));
@@ -20,7 +19,6 @@ void main() {
 
     test('Canada', () {
       final p = Country.ca.profile;
-      expect(p.placesCountryCode, 'CA');
       expect(p.dialCode, '+1');
       expect(p.regionLabel, 'Province');
       expect(p.regions, contains('Ontario'));

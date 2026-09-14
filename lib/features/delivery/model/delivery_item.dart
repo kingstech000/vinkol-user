@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:starter_codes/core/design/vinkol_color.dart';
 import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/features/delivery/model/delivery_model.dart';
+import 'package:starter_codes/features/delivery/model/order_status.dart';
 
 class DeliveryItem {
   final String customerName;
@@ -27,28 +28,17 @@ class DeliveryItem {
     // Status colors come off the token ramp, never from Material's palette. The
     // shape and the label are added by the widget that draws them — status is
     // never carried by color alone (decision D-05).
-    Color statusColor;
-    switch (delivery.status?.toLowerCase()) {
-      case 'delivered':
-        statusColor = VinkolPalette.successText;
-        break;
-      case 'pending':
-        statusColor = VinkolPalette.warningText;
-        break;
-      case 'with rider':
-      case 'with shopper':
-        statusColor = VinkolPalette.brand600;
-        break;
-      case 'unattended':
-        statusColor = VinkolPalette.dangerText;
-        break;
-      case 'cancelled':
-        // Cancellation is an outcome, not an error, so it reads neutral.
-        statusColor = VinkolPalette.neutral600;
-        break;
-      default:
-        statusColor = VinkolPalette.neutral500;
-    }
+    final Color statusColor = switch (OrderStatus.parse(delivery.status).kind) {
+      OrderStatusKind.delivered => VinkolPalette.successText,
+      OrderStatusKind.pending => VinkolPalette.warningText,
+      OrderStatusKind.withRider ||
+      OrderStatusKind.withShopper =>
+        VinkolPalette.brand600,
+      OrderStatusKind.unattended => VinkolPalette.dangerText,
+      // Cancellation is an outcome, not an error, so it reads neutral.
+      OrderStatusKind.cancelled => VinkolPalette.neutral600,
+      OrderStatusKind.unknown => VinkolPalette.neutral500,
+    };
 
     // Use totalAmount for the display amount
     final formattedAmount = '${delivery.totalAmount?.toMoney()}';
@@ -97,7 +87,7 @@ class DeliveryItem {
     return DeliveryItem(
       orderId: delivery.id ?? UniqueKey().toString(),
       customerName: displayCustomerName,
-      status: delivery.status ?? '-',
+      status: OrderStatus.parse(delivery.status).label,
       amount: formattedAmount,
       address: displayAddress,
       timestamp: formattedTimestamp,

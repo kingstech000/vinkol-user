@@ -76,6 +76,11 @@ class WalletService {
 
   /// Fetches what can actually be withdrawn, with the breakdown that explains
   /// why it may be less than the balance.
+  ///
+  /// **Admin-only.** The endpoint answers 403 to a customer token, so nothing
+  /// in the customer app calls this; the withdraw screen gates on
+  /// [fetchWalletBalance] instead. Kept because the contract exists and the
+  /// model parses it, should a customer-facing variant arrive.
   Future<WithdrawableAmount> fetchWithdrawableAmount(String userId) async {
     _logger.d('WalletService: Fetching withdrawable amount for $userId');
     try {

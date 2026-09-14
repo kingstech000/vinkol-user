@@ -1,0 +1,171 @@
+// TEMPORARY dev harness for previewing <SCREEN>. Delete after review.
+//
+// Copy to lib/dev_preview_<thing>.dart, fill in the <PLACEHOLDERS>, run with:
+//   flutter run -t lib/dev_preview_<thing>.dart -d <device-id>
+//
+// Three pieces matter:
+//   1. Provider overrides supply mock data.
+//   2. _Pin re-asserts that mock, because screens refetch on mount and would
+//      otherwise overwrite it a second after launch.
+//   3. The cycler prints "PREVIEW_SCREEN: <name>" so capture.sh can sync.
+
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/utils/colors.dart';
+import 'package:starter_codes/core/utils/locator.dart';
+import 'package:starter_codes/features/auth/model/user_model.dart' as m;
+import 'package:starter_codes/provider/user_provider.dart';
+// import '<the screen under preview>';
+
+// ---------------------------------------------------------------------------
+// Mock data
+// ---------------------------------------------------------------------------
+
+final _mockUser = m.User(
+  id: '1',
+  email: 'rider@example.com',
+  role: 'rider',
+  isEmailVerified: true,
+  isPhoneVerified: true,
+  isKYCVerified: false,
+  createdAt: DateTime.now(),
+  updatedAt: DateTime.now(),
+  firstname: 'Kingsley',
+  lastname: 'Daniel',
+  phoneNumber: '+234 803 555 0142',
+  state: 'Ontario',
+  country: 'CA',
+);
+
+/// One preview scenario. Add the branches your design actually takes —
+/// populated, empty, error, and any conditional layout.
+class _Case {
+  const _Case(this.name, this.screen);
+  final String name;
+  final Widget screen;
+}
+
+final _cases = <_Case>[
+  // const _Case('Populated', MyScreen()),
+  // const _Case('Empty', MyScreen()),
+  // const _Case('Error', MyScreen()),
+];
+
+// ---------------------------------------------------------------------------
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Only needed if the screen's providers reach for env or the service locator.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {}
+  try {
+    await setupLocator();
+  } catch (_) {}
+  runApp(const _PreviewApp());
+}
+
+class _PreviewApp extends StatefulWidget {
+  const _PreviewApp();
+
+  @override
+  State<_PreviewApp> createState() => _PreviewAppState();
+}
+
+class _PreviewAppState extends State<_PreviewApp> {
+  int _i = 0;
+  late final Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('PREVIEW_SCREEN: ${_cases.first.name}');
+    _timer = Timer.periodic(const Duration(seconds: 8), (_) {
+      setState(() => _i = (_i + 1) % _cases.length);
+      debugPrint('PREVIEW_SCREEN: ${_cases[_i].name}');
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = _cases[_i];
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        // Mirror the real theme from main.dart so the preview is honest.
+        theme: ThemeData.light().copyWith(
+          scaffoldBackgroundColor: AppColors.canvas,
+          textTheme: GoogleFonts.montserratTextTheme(),
+          shadowColor: Colors.transparent,
+          appBarTheme: const AppBarTheme(
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            shadowColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+          ),
+        ),
+        home: ProviderScope(
+          // Rebuilds the scope per scenario so initState runs again.
+          key: ValueKey(c.name),
+          overrides: [
+            userProvider
+                .overrideWith((ref) => UserNotifier()..setUser(_mockUser)),
+            // Override the screen's own view model provider here. If its
+            // notifier has required constructor deps, subclass it and pass the
+            // real ones through, then seed state in a method you call yourself.
+          ],
+          child: _Pin(child: c.screen),
+        ),
+      ),
+    );
+  }
+}
+
+/// Screens fetch on mount and would replace the mock. This keeps re-asserting
+/// it so previews stay deterministic.
+class _Pin extends ConsumerStatefulWidget {
+  const _Pin({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_Pin> createState() => _PinState();
+}
+
+class _PinState extends ConsumerState<_Pin> {
+  late final Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 400), (_) {
+      if (!mounted) return;
+      if (!identical(ref.read(userProvider), _mockUser)) {
+        ref.read(userProvider.notifier).setUser(_mockUser);
+      }
+      // Re-seed the screen's own view model here too.
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}

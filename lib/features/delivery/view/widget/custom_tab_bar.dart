@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/utils/fonts.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 
 class CustomTabBar extends StatelessWidget {
@@ -12,7 +12,7 @@ class CustomTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.transparent,
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Container(
         height: 52.h,
         decoration: BoxDecoration(
@@ -35,11 +35,13 @@ class CustomTabBar extends StatelessWidget {
           ),
           labelColor: Colors.white,
           unselectedLabelColor: Colors.grey[700],
-          labelStyle: GoogleFonts.montserrat(
+          labelStyle: TextStyle(
+            fontFamily: AppFonts.montserrat,
             fontWeight: FontWeight.bold,
             fontSize: 14.sp,
           ),
-          unselectedLabelStyle: GoogleFonts.montserrat(
+          unselectedLabelStyle: TextStyle(
+            fontFamily: AppFonts.montserrat,
             fontWeight: FontWeight.w500,
             fontSize: 14.sp,
           ),
@@ -52,4 +54,3 @@ class CustomTabBar extends StatelessWidget {
     );
   }
 }
-

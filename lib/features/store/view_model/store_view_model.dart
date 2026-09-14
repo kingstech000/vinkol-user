@@ -2,11 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/features/store/data/store_service.dart';
 import 'package:starter_codes/features/store/model/store_response_model.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 
 class StoresViewModel extends AsyncNotifier<StoreResponse> {
   String _currentSearchQuery = '';
   String? _currentTag;
+
+  /// The category the list is filtered to, if any. Null means every store.
+  String? get currentTag => _currentTag;
 
   DateTime? _lastFetchedTime;
   final Duration _staleTime = const Duration(minutes: 5);
@@ -33,6 +37,10 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
     final user = ref.read(userProvider);
 
     final userState = user?.currentState;
+    // The device market, not the account's `country`: it follows the location
+    // the customer picked, and legacy accounts report NG regardless of where
+    // their state was chosen from.
+    final userCountry = ref.read(marketProvider);
 
     // --- Stale Data Check ---
     if (!forceRefresh && 
@@ -45,8 +53,9 @@ class StoresViewModel extends AsyncNotifier<StoreResponse> {
     }
 
     try {
-      logger.d('Fetching stores with user state: $userState, search: $search, tags: $tags, page: $page, limit: $limit, forceRefresh: $forceRefresh');
+      logger.d('Fetching stores with user country: ${userCountry.code}, state: $userState, search: $search, tags: $tags, page: $page, limit: $limit, forceRefresh: $forceRefresh');
       final response = await storeService.getStores(
+        country: userCountry,
         state: userState,
         search: search,
         tags: tags,

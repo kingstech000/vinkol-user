@@ -7,9 +7,7 @@ import 'package:starter_codes/provider/location_provider.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class MapDisplay extends ConsumerStatefulWidget {
-  const MapDisplay({
-    super.key,
-  });
+  const MapDisplay({super.key});
 
   @override
   _MapDisplayState createState() => _MapDisplayState();
@@ -36,7 +34,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
     if (!mounted) return;
 
     setState(() {
-      _isLoading = true; 
+      _isLoading = true;
       _currentAddress = "Fetching location...";
     });
 
@@ -90,13 +88,13 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
   @override
   Widget build(BuildContext context) {
     final CameraPosition initialCameraPosition = CameraPosition(
-      target: _currentPosition ??
-          const LatLng(6.3361, 5.6125),
+      target: _currentPosition ?? const LatLng(6.3361, 5.6125),
       zoom: 14,
     );
 
+    // Fills whatever height the parent gives it; the home screen hands it
+    // the space left over by the quick actions and the promotion banner.
     return Container(
-      height: 200, 
       margin: const EdgeInsets.symmetric(horizontal: 16.0),
       decoration: BoxDecoration(
         color: Colors.grey[300],
@@ -111,7 +109,6 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                   zoomControlsEnabled: false,
                   markers: _markers,
                 ),
-
           Positioned(
             bottom: 16,
             left: 16,
@@ -128,9 +125,7 @@ class _MapDisplayState extends ConsumerState<MapDisplay> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _currentAddress
-                          .split(',')
-                          .first,
+                      _currentAddress.split(',').first,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -193,7 +188,8 @@ class MapShimmerPlaceholder extends StatelessWidget {
       child: Stack(
         children: [
           Center(
-            child: Icon(PhosphorIconsRegular.mapTrifold, size: 80, color: Colors.grey[400]),
+            child: Icon(PhosphorIconsRegular.mapTrifold,
+                size: 80, color: Colors.grey[400]),
           ),
           Positioned(
             bottom: 16,

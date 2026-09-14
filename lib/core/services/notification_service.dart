@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
+import 'package:starter_codes/provider/notification_preferences_provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -85,7 +86,11 @@ class NotificationService {
 
   Future<void> showNotification(RemoteMessage message) async {
     final data = message.data;
-    final String? sound = data['sound'];
+    // A silenced alert still arrives and still reads the same; it just does not
+    // make a noise. Read straight from the cache rather than from Riverpod:
+    // this runs in a background isolate when the app is terminated.
+    final bool alertsAudible = notificationSoundEnabled();
+    final String? sound = alertsAudible ? data['sound'] as String? : null;
     final String title = message.notification?.title ?? "New Notification";
     final String body = message.notification?.body ?? "";
 
@@ -97,10 +102,13 @@ class NotificationService {
       priority: Priority.high,
       largeIcon: const DrawableResourceAndroidBitmap('logo'),
       sound: sound != null ? RawResourceAndroidNotificationSound(sound) : null,
+      playSound: alertsAudible,
+      enableVibration: alertsAudible,
     );
 
     DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
       sound: sound != null ? '$sound.wav' : '',
+      presentSound: alertsAudible,
     );
 
     NotificationDetails platformDetails = NotificationDetails(

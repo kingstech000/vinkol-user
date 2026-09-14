@@ -14,6 +14,7 @@ import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/core/utils/textstyles.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
 /// The first fork in the app: make an account, sign back in, or look around.
 ///
@@ -69,15 +70,8 @@ class _AuthChoiceScreenState extends ConsumerState<AuthChoiceScreen> {
       await LaunchLink.launchURL(url);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.black,
-          content: AppText.body(
-            'Could not open that link.',
-            color: AppColors.white,
-          ),
-        ),
-      );
+      AppStatusDialogs.showError(
+          context, 'Could not open link', 'Could not open that link.');
     }
   }
 

@@ -4,10 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/utils/fonts.dart';
 import 'package:starter_codes/core/router/router.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
+import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/services/notification_service.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/firebase_options.dart';
@@ -57,8 +58,10 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData.light().copyWith(
-          scaffoldBackgroundColor: Colors.grey.shade100,
-          textTheme: GoogleFonts.montserratTextTheme(),
+          scaffoldBackgroundColor: AppColors.background,
+          textTheme: ThemeData.light()
+              .textTheme
+              .apply(fontFamily: AppFonts.montserrat),
         ),
         builder: (context, widget) => Navigator(
           key: AppFlushBar.navigatorKey,

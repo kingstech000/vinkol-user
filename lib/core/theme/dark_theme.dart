@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/utils/fonts.dart';
 
 ThemeData darkMode = ThemeData(
   colorScheme: const ColorScheme.dark(
@@ -10,5 +10,5 @@ ThemeData darkMode = ThemeData(
     inversePrimary: Color(0xFF000001),
   ),
   scaffoldBackgroundColor: const Color(0xFF000001),
-  textTheme: GoogleFonts.montserratTextTheme(),
+  fontFamily: AppFonts.montserrat,
 );

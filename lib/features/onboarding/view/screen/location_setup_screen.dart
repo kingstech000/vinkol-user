@@ -75,12 +75,8 @@ class _LocationSetupScreenState extends ConsumerState<LocationSetupScreen> {
       _error = null;
     });
     try {
-      // Deliberately unfiltered: this is where the customer tells us which
-      // country they are in, so restricting to the current one would make it
-      // impossible to ever change.
-      final results = await ref
-          .read(locationControllerProvider)
-          .searchPlaces(query, restrictToMarket: false);
+      final results =
+          await ref.read(locationControllerProvider).searchPlaces(query);
       if (!mounted) return;
       setState(() => _predictions = results);
     } catch (_) {

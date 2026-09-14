@@ -43,17 +43,19 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
       return ProductListState();
     }
 
-    return _fetchSingleStoreAndProducts(store.id);
+    return _fetchSingleStoreAndProducts(store);
   }
 
-  Future<ProductListState> _fetchSingleStoreAndProducts(String storeId) async {
+  Future<ProductListState> _fetchSingleStoreAndProducts(Store listedStore) async {
     final storeService = ref.read(storeServiceProvider);
     try {
-      final responseData = await storeService.getSingleStore(storeId);
+      // Look the store up under its own market — the listing already told us.
+      final responseData = await storeService.getSingleStore(
+        listedStore.id,
+        country: listedStore.country,
+      );
 
-      final Store store = responseData.store;
-
-      final List<StoreProduct> newProducts = responseData.storeProducts ?? [];
+      final List<StoreProduct> newProducts = responseData.storeProducts;
 
       return ProductListState(
         products: newProducts,
@@ -72,7 +74,7 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
     if (store == null) return;
 
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchSingleStoreAndProducts(store.id));
+    state = await AsyncValue.guard(() => _fetchSingleStoreAndProducts(store));
   }
 
   Future<void> loadMoreProducts() async {
@@ -87,7 +89,7 @@ class ProductListViewModel extends AsyncNotifier<ProductListState> {
     if (store == null) return;
 
     state = await AsyncValue.guard(() async {
-      final newState = await _fetchSingleStoreAndProducts(store.id);
+      final newState = await _fetchSingleStoreAndProducts(store);
       return newState.copyWith(isLoadingMore: false);
     });
   }

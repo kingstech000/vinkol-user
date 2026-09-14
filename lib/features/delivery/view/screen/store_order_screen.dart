@@ -1,28 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_codes/core/constants/assets.dart';
-import 'package:starter_codes/core/extensions/double_extension.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/core/utils/copy_to_clipboard_util.dart';
-import 'package:starter_codes/core/utils/launch_link.dart';
 import 'package:starter_codes/core/utils/map_utils.dart';
 import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/features/delivery/view/screen/product_order_modal.dart';
+import 'package:starter_codes/features/delivery/model/delivery_model.dart';
+import 'package:starter_codes/features/delivery/model/order_status.dart';
+import 'package:starter_codes/features/delivery/view/widget/order_detail_widgets.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_detail_view_model.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
 import 'package:starter_codes/provider/navigation_provider.dart';
-import 'package:starter_codes/widgets/circular_network_image.dart';
+import 'package:starter_codes/widgets/content_sized_sheet.dart';
 import 'package:starter_codes/widgets/gap.dart';
-import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
+import 'package:starter_codes/widgets/map_control.dart';
 import 'package:starter_codes/widgets/reverse_map.dart';
 
-import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
-import 'package:starter_codes/widgets/loading_overlay.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
-
+/// A store order on its own screen, built from the same pieces as a package
+/// delivery so the two read as one product: the route from the store on a
+/// full-bleed map, and a sheet that answers where it is, who has it, what was
+/// bought, where it is going, what it cost, and what the customer needs at
+/// handover. Everything on it is a field the API returns (decision D-10).
 class StoreOrderScreen extends ConsumerStatefulWidget {
   const StoreOrderScreen({super.key});
 
@@ -31,6 +33,16 @@ class StoreOrderScreen extends ConsumerStatefulWidget {
 }
 
 class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
+  /// Past this extent the sheet is under the map controls, so they step aside.
+  static const _controlsHideAt = 0.82;
+
+  bool _controlsHidden = false;
+
+  void _onSheetExtent(double extent) {
+    final hidden = extent >= _controlsHideAt;
+    if (hidden != _controlsHidden) setState(() => _controlsHidden = hidden);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,17 +58,20 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
     });
   }
 
+  void _goBack() {
+    if (ref.read(comingFromBookingsScreenProvider)) {
+      ref.read(comingFromBookingsScreenProvider.notifier).state = false;
+      NavigationService.instance
+          .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
+    } else {
+      NavigationService.instance.goBack();
+    }
+  }
+
   void _openGoogleMapsDirections() {
-    final deliveryDetailsAsync = ref.watch(deliveryDetailsViewModelProvider);
-    deliveryDetailsAsync.when(
-      data: (delivery) {
-        if (delivery == null) return;
-        openGoogleMapsDirections(
-            delivery.pickupLocation, delivery.dropoffLocation);
-      },
-      loading: () {},
-      error: (error, stack) {},
-    );
+    final delivery = ref.read(deliveryDetailsViewModelProvider).value;
+    if (delivery == null) return;
+    openGoogleMapsDirections(_pickupOf(delivery), delivery.dropoffLocation);
   }
 
   @override
@@ -65,1014 +80,331 @@ class _StoreOrderScreenState extends ConsumerState<StoreOrderScreen> {
     final isFromBookingScreen = ref.watch(comingFromBookingsScreenProvider);
 
     return PopScope(
-        canPop: !isFromBookingScreen,
-        onPopInvoked: (didPop) {
-          if (didPop) return;
-          if (isFromBookingScreen) {
-            ref.read(comingFromBookingsScreenProvider.notifier).state = false;
-            NavigationService.instance
-                .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
-          } else {
-            NavigationService.instance.goBack();
-          }
-        },
-        child: Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: GestureDetector(
-              onTap: () {
-                if (isFromBookingScreen) {
-                  ref.read(comingFromBookingsScreenProvider.notifier).state =
-                      false;
-                  NavigationService.instance
-                      .navigateToReplaceAll(NavigatorRoutes.dashboardScreen);
-                } else {
-                  NavigationService.instance.goBack();
-                }
-              },
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                margin: EdgeInsets.only(left: 20.w, top: 10.h),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(PhosphorIconsRegular.caretLeft,
-                    color: AppColors.black, size: 18.w),
+      canPop: !isFromBookingScreen,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        _goBack();
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leadingWidth: 76.w,
+          leading: Padding(
+            padding: EdgeInsetsDirectional.only(start: 20.w),
+            child: Center(
+              child: MapControl(
+                icon: PhosphorIconsRegular.caretLeft,
+                semanticLabel: 'Back',
+                hidden: _controlsHidden,
+                onTap: _goBack,
               ),
             ),
-            actions: [
-              IconButton(
-                onPressed: () {
-                  _openGoogleMapsDirections();
+          ),
+          actions: [
+            Padding(
+              padding: EdgeInsetsDirectional.only(end: 20.w),
+              child: Center(
+                child: MapControl(
+                  icon: PhosphorIconsRegular.navigationArrow,
+                  semanticLabel: 'Open directions',
+                  hidden: _controlsHidden,
+                  onTap: _openGoogleMapsDirections,
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: deliveryDetailsAsync.when(
+                data: (delivery) {
+                  if (delivery == null) return const OrderMapPlaceholder();
+                  return ReverseLocationStringMap(
+                    pickupLocationString: _pickupOf(delivery),
+                    dropoffLocationString: delivery.dropoffLocation,
+                  );
                 },
-                icon: Container(
-                  width: 60.w,
-                  height: 80.w,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primary.withOpacity(0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(18.r),
+                loading: () => const OrderMapPlaceholder(),
+                error: (err, stack) => const OrderMapPlaceholder(),
+              ),
+            ),
+            ContentSizedSheet(
+              color: AppColors.background,
+              onExtentChanged: _onSheetExtent,
+              child: deliveryDetailsAsync.when(
+                data: (delivery) => delivery == null
+                    ? const OrderSheetMessage(
+                        icon: PhosphorIconsRegular.bag,
+                        message: 'No store order details found',
+                      )
+                    : _SheetBody(delivery: delivery),
+                loading: () => SizedBox(
+                  height: 160.h,
+                  child: const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
-                  child: Icon(
-                    PhosphorIconsRegular.navigationArrow,
-                    color: Colors.white,
-                    size: 32.w,
-                  ),
+                ),
+                error: (err, stack) => const OrderSheetMessage(
+                  icon: PhosphorIconsRegular.warningCircle,
+                  message: 'Unable to load order details',
+                  isError: true,
                 ),
               ),
-            ],
-          ),
-          body: LoadingOverlay(
-            isLoading: ref.watch(isCancellingProvider),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: deliveryDetailsAsync.when(
-                    data: (delivery) {
-                      if (delivery == null) {
-                        return Container(color: Colors.grey.shade300);
-                      }
-                      return ReverseLocationStringMap(
-                        pickupLocationString: delivery.store!.address!,
-                        dropoffLocationString: delivery.dropoffLocation,
-                      );
-                    },
-                    loading: () => Container(color: Colors.grey.shade300),
-                    error: (err, stack) =>
-                        Container(color: Colors.red.shade100),
-                  ),
-                ),
-                DraggableScrollableSheet(
-                  initialChildSize: 0.55,
-                  minChildSize: 0.35,
-                  maxChildSize: 0.9,
-                  builder: (BuildContext context,
-                      ScrollController scrollController) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(24.r),
-                          topRight: Radius.circular(24.r),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          // Drag Handle
-                          Container(
-                            padding: EdgeInsets.symmetric(vertical: 12.h),
-                            child: Center(
-                              child: Container(
-                                width: 40.w,
-                                height: 4.h,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade300,
-                                  borderRadius: BorderRadius.circular(2.r),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              controller: scrollController,
-                              physics: const BouncingScrollPhysics(),
-                              child: deliveryDetailsAsync.when(
-                                data: (delivery) {
-                                  if (delivery == null) {
-                                    return Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(40.w),
-                                        child: Column(
-                                          children: [
-                                            Icon(PhosphorIconsRegular.bag,
-                                                size: 64.w,
-                                                color: Colors.grey.shade400),
-                                            Gap.h16,
-                                            Text(
-                                              'No store order details found',
-                                              style: TextStyle(
-                                                color: Colors.grey.shade600,
-                                                fontSize: 16.sp,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }
-
-                                  return Column(
-                                    children: [
-                                      // Status Banner with gradient
-                                      Container(
-                                        margin: EdgeInsets.symmetric(
-                                            horizontal: 20.w),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 20.w,
-                                          vertical: 16.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              AppColors.primary,
-                                              Color(0xFF6C63FF),
-                                            ],
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(16.r),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: EdgeInsets.all(8.r),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white
-                                                    .withOpacity(0.2),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                PhosphorIconsRegular.storefront,
-                                                color: AppColors.white,
-                                                size: 24.w,
-                                              ),
-                                            ),
-                                            Gap.w12,
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  AppText.caption(
-                                                    'Order Status',
-                                                    color: Colors.white
-                                                        .withOpacity(0.9),
-                                                    fontSize: 11.sp,
-                                                  ),
-                                                  AppText.h5(
-                                                    delivery.status ??
-                                                        'Pending',
-                                                    color: AppColors.white,
-                                                    fontSize: 16.sp,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Gap.h24,
-                                      Padding(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 20.w),
-                                        child: Column(
-                                          children: [
-                                            // Tracking Card
-                                            _EnhancedCard(
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        AppText.caption(
-                                                          'Tracking ID',
-                                                          color: Colors
-                                                              .grey.shade600,
-                                                          fontSize: 11.sp,
-                                                        ),
-                                                        Gap.h4,
-                                                        GestureDetector(
-                                                          onTap: () {
-                                                            final trackingId =
-                                                                delivery
-                                                                    .trackingId;
-                                                            if (trackingId !=
-                                                                    null &&
-                                                                trackingId
-                                                                    .isNotEmpty) {
-                                                              copyToClipboard(
-                                                                context,
-                                                                trackingId,
-                                                                successMessage:
-                                                                    'Tracking ID copied!',
-                                                              );
-                                                            }
-                                                          },
-                                                          child: Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              AppText.h5(
-                                                                delivery.trackingId ??
-                                                                    'N/A',
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize: 18.sp,
-                                                              ),
-                                                              Gap.w8,
-                                                              Icon(
-                                                                Icons
-                                                                    .copy_all_rounded,
-                                                                size: 18.w,
-                                                                color: AppColors
-                                                                    .primary,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        Gap.h4,
-                                                        AppText.caption(
-                                                          delivery.vehicleRequest ??
-                                                              '',
-                                                          color: Colors
-                                                              .grey.shade600,
-                                                          fontSize: 12.sp,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Column(
-                                                    children: [
-                                                      Image.asset(
-                                                        ImageAsset.riderBike,
-                                                        height: 45.h,
-                                                        width: 70.w,
-                                                      ),
-                                                      Gap.h8,
-                                                      Container(
-                                                        padding: EdgeInsets
-                                                            .symmetric(
-                                                          horizontal: 12.w,
-                                                          vertical: 6.h,
-                                                        ),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: AppColors
-                                                              .primary
-                                                              .withOpacity(0.1),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12.r),
-                                                        ),
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .check_circle,
-                                                              color: AppColors
-                                                                  .primary,
-                                                              size: 16.w,
-                                                            ),
-                                                            Gap.w6,
-                                                            AppText.button(
-                                                              delivery.deliveryType ??
-                                                                  'N/A',
-                                                              fontSize: 12.sp,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Gap.h16,
-
-                                            // Delivery Agent Card (show if agent is assigned)
-                                            if (delivery.deliveryAgent !=
-                                                    null &&
-                                                delivery.status
-                                                        ?.toLowerCase() !=
-                                                    'delivered') ...[
-                                              _EnhancedCard(
-                                                child: Row(
-                                                  children: [
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                          color:
-                                                              AppColors.primary,
-                                                          width: 2.w,
-                                                        ),
-                                                      ),
-                                                      child:
-                                                          CircularNetworkImage(
-                                                        imageUrl: delivery
-                                                                .deliveryAgent
-                                                                ?.imageUrl ??
-                                                            'https://via.placeholder.com/150',
-                                                        width: 50.w,
-                                                        height: 50.w,
-                                                      ),
-                                                    ),
-                                                    Gap.w16,
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          AppText.caption(
-                                                            'Your Delivery Agent',
-                                                            color: Colors
-                                                                .grey.shade600,
-                                                            fontSize: 11.sp,
-                                                          ),
-                                                          Gap.h4,
-                                                          AppText.body(
-                                                            delivery.deliveryAgent
-                                                                    ?.fullName ??
-                                                                'N/A',
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 16.sp,
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                          ),
-                                                          AppText.caption(
-                                                            delivery.deliveryAgent
-                                                                    ?.phone ??
-                                                                'N/A',
-                                                            color: Colors
-                                                                .grey.shade600,
-                                                            fontSize: 12.sp,
-                                                          ),
-                                                          if (delivery
-                                                                  .deliveryAgent
-                                                                  ?.id !=
-                                                              null) ...[
-                                                            Gap.h4,
-                                                            ref
-                                                                .watch(
-                                                                  riderRatingProvider(
-                                                                    delivery
-                                                                        .deliveryAgent!
-                                                                        .id!,
-                                                                  ),
-                                                                )
-                                                                .when(
-                                                                  data:
-                                                                      (rating) =>
-                                                                          Row(
-                                                                    children: [
-                                                                      ...List
-                                                                          .generate(
-                                                                        5,
-                                                                        (index) =>
-                                                                            Icon(
-                                                                          index < rating.avgRating.floor()
-                                                                              ? PhosphorIconsFill.star
-                                                                              : (index == rating.avgRating.floor() && rating.avgRating % 1 >= 0.5)
-                                                                                  ? PhosphorIconsFill.starHalf
-                                                                                  : PhosphorIconsRegular.star,
-                                                                          color:
-                                                                              Colors.amber,
-                                                                          size:
-                                                                              14.w,
-                                                                        ),
-                                                                      ),
-                                                                      Gap.w4,
-                                                                      AppText
-                                                                          .caption(
-                                                                        rating
-                                                                            .avgRating
-                                                                            .toStringAsFixed(1),
-                                                                        color: Colors
-                                                                            .grey
-                                                                            .shade700,
-                                                                        fontSize:
-                                                                            12.sp,
-                                                                        fontWeight:
-                                                                            FontWeight.w600,
-                                                                      ),
-                                                                      if (rating
-                                                                              .ratingsCount >
-                                                                          0) ...[
-                                                                        Gap.w4,
-                                                                        AppText
-                                                                            .caption(
-                                                                          '(${rating.ratingsCount})',
-                                                                          color: Colors
-                                                                              .grey
-                                                                              .shade600,
-                                                                          fontSize:
-                                                                              11.sp,
-                                                                        ),
-                                                                      ],
-                                                                    ],
-                                                                  ),
-                                                                  loading: () =>
-                                                                      SizedBox(
-                                                                    width: 14.w,
-                                                                    height:
-                                                                        14.w,
-                                                                    child:
-                                                                        CircularProgressIndicator(
-                                                                      strokeWidth:
-                                                                          2,
-                                                                      valueColor:
-                                                                          AlwaysStoppedAnimation<
-                                                                              Color>(
-                                                                        AppColors
-                                                                            .primary,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                  error: (_,
-                                                                          __) =>
-                                                                      const SizedBox
-                                                                          .shrink(),
-                                                                ),
-                                                          ],
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            AppColors.primary,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(12.r),
-                                                      ),
-                                                      child: IconButton(
-                                                        icon: Icon(
-                                                          PhosphorIconsRegular.phone,
-                                                          color: Colors.white,
-                                                          size: 20.w,
-                                                        ),
-                                                        onPressed: () {
-                                                          if (delivery
-                                                                  .deliveryAgent
-                                                                  ?.phone !=
-                                                              null) {
-                                                            final phoneNumber =
-                                                                delivery
-                                                                    .deliveryAgent!
-                                                                    .phone!
-                                                                    .toString()
-                                                                    .trim();
-
-                                                            try {
-                                                              // Handle international format (+234...)
-                                                              // Use makePhoneCall directly for international format
-                                                              if (phoneNumber
-                                                                  .startsWith(
-                                                                      '+')) {
-                                                                makePhoneCall(
-                                                                    phoneNumber);
-                                                              } else {
-                                                                // Handle local format, validate and format
-                                                                final validatedPhone =
-                                                                    validateAndFormatPhoneNumber(
-                                                                        phoneNumber);
-                                                                if (validatedPhone !=
-                                                                    null) {
-                                                                  makePhoneCall(
-                                                                      validatedPhone);
-                                                                } else {
-                                                                  AppStatusDialogs.showError(
-                                                                      context,
-                                                                      'Invalid Format',
-                                                                      'Invalid phone number format.');
-                                                                }
-                                                              }
-                                                            } catch (e) {
-                                                              AppStatusDialogs
-                                                                  .showError(
-                                                                      context,
-                                                                      'Call Failed',
-                                                                      'Unable to make phone call. Please try again.');
-                                                            }
-                                                          } else {
-                                                            AppStatusDialogs.showError(
-                                                                context,
-                                                                'No Phone Number',
-                                                                'Phone number not available.');
-                                                          }
-                                                        },
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              Gap.h16,
-                                            ],
-
-                                            // Order Summary Card (clickable)
-                                            GestureDetector(
-                                              onTap: () {
-                                                if (delivery.products != null &&
-                                                    delivery
-                                                        .products!.isNotEmpty) {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          ProductsOrderedModal(
-                                                        products:
-                                                            delivery.products!,
-                                                      ),
-                                                    ),
-                                                  );
-                                                } else {
-                                                  AppStatusDialogs.showError(
-                                                      context,
-                                                      'No Products',
-                                                      'No products available for this order.');
-                                                }
-                                              },
-                                              child: _EnhancedCard(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Container(
-                                                          padding:
-                                                              EdgeInsets.all(
-                                                                  12.w),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: AppColors
-                                                                .primary
-                                                                .withOpacity(
-                                                                    0.1),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12.r),
-                                                          ),
-                                                          child: Icon(
-                                                            Icons
-                                                                .shopping_cart_outlined,
-                                                            color: AppColors
-                                                                .primary,
-                                                            size: 24.w,
-                                                          ),
-                                                        ),
-                                                        Gap.w16,
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              AppText.caption(
-                                                                'Order Summary',
-                                                                color: Colors
-                                                                    .grey
-                                                                    .shade600,
-                                                                fontSize: 11.sp,
-                                                              ),
-                                                              Gap.h4,
-                                                              AppText.body(
-                                                                '${delivery.totalItemsOrdered} Items',
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize: 16.sp,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        Icon(
-                                                          PhosphorIconsRegular.caretRight,
-                                                          color: Colors
-                                                              .grey.shade400,
-                                                          size: 24.w,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    Gap.h16,
-                                                    Divider(
-                                                      height: 1,
-                                                      color:
-                                                          Colors.grey.shade200,
-                                                    ),
-                                                    Gap.h12,
-                                                    // Item Amount
-                                                    Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        AppText.body(
-                                                          'Item Amount',
-                                                          color: Colors
-                                                              .grey.shade600,
-                                                          fontSize: 14.sp,
-                                                        ),
-                                                        AppText.body(
-                                                          (delivery.amount ??
-                                                                  0.0)
-                                                              .toMoney(),
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 14.sp,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    Gap.h8,
-                                                    // Delivery Fee
-                                                    Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        AppText.body(
-                                                          'Delivery Fee',
-                                                          color: Colors
-                                                              .grey.shade600,
-                                                          fontSize: 14.sp,
-                                                        ),
-                                                        AppText.body(
-                                                          (delivery.deliveryFee ??
-                                                                  0.0)
-                                                              .toMoney(),
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 14.sp,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    Gap.h12,
-                                                    Divider(
-                                                      height: 1,
-                                                      color:
-                                                          Colors.grey.shade200,
-                                                    ),
-                                                    Gap.h12,
-                                                    // Total Amount
-                                                    Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        AppText.body(
-                                                          'Total Amount',
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16.sp,
-                                                        ),
-                                                        AppText.h5(
-                                                          delivery.totalAmount!
-                                                              .toMoney(),
-                                                          color:
-                                                              AppColors.primary,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 18.sp,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    // Gap.h24,
-                                                    // // Cancel Order Button
-                                                    // if (delivery.status
-                                                    //             ?.toLowerCase() ==
-                                                    //         'pending' &&
-                                                    //     delivery.deliveryAgent ==
-                                                    //         null)
-                                                    //   SizedBox(
-                                                    //     width: double.infinity,
-                                                    //     child: AppButton.outline(
-                                                    //       title: 'Cancel Order',
-                                                    //       textColor: Colors.red,
-                                                    //       outlineColor: Colors.red,
-                                                    //       onTap: () {
-                                                    //         AppStatusDialogs
-                                                    //             .showConfirmation(
-                                                    //           context,
-                                                    //           title: 'Cancel Order',
-                                                    //           message:
-                                                    //               'Are you sure you want to cancel this order? The amount will be reversed to your wallet.',
-                                                    //           confirmText:
-                                                    //               'Confirm',
-                                                    //           cancelText:
-                                                    //               'No, Keep',
-                                                    //           onConfirm: () async {
-                                                    //             ref
-                                                    //                 .read(isCancellingProvider.notifier)
-                                                    //                 .state = true;
-
-                                                    //             final success = await ref
-                                                    //                 .read(deliveryDetailsViewModelProvider
-                                                    //                     .notifier)
-                                                    //                 .cancelOrder(delivery.id!);
-
-                                                    //             ref
-                                                    //                 .read(isCancellingProvider.notifier)
-                                                    //                 .state = false;
-
-                                                    //             if (success) {
-                                                    //               if (context.mounted) {
-                                                    //                 AppStatusDialogs.showSuccess(
-                                                    //                   context,
-                                                    //                   'Order Cancelled',
-                                                    //                   'Your order has been cancelled successfully.',
-                                                    //                 );
-                                                    //               }
-                                                    //             } else {
-                                                    //               if (context.mounted) {
-                                                    //                 AppStatusDialogs.showError(
-                                                    //                   context,
-                                                    //                   'Cancellation Failed',
-                                                    //                   'Failed to cancel order. Please try again.',
-                                                    //                 );
-                                                    //               }
-                                                    //             }
-                                                    //           },
-                                                    //         );
-                                                    //       },
-                                                    //     ),
-                                                    //   ),
-                                                    // Gap.h32, // Extra padding at bottom
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            Gap.h16,
-
-                                            // Location Card
-                                            _EnhancedCard(
-                                              child: Column(
-                                                children: [
-                                                  _EnhancedLocationInfo(
-                                                    icon: PhosphorIconsRegular.storefront,
-                                                    iconColor: Colors.green,
-                                                    title:
-                                                        'Pick-up Location (Store)',
-                                                    address: delivery
-                                                            .store?.address ??
-                                                        'N/A',
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                            vertical: 16.h),
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                            width: 8.w +
-                                                                8.w), // Half of container padding + half of icon container size (8.w padding + ~17w for half the container)
-                                                        Container(
-                                                          width: 2.w,
-                                                          height: 40.h,
-                                                          decoration:
-                                                              const BoxDecoration(
-                                                            gradient:
-                                                                LinearGradient(
-                                                              colors: [
-                                                                Colors.green,
-                                                                AppColors
-                                                                    .primary
-                                                              ],
-                                                              begin: Alignment
-                                                                  .topCenter,
-                                                              end: Alignment
-                                                                  .bottomCenter,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  _EnhancedLocationInfo(
-                                                    icon: PhosphorIconsRegular.mapPin,
-                                                    iconColor:
-                                                        AppColors.primary,
-                                                    title: 'Drop-off Location',
-                                                    address: delivery
-                                                            .dropoffLocation ??
-                                                        'N/A',
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Gap.h16,
-
-                                            // Delivery Code Card
-                                            _EnhancedCard(
-                                              child: Container(
-                                                padding: EdgeInsets.all(16.w),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.primary
-                                                      .withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          12.r),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Icon(
-                                                          PhosphorIconsRegular.lock,
-                                                          color:
-                                                              AppColors.primary,
-                                                          size: 20.w,
-                                                        ),
-                                                        Gap.w8,
-                                                        AppText.body(
-                                                          'Delivery Code',
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    AppText.h4(
-                                                      delivery.orderOtp
-                                                          .toString(),
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: AppColors.primary,
-                                                      fontSize: 20.sp,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            Gap.h24,
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                                loading: () => Padding(
-                                  padding: EdgeInsets.all(40.w),
-                                  child: const Center(
-                                      child: DotSpinningIndicator()),
-                                ),
-                                error: (err, stack) => Padding(
-                                  padding: EdgeInsets.all(40.w),
-                                  child: Center(
-                                    child: Column(
-                                      children: [
-                                        Icon(PhosphorIconsRegular.warningCircle,
-                                            size: 48.w, color: Colors.red),
-                                        Gap.h16,
-                                        Text(
-                                          'Unable to load order details',
-                                          style: TextStyle(
-                                            color: Colors.red,
-                                            fontSize: 14.sp,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
             ),
-          ),
-        ));
-  }
-}
-
-class _EnhancedCard extends StatelessWidget {
-  const _EnhancedCard({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1.w,
+          ],
         ),
       ),
-      child: child,
     );
   }
 }
 
-class _EnhancedLocationInfo extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String address;
+/// Where the rider collects from. The store's own address when the server
+/// populated the store; otherwise the pickup the order was written with.
+String? _pickupOf(DeliveryModel delivery) {
+  final storeAddress = delivery.store?.address?.trim();
+  if (storeAddress != null && storeAddress.isNotEmpty) return storeAddress;
+  return delivery.pickupLocation;
+}
 
-  const _EnhancedLocationInfo({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.address,
-  });
+// ---------------------------------------------------------------------------
+// Sheet body
+// ---------------------------------------------------------------------------
+
+class _SheetBody extends StatelessWidget {
+  const _SheetBody({required this.delivery});
+
+  final DeliveryModel delivery;
+
+  /// `Store order · Express · 3 items` — only the parts the order carries.
+  String get _subtitle {
+    final parts = <String>['Store order'];
+    final type = delivery.deliveryType?.trim();
+    if (type != null && type.isNotEmpty) parts.add(orderTitleCase(type));
+    final count = delivery.totalItemsOrdered;
+    if (count > 0) parts.add(count == 1 ? '1 item' : '$count items');
+    return parts.join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: EdgeInsets.all(8.w),
-          decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
-            shape: BoxShape.circle,
+    final status = OrderStatus.parse(delivery.status);
+    final agent = delivery.deliveryAgent;
+    final showAgent = agent != null && status.kind != OrderStatusKind.delivered;
+    final products = delivery.products ?? const <ProductModel>[];
+    final store = delivery.store;
+    final amount = delivery.amount;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        4.h,
+        20.w,
+        20.h + MediaQuery.paddingOf(context).bottom,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OrderHeaderCard(
+            delivery: delivery,
+            status: status,
+            subtitle: _subtitle,
           ),
-          child: Icon(icon, color: iconColor, size: 18.w),
-        ),
+          Gap.h12,
+          if (showAgent) ...[
+            OrderAgentCard(
+              agent: agent,
+              // The same person is a shopper while the goods are being bought
+              // and a rider once they are on the road; the server's status is
+              // what says which.
+              label: status.kind == OrderStatusKind.withShopper
+                  ? 'Your shopper'
+                  : 'Your rider',
+            ),
+            Gap.h12,
+          ],
+          if (products.isNotEmpty) ...[
+            _ItemsCard(products: products, currency: delivery.currency),
+            Gap.h12,
+          ],
+          OrderDetailCard(
+            child: OrderRouteLine(stops: [
+              OrderStop(
+                label: 'Pick-up',
+                title: store?.name,
+                address: _pickupOf(delivery),
+                isOrigin: true,
+              ),
+              OrderStop(
+                label: 'Drop-off',
+                address: delivery.dropoffLocation,
+              ),
+            ]),
+          ),
+          Gap.h12,
+          OrderSummaryCard(
+            delivery: delivery,
+            subtotal: amount == null ? null : Money(amount, delivery.currency),
+          ),
+          if (delivery.orderOtp != null &&
+              status.isOnTrack &&
+              status.kind != OrderStatusKind.delivered) ...[
+            Gap.h12,
+            OrderDeliveryCode(code: delivery.orderOtp!),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Items — what was bought
+// ---------------------------------------------------------------------------
+
+/// The goods, one row each: what it is, how many, and what that line cost.
+/// The detail endpoint populates each product's title, price and photo; where
+/// an older record carries only ids, the row still shows the quantity so the
+/// count on the card stays true.
+class _ItemsCard extends StatelessWidget {
+  const _ItemsCard({required this.products, required this.currency});
+
+  final List<ProductModel> products;
+  final Currency currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = products.fold<int>(0, (sum, p) => sum + (p.quantity ?? 0));
+
+    return OrderDetailCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(child: OrderDetailLabel('Items')),
+              AppText.caption(
+                count == 1 ? '1 item' : '$count items',
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: VinkolPalette.neutral500,
+              ),
+            ],
+          ),
+          Gap.h12,
+          for (var i = 0; i < products.length; i++) ...[
+            if (i > 0) ...[Gap.h10, const OrderHairline(), Gap.h10],
+            _ItemRow(product: products[i], currency: currency),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ItemRow extends StatelessWidget {
+  const _ItemRow({required this.product, required this.currency});
+
+  final ProductModel product;
+  final Currency currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = product.title?.trim();
+    final quantity = product.quantity ?? 1;
+    final price = product.price;
+    final lineTotal = price == null ? null : Money(price * quantity, currency);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _ItemThumbnail(imageUrl: product.imageUrl),
         Gap.w12,
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText.caption(
-                title,
-                color: Colors.grey.shade600,
-                fontSize: 11.sp,
-              ),
-              Gap.h4,
               AppText.body(
-                address,
-                fontSize: 14.sp,
+                title == null || title.isEmpty ? 'Item' : title,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: VinkolPalette.neutral900,
+                maxLines: 2,
+                lineHeight: 1.3,
+              ),
+              Gap.h2,
+              AppText.caption(
+                price == null
+                    ? 'Qty $quantity'
+                    : 'Qty $quantity · ${Money(price, currency).format()}',
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
+                color: VinkolPalette.neutral500,
+                maxLines: 1,
               ),
             ],
           ),
         ),
+        if (lineTotal != null) ...[
+          Gap.w12,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppText.body(
+                lineTotal.currency.symbol,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: VinkolPalette.neutral500,
+              ),
+              AppText.h3(
+                lineTotal.format(showSymbol: false),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: VinkolPalette.neutral900,
+              ),
+            ],
+          ),
+        ],
       ],
+    );
+  }
+}
+
+/// The product photo on a tinted ground, or a bag glyph on the same ground
+/// when the record has none — so every row keeps the same left edge.
+class _ItemThumbnail extends StatelessWidget {
+  const _ItemThumbnail({required this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = imageUrl?.trim();
+    final placeholder = Icon(
+      PhosphorIconsRegular.bag,
+      size: 20.w,
+      color: VinkolPalette.neutral400,
+    );
+
+    return Container(
+      width: 44.w,
+      height: 44.w,
+      decoration: BoxDecoration(
+        color: VinkolPalette.neutral50,
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url == null || url.isEmpty
+          ? placeholder
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => placeholder,
+            ),
     );
   }
 }

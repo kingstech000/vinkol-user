@@ -8,6 +8,7 @@ import 'package:starter_codes/features/delivery/model/rider_rating_model.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class RiderRatingBottomSheet extends ConsumerStatefulWidget {
@@ -61,11 +62,8 @@ class _RiderRatingBottomSheetState
 
   Future<void> _submitRating() async {
     if (_selectedRating == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a rating'),
-        ),
-      );
+      AppStatusDialogs.showError(
+          context, 'Rating required', 'Please select a rating.');
       return;
     }
 
@@ -85,24 +83,15 @@ class _RiderRatingBottomSheetState
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text('Rating submitted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppStatusDialogs.showSuccess(
+            context, 'Thank you', 'Rating submitted successfully.');
         // Refresh the rating display
         ref.invalidate(riderRatingProvider(widget.riderId));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit rating: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppStatusDialogs.showError(
+            context, 'Rating failed', 'Failed to submit rating: ${e.toString()}');
       }
     } finally {
       if (mounted) {

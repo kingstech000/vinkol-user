@@ -38,6 +38,13 @@ enum Country {
 /// is the safest thing to send — so a market with a single option sends nothing
 /// at all rather than naming it.
 extension MarketRules on Country {
+  /// The currency this market trades in. Every market has exactly one, so a
+  /// record that names its country but not its currency is not ambiguous.
+  Currency get currency => switch (this) {
+        Country.ng => Currency.ngn,
+        Country.ca => Currency.cad,
+      };
+
   /// The payment sources this market accepts, in the order to offer them.
   ///
   /// Sending one the market does not offer is a 400 naming it, e.g.

@@ -255,15 +255,24 @@ class SignupRequest {
   final String email;
   final String password;
 
+  /// The market the account is created in.
+  ///
+  /// Account-level only: it seeds the customer's input affordances and is not
+  /// what an order is priced in — the server still resolves an order's market
+  /// from its pickup coordinates.
+  final Country country;
+
   SignupRequest({
     required this.email,
     required this.password,
+    required this.country,
   });
   // Converts this SignupRequest object into a JSON-compatible Map.
   Map<String, dynamic> toJson() {
     return {
       'email': email,
       'password': password,
+      'country': country.code,
     };
   }
 
@@ -273,6 +282,7 @@ class SignupRequest {
     return SignupRequest(
       email: json['email'] as String,
       password: json['password'] as String,
+      country: Country.fromCode(json['country'] as String?),
     );
   }
 
@@ -280,13 +290,12 @@ class SignupRequest {
   SignupRequest copyWith({
     String? email,
     String? password,
-    String? firstName,
-    String? lastName,
-    String? phoneNumber,
+    Country? country,
   }) {
     return SignupRequest(
       email: email ?? this.email,
       password: password ?? this.password,
+      country: country ?? this.country,
     );
   }
 }

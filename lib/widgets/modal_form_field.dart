@@ -17,6 +17,8 @@ class ModalFormField extends StatefulWidget {
     this.textColor,
     this.modalHeightFactor = 0.6,
     this.enableSearch = false,
+    this.fillColor,
+    this.outlineColor,
   });
 
   final String title;
@@ -29,6 +31,11 @@ class ModalFormField extends StatefulWidget {
   final Function(String)? onOptionSelected;
   final double modalHeightFactor;
   final bool enableSearch;
+
+  /// Forwarded to the underlying field so the picker cannot drift away from
+  /// the surface treatment of the form it sits in.
+  final Color? fillColor;
+  final Color? outlineColor;
 
   @override
   State<ModalFormField> createState() => _ModalFormFieldState();
@@ -200,6 +207,8 @@ class _ModalFormFieldState extends State<ModalFormField> {
     // other field in the form for free, and cannot drift away from them.
     return AppTextField(
       controller: widget.controller,
+      fillColor: widget.fillColor,
+      outlineColor: widget.outlineColor,
       readOnly: true,
       onTap: enabled ? _showOptionsModal : null,
       hint: widget.title,

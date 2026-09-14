@@ -9,7 +9,6 @@ import 'package:starter_codes/features/delivery/view/widget/custom_tab_bar.dart'
 import 'package:starter_codes/features/delivery/view/widget/delivery_list_view.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_view_model.dart';
 import 'package:starter_codes/widgets/app_button.dart';
-import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/empty_content.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/features/delivery/view/screen/download_report_screen.dart';
@@ -148,7 +147,8 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                 ),
               );
             },
-            child: Icon(PhosphorIconsRegular.downloadSimple, color: AppColors.blue, size: 20.w),
+            child: Icon(PhosphorIconsRegular.downloadSimple,
+                color: AppColors.blue, size: 20.w),
           )
         ],
       ),
@@ -195,7 +195,6 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
     // Calculate summary statistics
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SizedBox(
         width: double.infinity,
         height: double.infinity,
@@ -204,7 +203,6 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
             children: [
               _buildHeader(),
               CustomTabBar(tabController: _tabController),
-              Gap.h8,
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
@@ -215,7 +213,9 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                       onRefresh: () => _onRefresh(OrderTabType.packageDelivery),
                       child: deliveryViewModel.isLoadingPackageDeliveries &&
                               displayPackageDeliveries.isEmpty
-                          ? const Center(child: DotSpinningIndicator())
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                  color: AppColors.primary))
                           : deliveryViewModel.packageDeliveryError != null
                               ? _buildErrorWidget(
                                   deliveryViewModel.packageDeliveryError,
@@ -242,7 +242,9 @@ class _DeliveryScreenState extends ConsumerState<DeliveryScreen>
                       onRefresh: () => _onRefresh(OrderTabType.storeDelivery),
                       child: deliveryViewModel.isLoadingStoreDeliveries &&
                               displayStoreDeliveries.isEmpty
-                          ? const Center(child: DotSpinningIndicator())
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                  color: AppColors.primary))
                           : deliveryViewModel.storeDeliveryError != null
                               ? _buildErrorWidget(
                                   deliveryViewModel.storeDeliveryError,

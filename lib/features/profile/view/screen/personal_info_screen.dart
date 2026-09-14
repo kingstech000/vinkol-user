@@ -1,22 +1,22 @@
 // lib/features/profile/view/screens/personal_info_screen.dart
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/core/utils/text.dart';
-import 'package:starter_codes/provider/user_provider.dart'; // To get initial user data
+import 'package:starter_codes/features/profile/view/widget/settings_group.dart';
+import 'package:starter_codes/features/profile/view_model/personal_info_view_model.dart';
+import 'package:starter_codes/provider/market_provider.dart';
+import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/app_textfield.dart';
 import 'package:starter_codes/widgets/gap.dart';
-import 'package:starter_codes/features/profile/view_model/personal_info_view_model.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/widgets/modal_form_field.dart';
 import 'package:starter_codes/widgets/phone_number_input.dart';
-import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class PersonalInfoScreen extends ConsumerStatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -28,14 +28,10 @@ class PersonalInfoScreen extends ConsumerStatefulWidget {
 class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   late final TextEditingController _firstNameController;
   late final TextEditingController _lastNameController;
-  late final TextEditingController _emailController;
   late final TextEditingController _stateController;
 
-  /// The values this screen opened with. Used to tell a real edit from a tap,
-  /// so we never send an update request that changes nothing.
   late final PersonalInfoState _initial;
 
-  /// Errors stay hidden until the first save attempt, then track every keystroke.
   bool _submitted = false;
 
   @override
@@ -48,10 +44,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
         TextEditingController(text: initialPersonalInfo.firstname);
     _lastNameController =
         TextEditingController(text: initialPersonalInfo.lastname);
-    _emailController = TextEditingController(text: initialPersonalInfo.email);
-    _stateController =
-        TextEditingController(text: initialPersonalInfo.address);
+    _stateController = TextEditingController(text: initialPersonalInfo.address);
 
+    // No email controller: the address is not editable here and is not part of
+    // the update payload, so it is read straight off the account.
     _firstNameController.addListener(() {
       ref
           .read(personalInfoViewModelProvider.notifier)
@@ -61,11 +57,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
       ref
           .read(personalInfoViewModelProvider.notifier)
           .updateLastName(_lastNameController.text);
-    });
-    _emailController.addListener(() {
-      ref
-          .read(personalInfoViewModelProvider.notifier)
-          .updateEmail(_emailController.text);
     });
     _stateController.addListener(() {
       ref
@@ -78,7 +69,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
-    _emailController.dispose();
     _stateController.dispose();
     super.dispose();
   }
@@ -87,41 +77,55 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.white,
-      builder: (BuildContext context) {
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: EdgeInsets.all(16.w),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: AppText.body(
-                    'Profile photo',
-                    fontWeight: FontWeight.w600,
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.lightgrey,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
-                Gap.h8,
-                ListTile(
-                  leading: const Icon(PhosphorIconsRegular.camera),
-                  title: AppText.body('Take a picture'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ref
-                        .read(personalInfoViewModelProvider.notifier)
-                        .pickImage(ImageSource.camera);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(PhosphorIconsRegular.images),
-                  title: AppText.body('Choose from gallery'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ref
-                        .read(personalInfoViewModelProvider.notifier)
-                        .pickImage(ImageSource.gallery);
-                  },
+                Gap.h20,
+                AppText.h4('Profile photo'),
+                Gap.h20,
+                SettingsGroup(
+                  children: [
+                    SettingsRow(
+                      icon: PhosphorIconsRegular.camera,
+                      title: 'Take a picture',
+                      affordance: RowAffordance.none,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        ref
+                            .read(personalInfoViewModelProvider.notifier)
+                            .pickImage(ImageSource.camera);
+                      },
+                    ),
+                    SettingsRow(
+                      icon: PhosphorIconsRegular.images,
+                      title: 'Choose from gallery',
+                      affordance: RowAffordance.none,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        ref
+                            .read(personalInfoViewModelProvider.notifier)
+                            .pickImage(ImageSource.gallery);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -172,35 +176,36 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
 
   String? _phoneError(PersonalInfoState state) {
     if (!_submitted) return null;
+    // The expected length is the market's, not Nigeria's. Both markets happen
+    // to want ten digits today, which is exactly why hardcoding it would go
+    // unnoticed until the third market.
+    final expected = ref.read(marketProfileProvider).localPhoneDigits;
     final digits = _localPhoneDigits(state.phoneNumber);
     if (digits.isEmpty) return 'Enter your phone number';
-    if (digits.length != 10) {
-      return 'Enter a 10-digit phone number';
+    if (digits.length != expected) {
+      return 'Enter a $expected-digit phone number';
     }
     return null;
   }
 
-  String? _stateError(PersonalInfoState state) {
+  String? _stateError(PersonalInfoState state, String regionLabel) {
     if (!_submitted) return null;
-    if (state.address.trim().isEmpty) return 'Select your state';
+    if (state.address.trim().isEmpty) {
+      return 'Select your ${regionLabel.toLowerCase()}';
+    }
     return null;
   }
 
-  bool _hasErrors(PersonalInfoState state) =>
+  bool _hasErrors(PersonalInfoState state, String regionLabel) =>
       _firstNameError(state) != null ||
       _lastNameError(state) != null ||
       _phoneError(state) != null ||
-      _stateError(state) != null;
+      _stateError(state, regionLabel) != null;
 
-  Future<void> _submit(PersonalInfoState state) async {
+  Future<void> _submit(PersonalInfoState state, String regionLabel) async {
     FocusScope.of(context).unfocus();
     setState(() => _submitted = true);
-    if (_hasErrors(state)) return;
-    // Success is taken from the return value rather than from state: saving
-    // refreshes the user, which rebuilds the view model's provider and
-    // disposes the notifier before it can publish a success message. Failures
-    // are set while the notifier is still alive, so ref.listen below still
-    // announces those.
+    if (_hasErrors(state, regionLabel)) return;
     final updated =
         await ref.read(personalInfoViewModelProvider.notifier).updateProfile();
     if (!mounted || !updated) return;
@@ -212,23 +217,14 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     );
   }
 
-  String _initials(PersonalInfoState state) {
-    final first = state.firstname.trim();
-    final last = state.lastname.trim();
-    final buffer = StringBuffer();
-    if (first.isNotEmpty) buffer.write(first[0]);
-    if (last.isNotEmpty) buffer.write(last[0]);
-    return buffer.toString().toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     final personalInfoState = ref.watch(personalInfoViewModelProvider);
     final profile = ref.watch(marketProfileProvider);
     final currentUser = ref.watch(userProvider);
 
-    // Local pick wins, then the stored avatar, then initials. No network round
-    // trip just to render an empty state.
+    // Local pick wins, then the stored avatar, then the person glyph. No
+    // network round trip just to render an empty state.
     ImageProvider<Object>? displayImageProvider;
     if (personalInfoState.profileImage != null) {
       displayImageProvider = FileImage(personalInfoState.profileImage!);
@@ -237,7 +233,6 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
       displayImageProvider = NetworkImage(currentUser.avatar!.imageUrl);
     }
 
-    final initials = _initials(personalInfoState);
     final dirty = _isDirty(personalInfoState);
 
     ref.listen<PersonalInfoState>(personalInfoViewModelProvider,
@@ -249,30 +244,26 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
     });
 
     return Scaffold(
-      appBar: MiniAppBar(
-        title: 'Personal Info',
-      ),
+      appBar: MiniAppBar(title: 'Personal info'),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.w),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: _AvatarPicker(
-                image: displayImageProvider,
-                initials: initials,
-                onTap: _showImagePickerOptions,
-              ),
+            _PhotoField(
+              image: displayImageProvider,
+              hasPhoto: displayImageProvider != null,
+              onTap: _showImagePickerOptions,
             ),
-            Gap.h32,
-            const _SectionHeader('Your name'),
-            Gap.h12,
+            Gap.h28,
             _Field(
               label: 'First name',
               error: _firstNameError(personalInfoState),
               child: AppTextField(
                 controller: _firstNameController,
                 hint: 'First name',
+                fillColor: AppColors.white,
+                outlineColor: AppColors.lightgrey,
                 textCapitalization: TextCapitalization.words,
                 autofillHints: const [AutofillHints.givenName],
               ),
@@ -284,13 +275,13 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
               child: AppTextField(
                 controller: _lastNameController,
                 hint: 'Last name',
+                fillColor: AppColors.white,
+                outlineColor: AppColors.lightgrey,
                 textCapitalization: TextCapitalization.words,
                 autofillHints: const [AutofillHints.familyName],
               ),
             ),
             Gap.h28,
-            const _SectionHeader('How we reach you'),
-            Gap.h12,
             _Field(
               label: 'Phone number',
               error: _phoneError(personalInfoState),
@@ -303,32 +294,23 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                       .updatePhoneNumber(fullPhoneNumber);
                 },
                 enabled: true,
-                hint: 'Enter phone number',
+                hint: profile.phoneExample,
               ),
             ),
             Gap.h16,
             _Field(
               label: 'Email',
-              helper: 'Your email cannot be changed here. Contact support to '
-                  'update it.',
-              child: AppTextField(
-                controller: _emailController,
-                hint: 'Email',
-                keyboardType: TextInputType.emailAddress,
-                enabled: false,
-                suffixIcon: Icon(
-                  PhosphorIconsRegular.lock,
-                  size: 18.w,
-                  color: AppColors.darkgrey,
-                ),
+              helper: 'Contact support to change the address on your account.',
+              child: _ReadOnlyValue(
+                value: personalInfoState.email.isNotEmpty
+                    ? personalInfoState.email
+                    : currentUser?.email ?? '',
               ),
             ),
             Gap.h28,
-            const _SectionHeader('Where you are'),
-            Gap.h12,
             _Field(
               label: profile.regionLabel,
-              error: _stateError(personalInfoState),
+              error: _stateError(personalInfoState, profile.regionLabel),
               child: ModalFormField(
                 controller: _stateController,
                 title: 'Select ${profile.regionLabel}',
@@ -336,36 +318,47 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 modalHeightFactor: 0.9,
                 onOptionSelected: _onStateSelected,
                 enableSearch: true,
+                fillColor: AppColors.white,
+                outlineColor: AppColors.lightgrey,
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!dirty && !personalInfoState.isLoading) ...[
-                AppText.caption(
-                  'Nothing to save yet. Edit a field to continue.',
-                  color: AppColors.darkgrey,
-                  textAlign: TextAlign.center,
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          border: BorderDirectional(
+            top: BorderSide(color: AppColors.lightgrey),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!dirty && !personalInfoState.isLoading) ...[
+                  AppText.caption(
+                    'Nothing to save yet. Edit a field to continue.',
+                    color: AppColors.darkgrey,
+                    fontSize: 13,
+                    textAlign: TextAlign.center,
+                  ),
+                  Gap.h8,
+                ],
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton.primary(
+                    title: 'Save changes',
+                    loading: personalInfoState.isLoading,
+                    disable: !dirty,
+                    onTap: () =>
+                        _submit(personalInfoState, profile.regionLabel),
+                  ),
                 ),
-                Gap.h8,
               ],
-              SizedBox(
-                width: double.infinity,
-                child: AppButton.primary(
-                  title: 'Save changes',
-                  loading: personalInfoState.isLoading,
-                  onTap: (!dirty || personalInfoState.isLoading)
-                      ? null
-                      : () => _submit(personalInfoState),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -373,19 +366,123 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   }
 }
 
-/// A section heading. Groups the form so the screen reads as three short
-/// decisions rather than one undifferentiated stack of inputs.
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
+/// The photo, and the control that changes it, in one row.
+///
+/// It used to be a 88pt circle centred over a third of the screen, which left
+/// one and a half fields visible above the fold. Laid out like the identity
+/// card on the profile hub, it costs a quarter of the height and the two
+/// screens read as one flow.
+/// The photo, centred on the canvas with its action beneath it, rather than
+/// dressed up as a row in a card. It is the only thing on this screen that is a
+/// picture, so it is allowed to be one.
+class _PhotoField extends StatelessWidget {
+  const _PhotoField({
+    required this.image,
+    required this.hasPhoto,
+    required this.onTap,
+  });
 
-  final String title;
+  final ImageProvider<Object>? image;
+  final bool hasPhoto;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return AppText.body(
-      title,
-      color: AppColors.black,
-      fontWeight: FontWeight.w600,
+    // Both the photo and the label do the same thing, so they announce
+    // themselves to a screen reader once, as one button.
+    return Semantics(
+      button: true,
+      label: hasPhoto ? 'Change profile photo' : 'Add a profile photo',
+      excludeSemantics: true,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onTap,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.lightgrey),
+                  ),
+                  child: CircleAvatar(
+                    radius: 44,
+                    backgroundColor: AppColors.primary,
+                    foregroundImage: image,
+                    child: const Icon(
+                      PhosphorIconsFill.user,
+                      size: 36,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Gap.h12,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                customBorder: const StadiumBorder(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  child: AppText.body(
+                    hasPhoto ? 'Change photo' : 'Add a photo',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryText,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReadOnlyValue extends StatelessWidget {
+  const _ReadOnlyValue({required this.value});
+
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 45,
+      decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.darkgrey.withOpacity(.3))),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: AppText.body(
+              value,
+              fontSize: 15,
+              color: AppColors.darkgrey,
+              maxLines: 1,
+            ),
+          ),
+          Gap.w12,
+          const Icon(
+            PhosphorIconsRegular.lock,
+            size: 16,
+            color: AppColors.darkgrey,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -413,106 +510,67 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppText.caption(label, color: AppColors.darkgrey),
+        AppText.caption(
+          label,
+          color: AppColors.darkgrey,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
         Gap.h8,
         child,
         if (message != null) ...[
-          Gap.h4,
+          Gap.h6,
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (isError) ...[
-                Padding(
-                  padding: EdgeInsets.only(top: 2.w),
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
                   child: Icon(
                     PhosphorIconsRegular.warningCircle,
-                    size: 14.w,
-                    color: AppColors.red,
+                    size: 14,
+                    color: AppColors.redText,
                   ),
                 ),
                 Gap.w4,
               ],
               Expanded(
-                child: AppText.caption(
-                  message,
-                  color: isError ? AppColors.red : AppColors.darkgrey,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.blue.withOpacity(.1),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 3),
+                          child: Icon(
+                            Icons.info_outline,
+                            color: AppColors.blue,
+                            size: 10,
+                          ),
+                        ),
+                        Gap.w6,
+                        Expanded(
+                          child: AppText.free(
+                            message,
+                            fontSize: 12,
+                            lineHeight: 1.4,
+                            color: isError ? AppColors.redText : AppColors.blue,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ],
       ],
-    );
-  }
-}
-
-/// The avatar doubles as the control that changes it, so it carries a visible
-/// badge instead of relying on the user guessing that the circle is tappable.
-class _AvatarPicker extends StatelessWidget {
-  const _AvatarPicker({
-    required this.image,
-    required this.initials,
-    required this.onTap,
-  });
-
-  final ImageProvider<Object>? image;
-  final String initials;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Change profile photo',
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CircleAvatar(
-                  backgroundColor: AppColors.primary,
-                  radius: 44.r,
-                  backgroundImage: image,
-                  child: image == null
-                      ? (initials.isEmpty
-                          ? Icon(
-                              PhosphorIconsFill.user,
-                              size: 40.w,
-                              color: AppColors.white,
-                            )
-                          : AppText.h4(
-                              initials,
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w600,
-                            ))
-                      : null,
-                ),
-                PositionedDirectional(
-                  end: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(7.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.lightgrey),
-                    ),
-                    child: Icon(
-                      PhosphorIconsFill.camera,
-                      size: 14.w,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Gap.h8,
-            AppText.caption('Change photo', color: AppColors.primary),
-          ],
-        ),
-      ),
     );
   }
 }

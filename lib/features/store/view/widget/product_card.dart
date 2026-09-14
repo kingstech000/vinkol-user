@@ -1,253 +1,232 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:starter_codes/core/extensions/extensions.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
+import 'package:starter_codes/core/design/vinkol_space.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/store/model/store_model.dart';
+import 'package:starter_codes/features/store/view/widget/store_ui.dart';
 import 'package:starter_codes/provider/cart_provider.dart';
-import 'package:starter_codes/widgets/app_button.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/widgets/gap.dart';
 
+/// A product in the grid. Photo, name, price, and the one action — add, or
+/// adjust what is already in the basket. Tapping anywhere else opens the
+/// detail page.
 class ProductCard extends ConsumerWidget {
+  const ProductCard({super.key, required this.product});
+
   final StoreProduct product;
 
-  const ProductCard({
-    super.key,
-    required this.product,
-  });
+  /// Grid cell proportions: a square photo plus ~92pt of text and control.
+  static const aspectRatio = 0.62;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final int currentQuantity =
-        ref.watch(cartProvider.notifier).getProductQuantity(product);
+    final quantity = ref.watch(
+      cartProvider.select((cart) =>
+          cart.products
+              .where((item) => item.id == product.id)
+              .firstOrNull
+              ?.quantity ??
+          0),
+    );
+    final cart = ref.read(cartProvider.notifier);
+    final inStock = product.inStock;
+    final stock = product.inventory;
+    final atLimit = stock != null && quantity >= stock;
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      elevation: 3,
-      shadowColor: Colors.black.withOpacity(0.1),
-      color: AppColors.white,
-      child: InkWell(
-        onTap: () {
-          NavigationService.instance.navigateTo(
+    return Semantics(
+      button: true,
+      label: '${product.title}, ${product.unitPrice.format()}'
+          '${inStock ? '' : ', out of stock'}',
+      child: Material(
+        color: VinkolPalette.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: VinkolRadius.brMd,
+          side: BorderSide(color: VinkolPalette.neutral200),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => NavigationService.instance.navigateTo(
             NavigatorRoutes.productDetailScreen,
             argument: {'product': product},
-          );
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Image section - takes 50% of the card height
-            Expanded(
-              flex: 4,
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: CachedNetworkImage(
-                  imageUrl: product.image.imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  memCacheHeight: 600, // Optimize memory usage
-                  maxWidthDiskCache: 600, // Optimize disk usage
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[50],
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        strokeWidth: 2,
-                      ),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[100],
-                    child: const Icon(
-                      PhosphorIconsRegular.imageBroken,
-                      color: Colors.grey,
-                      size: 32,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Content section - takes 50% of the card height
-            Expanded(
-              flex: 6,
-              child: Container(
-                padding: const EdgeInsets.all(
-                    12.0), // Increased padding for better spacing
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    // Product title - give it more space
-                    Flexible(
-                      flex: 3, // More space for title
-                      child: Container(
-                        width: double.infinity,
-                        child: AppText.free(
-                          product.title,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16, // Larger font for better readability
-                          color: Colors.black87,
-                          maxLines: 3, // Allow up to 3 lines for longer titles
-                          overflow: TextOverflow.ellipsis,
-                          height: 1.3, // Better line height for readability
-                        ),
-                      ),
+                    ProductImage(
+                      url: product.image.imageUrl,
+                      borderRadius: BorderRadius.zero,
                     ),
-                    const SizedBox(height: 10), // More spacing
-                    // Price section
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        product.price.toString().toMoney(),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14, // Larger font
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10), // More spacing
-                    // Button section - fixed height (wrapped to prevent navigation)
-                    GestureDetector(
-                      onTap: () {
-                        // Stop event propagation - this prevents the parent InkWell from firing
-                      },
-                      child: SizedBox(
-                        height: 40, // Larger button for better touch target
-                        child: currentQuantity == 0
-                            ? AppButton.primary(
-                                onTap: () {
-                                  // Allow adding to cart - auth check will be done at payment
-                                  ref
-                                      .read(cartProvider.notifier)
-                                      .addProduct(product);
-                                },
-                                title: 'Add To Cart',
-                              )
-                            : _buildQuantityControls(
-                                context, ref, currentQuantity),
-                      ),
-                    ),
+                    if (!inStock)
+                      const _StockBanner(label: 'Out of stock')
+                    else if (stock != null && stock <= 5)
+                      _StockBanner(label: 'Only $stock left'),
                   ],
                 ),
               ),
-            ),
-          ],
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    VinkolSpace.md,
+                    VinkolSpace.sm + 2,
+                    VinkolSpace.md,
+                    VinkolSpace.md,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Two lines reserved, so the price sits on the same
+                      // baseline in every tile of a row.
+                      SizedBox(
+                        height: 38,
+                        child: AppText.body(
+                          product.title,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: inStock
+                              ? VinkolPalette.neutral900
+                              : VinkolPalette.neutral500,
+                          maxLines: 2,
+                          lineHeight: 1.3,
+                        ),
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: PriceText.small(product.unitPrice),
+                          ),
+                          Gap.w8,
+                          if (!inStock)
+                            const SizedBox.shrink()
+                          else if (quantity == 0)
+                            _AddButton(onTap: () => cart.addProduct(product))
+                          else
+                            QuantityStepper(
+                              compact: true,
+                              quantity: quantity,
+                              canIncrement: !atLimit,
+                              onIncrement: () => cart.addProduct(product),
+                              onDecrement: () => cart.removeProduct(product),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildQuantityControls(
-      BuildContext context, WidgetRef ref, int currentQuantity) {
+/// The add control at rest: a filled 44×36 block with a plus. Small enough
+/// to leave the price as the loudest thing on the tile.
+class _AddButton extends StatelessWidget {
+  const _AddButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Add to cart',
+      child: Material(
+        color: VinkolPalette.brand500,
+        borderRadius: VinkolRadius.brSm,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: const SizedBox(
+            width: 44,
+            height: 36,
+            child: Icon(
+              PhosphorIconsBold.plus,
+              size: 16,
+              color: VinkolPalette.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A word across the bottom of the photo. Text on a solid strip, never a
+/// colour wash — it has to read on any photo and in grayscale.
+class _StockBanner extends StatelessWidget {
+  const _StockBanner({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.bottomStart,
+      child: Container(
+        margin: const EdgeInsets.all(VinkolSpace.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: VinkolSpace.sm,
+          vertical: VinkolSpace.xs,
+        ),
+        decoration: const BoxDecoration(
+          color: VinkolPalette.neutral900,
+          borderRadius: VinkolRadius.brXs,
+        ),
+        child: AppText.caption(
+          label,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: VinkolPalette.white,
+        ),
+      ),
+    );
+  }
+}
+
+/// The tile's silhouette while products load.
+class ProductCardSkeleton extends StatelessWidget {
+  const ProductCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        color: VinkolPalette.white,
+        borderRadius: VinkolRadius.brMd,
+        border: Border.all(color: VinkolPalette.neutral200),
       ),
-      child: Row(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Decrease Button
-          Expanded(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  ref.read(cartProvider.notifier).removeProduct(product);
-                },
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  bottomLeft: Radius.circular(8),
-                ),
-                child: Container(
-                  height: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      bottomLeft: Radius.circular(8),
-                    ),
-                  ),
-                  child: const Icon(
-                    PhosphorIconsRegular.minus,
-                    color: AppColors.primary,
-                    size: 20, // Larger for better touch target
-                  ),
-                ),
-              ),
-            ),
+          const AspectRatio(
+            aspectRatio: 1,
+            child: SkeletonBox(borderRadius: BorderRadius.zero),
           ),
-
-          // Quantity Display
-          Container(
-            width: 1,
-            color: Colors.grey[300],
-          ),
-          Expanded(
-            flex: 2, // Give more space to the quantity display
-            child: Container(
-              color: Colors.grey[50],
-              child: Center(
-                child: Text(
-                  currentQuantity.toString(),
-                  style: const TextStyle(
-                    fontSize: 15, // Larger for better readability
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Container(
-            width: 1,
-            color: Colors.grey[300],
-          ),
-
-          // Increase Button
-          Expanded(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  // Allow increasing quantity - auth check will be done at payment
-                  ref.read(cartProvider.notifier).addProduct(product);
-                },
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
-                child: Container(
-                  height: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: const Icon(
-                    PhosphorIconsRegular.plus,
-                    color: AppColors.primary,
-                    size: 20, // Larger for better touch target
-                  ),
-                ),
-              ),
+          Padding(
+            padding: const EdgeInsets.all(VinkolSpace.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SkeletonBox(width: double.infinity, height: 14),
+                Gap.h6,
+                const SkeletonBox(width: 80, height: 14),
+                Gap.h12,
+                const SkeletonBox(width: 56, height: 16),
+              ],
             ),
           ),
         ],

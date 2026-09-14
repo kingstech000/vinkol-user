@@ -57,7 +57,7 @@ class PhoneNumberUtils {
         null;
   }
 
-  /// Groups the local part in threes for display, e.g. `+1 647 946 0011`.
+  /// Groups the local part in threes for display, e.g. `+1 647 573 2867`.
   static String formatForDisplay(String phoneNumber, String countryCode) {
     if (!phoneNumber.startsWith(countryCode)) return phoneNumber;
     final local = phoneNumber.substring(countryCode.length);

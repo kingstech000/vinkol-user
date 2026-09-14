@@ -26,6 +26,10 @@ class AppTextField extends StatefulWidget {
   final Color? focusColor;
   final Color? hintColor;
   final Color? borderColor;
+
+  /// Border drawn when the field is at rest. Null keeps the field borderless,
+  /// which is how every screen outside the profile form still renders.
+  final Color? outlineColor;
   final Function(String)? onSubmitted;
   final int? maxLength;
   final double? height;
@@ -35,7 +39,7 @@ class AppTextField extends StatefulWidget {
   final Widget? prefix;
   final EdgeInsets? padding;
   final TextCapitalization textCapitalization;
-  final EdgeInsets? contentPadding;
+  final EdgeInsetsGeometry? contentPadding;
   final bool enabled;
   final bool validCode;
   final Iterable<String>? autofillHints;
@@ -71,6 +75,7 @@ class AppTextField extends StatefulWidget {
     this.prefix,
     this.hintColor,
     this.borderColor,
+    this.outlineColor,
     this.contentPadding,
     this.isPassword = false,
     this.formatter = const [],
@@ -130,11 +135,11 @@ class _AppTextFieldState extends State<AppTextField> {
           obscureText: obscure,
           enabled: widget.enabled,
           decoration: InputDecoration(
-            fillColor: widget.fillColor ?? Colors.grey.shade200,
+            fillColor: Colors.transparent,
             focusColor: widget.focusColor,
             errorStyle: headingStyle6.copyWith(
-              color: AppColors.red,
-              fontSize: 14.sp,
+              color: AppColors.redText,
+              fontSize: 14,
             ),
             labelText: widget.labelText,
             suffixIconConstraints: BoxConstraints(maxHeight: 40.h),
@@ -154,32 +159,40 @@ class _AppTextFieldState extends State<AppTextField> {
                 : widget.suffixIcon,
             isDense: true,
             contentPadding: widget.contentPadding ??
-                EdgeInsets.only(top: 10.h, bottom: 15.h, left: 20.w),
+                const EdgeInsetsDirectional.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
             hintText: widget.hint,
             hintStyle: widget.hintStyle ??
                 headingStyle6.copyWith(
                   color: AppColors.black.withOpacity(0.35),
-                  fontSize: 14.sp,
+                  fontSize: 14,
                 ),
             filled: true,
+
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10.r)),
-              borderSide: widget.validCode
-                  ? const BorderSide(color: AppColors.green)
-                  : BorderSide.none,
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                borderSide:
+                    BorderSide(color: AppColors.greyLight.withOpacity(.3))),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+              borderSide: widget.outlineColor == null
+                  ? BorderSide.none
+                  : BorderSide(color: widget.outlineColor!),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10.r)),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
               borderSide: BorderSide(
                 color: widget.borderColor ?? AppColors.primary,
               ),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10.r)),
-              borderSide: const BorderSide(color: AppColors.red),
+            errorBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderSide: BorderSide(color: AppColors.red),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10.r)),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
               borderSide: BorderSide(
                 color: widget.borderColor ?? AppColors.black,
               ),

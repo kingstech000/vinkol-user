@@ -20,6 +20,7 @@ class StoreService {
 
   /// Fetches a list of stores with optional filters.
   Future<StoreResponse> getStores({
+    Country? country,
     String? state,
     String? search,
     String? tags,
@@ -31,6 +32,10 @@ class StoreService {
         'page': page,
         'limit': limit,
       };
+
+      if (country != null) {
+        queryParameters['country'] = country.code;
+      }
 
       if (state != null && state.trim().isNotEmpty) {
         queryParameters['state'] = state.trim();
@@ -78,10 +83,20 @@ class StoreService {
   }
 
   /// Fetches a single store by its ID.
-  Future<SingleStoreData> getSingleStore(String storeId) async {
+  ///
+  /// [country] is the market the listing was fetched under. The server scopes
+  /// store records by market, so a store found under one country is not found
+  /// again without it.
+  Future<SingleStoreData> getSingleStore(
+    String storeId, {
+    Country? country,
+  }) async {
     try {
       final responseData = await _networkClient.get(
         '${ApiRoute.stores}/$storeId',
+        queryParameters: {
+          if (country != null) 'country': country.code,
+        },
       );
 
       logger.i('Single Store API response: $responseData');
@@ -255,10 +270,11 @@ class StoreService {
   /// Returns a list containing Internal (Express) and External (Priority/Chowdeck) quotes.
   Future<List<QuoteResponseModel>> fetchDeliveryQuote({
     required String storeId,
+    Country? country,
     required LocationModel dropoffLocation,
   }) async {
     // 1. Fetch Store Details to get Pickup Coordinates
-    final singleStoreData = await getSingleStore(storeId);
+    final singleStoreData = await getSingleStore(storeId, country: country);
     final store = singleStoreData.store;
 
     if (store.lat == null || store.lng == null) {

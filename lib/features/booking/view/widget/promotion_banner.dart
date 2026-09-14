@@ -1,8 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
+import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/core/utils/textstyles.dart';
+import 'package:starter_codes/widgets/gap.dart';
 
-// Main Promotion Banner with two states
+/// The loyalty promotion: a soft violet gradient card, title and subtitle on
+/// the start side, a gift illustration bleeding off the end edge with a
+/// tilted badge over it. One layout for both states — earned and in
+/// progress — so only the copy and the badge change. Compact enough to sit
+/// below the quick actions without pushing the screen into a scroll.
 class PromotionBanner extends StatelessWidget {
   final bool hasPromotion;
   final int completedBookings;
@@ -21,423 +30,207 @@ class PromotionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return hasPromotion
-        ? _PromotionEarnedBanner(
-            discountPercentage: discountPercentage,
-            onTap: onTap,
-          )
-        : _PromotionProgressBanner(
-            completedBookings: completedBookings,
-            requiredBookings: requiredBookings,
-            discountPercentage: discountPercentage,
-            onTap: onTap,
-          );
+    if (hasPromotion) {
+      return _GiftCard(
+        title: '$discountPercentage% off for you',
+        highlight: '$discountPercentage%',
+        subtitle: 'Valid on your next booking.\nBook now !!!',
+        badge: '$discountPercentage%',
+        semanticsLabel:
+            'Reward unlocked. $discountPercentage percent off your next booking. Book now.',
+        onTap: onTap,
+      );
+    }
+
+    final remaining = requiredBookings - completedBookings;
+    final remainingLabel =
+        remaining == 1 ? '1 more booking' : '$remaining more bookings';
+    return _GiftCard(
+      title: 'Unlock $discountPercentage% off',
+      highlight: '$discountPercentage%',
+      subtitle: 'Complete $remainingLabel to claim it.',
+      badge: '$completedBookings/$requiredBookings',
+      semanticsLabel:
+          '$remainingLabel to unlock $discountPercentage percent off. '
+          '$completedBookings of $requiredBookings bookings done. Start booking.',
+      onTap: onTap,
+    );
   }
 }
 
-// Banner when user HAS earned the promotion
-class _PromotionEarnedBanner extends StatelessWidget {
-  final int discountPercentage;
-  final VoidCallback? onTap;
-
-  const _PromotionEarnedBanner({
-    required this.discountPercentage,
+class _GiftCard extends StatelessWidget {
+  const _GiftCard({
+    required this.title,
+    required this.highlight,
+    required this.subtitle,
+    required this.badge,
+    required this.semanticsLabel,
     this.onTap,
   });
 
+  final String title;
+
+  /// The substring of [title] set in the brand blue — the discount figure.
+  final String highlight;
+  final String subtitle;
+  final String badge;
+  final String semanticsLabel;
+  final VoidCallback? onTap;
+
+  /// Width kept clear of text for the illustration and its badge.
+  static const double _artWidth = 120;
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFF10B981), // Emerald green
-              Color(0xFF059669), // Dark green
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Semantics(
+        button: true,
+        label: semanticsLabel,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(20.r),
+          clipBehavior: Clip.antiAlias,
+          child: Ink(
+            // The one place the promo hue is allowed a gradient: it is the
+            // reward surface, and the gradient is the two promo steps.
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  VinkolPalette.promoFill,
+                  Color.fromARGB(255, 53, 41, 73)
+                ],
+                begin: AlignmentDirectional.topStart,
+                end: AlignmentDirectional.bottomEnd,
+              ),
+            ),
+            child: InkWell(
+              onTap: onTap,
+              child: Stack(
+                children: [
+                  // Text. The end-side gap is reserved for the art.
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(
+                      20.w,
+                      20.h,
+                      0,
+                      20.h,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _HighlightedTitle(
+                                text: title,
+                                highlight: highlight,
+                              ),
+                              Gap.h4,
+                              AppText.body(
+                                subtitle,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: VinkolPalette.white,
+                                lineHeight: 1.3,
+                                maxLines: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: _artWidth),
+                      ],
+                    ),
+                  ),
+
+                  PositionedDirectional(
+                    end: -10,
+                    bottom: -20,
+                    child: ExcludeSemantics(
+                      child: Transform.rotate(
+                        angle: -8 * math.pi / 180,
+                        child: const Text(
+                          '🎁',
+                          style: TextStyle(fontSize: 88, height: 1),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // // Badge over the illustration.
+                  // PositionedDirectional(
+                  //   end: 86,
+                  //   bottom: 52,
+                  //   child: ExcludeSemantics(
+                  //     child: Transform.rotate(
+                  //       angle: -12 * math.pi / 180,
+                  //       child: Container(
+                  //         width: 44,
+                  //         height: 44,
+                  //         alignment: Alignment.center,
+                  //         decoration: const BoxDecoration(
+                  //           shape: BoxShape.circle,
+                  //           color: VinkolPalette.dangerFill,
+                  //         ),
+                  //         child: AppText.caption(
+                  //           badge,
+                  //           fontSize: 13,
+                  //           fontWeight: FontWeight.w800,
+                  //           color: VinkolPalette.white,
+                  //           maxLines: 1,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
+            ),
           ),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Stack(
-          children: [
-            // Decorative circles
-            Positioned(
-              top: -20,
-              right: -20,
-              child: Container(
-                width: 80.w,
-                height: 80.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -30,
-              left: -30,
-              child: Container(
-                width: 100.w,
-                height: 100.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
-                ),
-              ),
-            ),
-
-            // Content
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Celebration emoji and badge
-                Row(
-                  children: [
-                    Text(
-                      '🎉',
-                      style: TextStyle(fontSize: 28.sp),
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Text(
-                        'REWARD UNLOCKED',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 12.h),
-
-                // Main heading
-                Text(
-                  'Congratulations!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
-                ),
-
-                SizedBox(height: 8.h),
-
-                // Promo details
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.95),
-                      fontSize: 15.sp,
-                      height: 1.4,
-                    ),
-                    children: [
-                      const TextSpan(text: 'You\'ve earned '),
-                      TextSpan(
-                        text: '$discountPercentage% OFF',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17.sp,
-                          color: Colors.yellow.shade300,
-                        ),
-                      ),
-                      const TextSpan(
-                          text: ' on your next\nbooking! Use it now! 🚀'),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 16.h),
-
-                // CTA Button
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 8.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Book Now',
-                            style: TextStyle(
-                              color: const Color(0xFF10B981),
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          const Icon(
-                            PhosphorIconsRegular.arrowRight,
-                            color: Color(0xFF10B981),
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );
   }
 }
 
-// Banner when user HASN'T earned the promotion yet (Progress state)
-class _PromotionProgressBanner extends StatelessWidget {
-  final int completedBookings;
-  final int requiredBookings;
-  final int discountPercentage;
-  final VoidCallback? onTap;
+/// The card title with the discount figure picked out in the brand blue.
+/// Same type as the old `AppText.h3` title; only the highlight's color
+/// differs. `brand300` is the brand step for text on a dark ground — `500`
+/// is 1.5:1 on the promo violet.
+class _HighlightedTitle extends StatelessWidget {
+  const _HighlightedTitle({required this.text, required this.highlight});
 
-  const _PromotionProgressBanner({
-    required this.completedBookings,
-    required this.requiredBookings,
-    required this.discountPercentage,
-    this.onTap,
-  });
+  final String text;
+  final String highlight;
 
   @override
   Widget build(BuildContext context) {
-    final remaining = requiredBookings - completedBookings;
-    final progress = completedBookings / requiredBookings;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFF6366F1), // Indigo
-              Color(0xFF8B5CF6), // Purple
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    final style = headingStyle3.copyWith(
+      fontSize: 20,
+      fontWeight: FontWeight.w800,
+      color: VinkolPalette.white,
+      letterSpacing: -0.3,
+    );
+    final at = text.indexOf(highlight);
+    if (at < 0) {
+      return Text(text,
+          style: style, maxLines: 1, overflow: TextOverflow.ellipsis);
+    }
+    return Text.rich(
+      TextSpan(
+        style: style,
+        children: [
+          TextSpan(text: text.substring(0, at)),
+          TextSpan(
+            text: highlight,
+            style: const TextStyle(color: VinkolPalette.warningDark),
           ),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Stack(
-          children: [
-            // Decorative circles
-            Positioned(
-              top: -20,
-              right: -20,
-              child: Container(
-                width: 80.w,
-                height: 80.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -30,
-              left: -30,
-              child: Container(
-                width: 100.w,
-                height: 100.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
-                ),
-              ),
-            ),
-
-            // Content
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Gift emoji and badge
-                Row(
-                  children: [
-                    Text(
-                      '🎁',
-                      style: TextStyle(fontSize: 28.sp),
-                    ),
-                    SizedBox(width: 8.w),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Text(
-                        'UNLOCK REWARD',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 12.h),
-
-                // Main heading
-                Text(
-                  'Almost There!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
-                ),
-
-                SizedBox(height: 8.h),
-
-                // Promo details
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.95),
-                      fontSize: 15.sp,
-                      height: 1.4,
-                    ),
-                    children: [
-                      const TextSpan(text: 'Complete '),
-                      TextSpan(
-                        text: remaining == 1
-                            ? '1 more booking'
-                            : '$remaining more bookings',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16.sp,
-                          color: Colors.yellow.shade300,
-                        ),
-                      ),
-                      const TextSpan(text: '\nto unlock '),
-                      TextSpan(
-                        text: '$discountPercentage% OFF',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17.sp,
-                          color: Colors.yellow.shade300,
-                        ),
-                      ),
-                      const TextSpan(text: ' your next booking! 🔥'),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 12.h),
-
-                // Progress bar
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Progress',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          '$completedBookings/$requiredBookings bookings',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 6.h),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10.r),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.yellow.shade300,
-                        ),
-                        minHeight: 8.h,
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 16.h),
-
-                // CTA Button
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 8.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Start Booking',
-                            style: TextStyle(
-                              color: const Color(0xFF6366F1),
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          const Icon(
-                            PhosphorIconsRegular.arrowRight,
-                            color: Color(0xFF6366F1),
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+          TextSpan(text: text.substring(at + highlight.length)),
+        ],
       ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

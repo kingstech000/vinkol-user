@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
+import 'package:starter_codes/core/design/vinkol_space.dart';
 import 'package:starter_codes/core/extensions/currency_formatter.dart';
-import 'package:starter_codes/core/extensions/double_extension.dart';
 import 'package:starter_codes/core/money/money.dart';
-import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/payment/view/payment_webview.dart';
+import 'package:starter_codes/features/wallet/view/widget/wallet_ui.dart';
 import 'package:starter_codes/features/wallet/view_model/wallet_history_view_model.dart';
 import 'package:starter_codes/features/wallet/view_model/withdrawal_view_model.dart';
+import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
@@ -17,254 +18,205 @@ import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 /// being written into the screen.
 const Currency _walletCurrency = Currency.ngn;
 const double _minimumTopUp = 100;
+const List<double> _quickAmounts = [1000, 5000, 10000, 20000];
 
+/// Top up the wallet by card. The amount is the only question; the sheet
+/// hands off to the payment page and refreshes the balance when it returns.
 void showFundDialog(BuildContext context, WidgetRef ref, bool mounted) {
-  final amountController = TextEditingController();
-  final formKey = GlobalKey<FormState>();
-  bool isProcessing = false;
-
-  showModalBottomSheet(
+  showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24.r),
-            topRight: Radius.circular(24.r),
-          ),
-        ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 24.w,
-          right: 24.w,
-          top: 24.h,
-        ),
-        child: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+    builder: (_) => _FundSheet(
+      onSubmit: (amount) => _fundWallet(amount, ref, context, mounted),
+    ),
+  );
+}
+
+class _FundSheet extends StatefulWidget {
+  const _FundSheet({required this.onSubmit});
+
+  final Future<void> Function(double amount) onSubmit;
+
+  @override
+  State<_FundSheet> createState() => _FundSheetState();
+}
+
+class _FundSheetState extends State<_FundSheet> {
+  final _amountController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _processing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _pick(double amount) {
+    _amountController.text = CurrencyFormatter.formatAmount(amount);
+    _amountController.selection = TextSelection.collapsed(
+      offset: _amountController.text.length,
+    );
+  }
+
+  Future<void> _continue() async {
+    if (_formKey.currentState?.validate() != true) return;
+    final amount = _amountController.numericValue;
+    setState(() => _processing = true);
+    try {
+      await widget.onSubmit(amount);
+      if (mounted) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) setState(() => _processing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final typed = _amountController.numericValue;
+    return WalletSheet(
+      child: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppText.h2(
+              'Add money',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: VinkolPalette.neutral900,
+            ),
+            Gap.h4,
+            AppText.body(
+              'Paid by card. The balance updates as soon as it goes through.',
+              fontSize: 14,
+              color: VinkolPalette.neutral500,
+            ),
+            Gap.h20,
+            const FieldLabel('Amount'),
+            TextFormField(
+              controller: _amountController,
+              enabled: !_processing,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              inputFormatters: [CurrencyFormatter.amountFormatter],
+              style: walletAmountTextStyle,
+              decoration: walletFieldDecoration(
+                hint: '0',
+                prefixText: _walletCurrency.symbol,
+                helperText:
+                    'Minimum ${const Money(_minimumTopUp, _walletCurrency).format()}',
+              ),
+              validator: (value) {
+                final amount = CurrencyFormatter.parseAmount(value ?? '');
+                if (amount <= 0) return null;
+                if (amount < _minimumTopUp) {
+                  return 'The minimum top-up is '
+                      '${const Money(_minimumTopUp, _walletCurrency).format()}.';
+                }
+                return null;
+              },
+            ),
+            Gap.h12,
+            Wrap(
+              spacing: VinkolSpace.sm,
+              runSpacing: VinkolSpace.sm,
               children: [
-                // Handle bar
-                Center(
-                  child: Container(
-                    width: 40.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
+                for (final amount in _quickAmounts)
+                  _AmountChip(
+                    money: Money(amount, _walletCurrency),
+                    selected: typed == amount,
+                    onTap: _processing ? null : () => _pick(amount),
                   ),
-                ),
-                Gap.h24,
-                // Title
-                AppText.h2(
-                  'Fund Wallet',
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-                Gap.h8,
-                AppText.body(
-                  'Enter the amount you want to add to your wallet',
-                  color: Colors.grey.shade600,
-                  fontSize: 14.sp,
-                ),
-                Gap.h24,
-                // Quick amount buttons
-                Text(
-                  'Quick Amount',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                Gap.h12,
-                Wrap(
-                  spacing: 12.w,
-                  runSpacing: 12.h,
-                  children: [1000, 5000, 10000, 20000]
-                      .map((amount) => InkWell(
-                            onTap: () {
-                              amountController.text =
-                                  double.parse(amount.toString())
-                                      .toMoneyWithoutSymbol();
-                              setState(() {});
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 20.w,
-                                vertical: 10.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8.r),
-                                border: Border.all(
-                                  color: AppColors.blue.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                double.parse(amount.toString()).toMoney(),
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.blue,
-                                ),
-                              ),
-                            ),
-                          ))
-                      .toList(),
-                ),
-                Gap.h24,
-                // Amount input
-                Text(
-                  'Amount',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                Gap.h8,
-                TextFormField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  enabled: !isProcessing,
-                  inputFormatters: [CurrencyFormatter.amountFormatter],
-                  decoration: InputDecoration(
-                    hintText: 'Enter amount',
-                    prefixText: '${_walletCurrency.symbol} ',
-                    prefixStyle: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide:
-                          const BorderSide(color: AppColors.blue, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 16.h,
-                    ),
-                  ),
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter an amount';
-                    }
-                    final amount = CurrencyFormatter.parseAmount(value);
-                    if (amount <= 0) {
-                      return 'Please enter a valid amount';
-                    }
-                    if (amount < _minimumTopUp) {
-                      return 'Minimum amount is '
-                          '${Money(_minimumTopUp, _walletCurrency).format()}';
-                    }
-                    return null;
-                  },
-                ),
-                Gap.h32,
-                // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed:
-                            isProcessing ? null : () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          side: BorderSide(color: Colors.grey.shade300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                        ),
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Gap.w12,
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton(
-                        onPressed: isProcessing
-                            ? null
-                            : () {
-                                if (formKey.currentState!.validate()) {
-                                  final amount = CurrencyFormatter.parseAmount(
-                                      amountController.text);
-                                  setState(() => isProcessing = true);
-                                  _fundWallet(amount, ref, context, mounted)
-                                      .then((_) {
-                                    Navigator.pop(context);
-                                  }).catchError((error) {
-                                    setState(() => isProcessing = false);
-                                  });
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.blue,
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: isProcessing
-                            ? SizedBox(
-                                width: 20.w,
-                                height: 20.h,
-                                child: const CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : Text(
-                                'Continue',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-                Gap.h24,
               ],
+            ),
+            Gap.h24,
+            AppButton.primary(
+              title: typed >= _minimumTopUp
+                  ? 'Continue with ${Money(typed, _walletCurrency).format()}'
+                  : 'Continue',
+              disable: typed < _minimumTopUp,
+              loading: _processing,
+              onTap: _continue,
+            ),
+            Gap.h4,
+            Center(
+              child: TextButton(
+                onPressed: _processing ? null : () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(44, 44),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: VinkolSpace.lg,
+                  ),
+                ),
+                child: AppText.button(
+                  'Cancel',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: VinkolPalette.neutral600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A preset amount. Selected, it takes the brand tint; otherwise a hairline.
+class _AmountChip extends StatelessWidget {
+  const _AmountChip({
+    required this.money,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Money money;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? VinkolPalette.brand50 : VinkolPalette.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: VinkolRadius.brSm,
+        side: BorderSide(
+          color: selected ? VinkolPalette.brand100 : VinkolPalette.neutral200,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: VinkolSpace.md,
+            vertical: VinkolSpace.sm + 2,
+          ),
+          child: Text(
+            money.format(),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color:
+                  selected ? VinkolPalette.brand600 : VinkolPalette.neutral700,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 Future<void> _fundWallet(
@@ -291,20 +243,14 @@ Future<void> _fundWallet(
       if (mounted && result == true) {
         await ref.read(walletOverviewViewModelProvider.notifier).refreshData();
       }
-    } else {
-      if (mounted) {
-        if (mounted) {
-          AppStatusDialogs.showError(context, 'Error',
-              'Unable to generate payment link. Please try again.');
-        }
-      }
+    } else if (mounted) {
+      AppStatusDialogs.showError(context, 'Couldn’t start payment',
+          'We couldn’t get a payment link. Please try again.');
     }
   } catch (error) {
     if (mounted) {
-      if (mounted) {
-        AppStatusDialogs.showError(
-            context, 'Error', 'Error: ${error.toString()}');
-      }
+      AppStatusDialogs.showError(context, 'Couldn’t start payment',
+          error.toString().replaceFirst('Exception: ', ''));
     }
     rethrow;
   }

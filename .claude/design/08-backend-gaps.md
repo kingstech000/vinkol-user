@@ -32,7 +32,7 @@ the backend's frontend migration guide, and against live staging responses captu
 | **Quote-then-order** — a server-issued `quoteId` prices the order | All six creation endpoints accept `quoteId` in place of `deliveryFee`. Single-use, 15 min, `expiresAt` on the response |
 | **Itemised bill** — fare, processing fee, tax, `grandTotal` | Returned by `get-quote`, `get-bulk-quote`, `multi-order-quote`, `shopping-delivery-fee` |
 | **Market on every record** — `country` and `currency` | On order, payment, wallet, withdrawal, store and product records |
-| Withdrawable amount, net of disputed **and pending** | `users/{id}/withdrawable-amount` |
+| Withdrawable amount, net of disputed **and pending** | `users/{id}/withdrawable-amount` — **admin-only, 403 for customers** (confirmed on staging 13 Sep 2026). The app gates withdrawals on `wallet-balance`; `/withdraw` enforces the real limit |
 | **Multi-drop** (1 pickup → N drop-offs, one route) | `orders/get-bulk-quote`, `orders/create-bulk-order` |
 | **Batch** (N independent deliveries) | `orders/multi-order-quote`, `orders/create-multi-order` |
 | Partner courier pricing | `orders/get-cd-quote` (Chowdeck), `deliveryProvider`, `externalDeliveryFeeId` |

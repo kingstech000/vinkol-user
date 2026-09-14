@@ -30,11 +30,12 @@ class NavigatorRoutes {
   static const String notificationSettingsScreen =
       'notification-settings-screen';
   static const String securityScreen = 'security-screen';
-  static const String settingsScreen = 'settings-screen';
   static const String supportAndHelpScreen = 'support-and-help-screen';
   static const String deleteAccountScreen = 'delete-account-screen';
 
   // BOOKING
+  static const String deliveryTypeScreen = 'delivery-type-screen';
+  static const String deliveryStopsScreen = 'delivery-stops-screen';
   static const String packageInfoScreen = 'package-info-screen';
   static const String mapWithQuoteScreen = 'map-with-quote-screen';
   static const String bookingOrderScreen = 'booking-order-screen';

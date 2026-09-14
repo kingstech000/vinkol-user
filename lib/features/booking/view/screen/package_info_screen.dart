@@ -263,11 +263,16 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
       }
 
       final user = ref.watch(userProvider);
-      final userState = user?.currentState;
+      // Quotes are priced for where the pickup is, not where the profile says
+      // the user lives. Google's address lookup supplies the region; the
+      // profile state is only a fallback for a location that arrived without
+      // one.
+      final quoteState =
+          rideLocationState.pickUpLocation?.state ?? user?.currentState;
 
-      if (userState == null) {
-        AppStatusDialogs.showError(
-            context, 'Error', 'User state not available. Please try again.');
+      if (quoteState == null) {
+        AppStatusDialogs.showError(context, 'Error',
+            'Could not determine the pickup region. Please select the pickup location again.');
         return;
       }
 
@@ -286,7 +291,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
               lat: dropOffLocation!.coordinates!.latitude.toString(),
               lng: dropOffLocation.coordinates!.longitude.toString(),
               address: dropOffLocation.formattedAddress ?? ''),
-          state: userState,
+          state: quoteState,
           orderType: 'Delivery',
           vehicleRequest: _vehicleController.text.toLowerCase(),
         );
@@ -316,7 +321,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
         }
 
         final bulkQuoteRequest = GetNewBulkQuoteRequest(
-          state: userState,
+          state: pickupLocation.state ?? quoteState,
           orderType: 'Delivery',
           pickup: NewBulkPickup(
             location: LatLngNumber(
@@ -395,7 +400,7 @@ class _PackageInfoScreenState extends ConsumerState<PackageInfoScreen> {
                 name: _items[i].recipientNameController.text,
                 phone: _items[i].recipientPhoneController.text,
               ),
-              state: userState,
+              state: pickupStop.location!.state ?? quoteState,
               note: _items[i].noteController.text,
               description: _items[i].packageNameController.text,
               vehicleRequest: _vehicleController.text.toLowerCase(),

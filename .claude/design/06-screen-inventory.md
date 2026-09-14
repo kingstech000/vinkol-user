@@ -50,21 +50,23 @@ Status: `—` not started · `AUDIT` audited · `WIP` · `DONE` passed the criti
 | delivery/product_order_modal | | | — |
 | delivery/test.dart | | **dead** | delete |
 | **Store** |
-| store/store_screen | 571 | god screen | — |
-| store/tags_screen | | | — |
-| store/product_list_screen | | | — |
-| store/product_detail_screen | | | — |
-| store/cart_screen | | ₦ | — |
+| store/store_screen | 308 | rebuilt 13 Sep 2026: one surface, hairline rows, category chip, skeleton/empty/error | DONE |
+| store/tags_screen | 241 | rebuilt 13 Sep 2026: e0 tiles, skeleton/empty/error | DONE |
+| store/product_list_screen | 379 | rebuilt 13 Sep 2026: StoreHeader, tiles w/ stock, CartBar (widgets in view/widget/) | DONE |
+| store/product_detail_screen | 354 | rebuilt 13 Sep 2026: hero, price+stock, seller card, pinned action | DONE |
+| store/cart_screen | 688 | rebuilt 13 Sep 2026: single scroll, radio delivery options, itemised summary, blocker copy on pay bar; money via market layer | DONE |
 | **Payment** |
 | payment/payment_webview | | provider assumptions | — |
 | payment/payment_veification_screen | | typo in filename | — |
 | **Wallet** |
-| wallet/wallet_screen | 645 | god screen | — |
-| wallet/wallet_screen_backup | | **dead** | delete |
-| wallet/withdraw_screen | | ₦ ×4 | — |
-| wallet/transaction_detail_screen | | ₦ | — |
-| wallet/add_bank_screen | | market layer | — |
-| wallet/bank_selection_screen | | market layer | — |
+| wallet/wallet_screen | 520 | rebuilt 13 Sep 2026: brand-500 balance as the one saturated object, segmented ledger, one surface, skeleton/empty/error; `initialSegment` for deep links | DONE |
+| wallet/wallet_screen_backup | | **deleted** 13 Sep 2026 | — |
+| wallet/withdraw_screen | 340 | rebuilt 13 Sep 2026: available block w/ holdings breakdown, bank row, amount, blocker copy on pinned bar; dead "reason" field removed (endpoint takes `amount` only) | DONE |
+| wallet/transaction_detail_screen | 180 | rebuilt 13 Sep 2026: one screen for payments and withdrawals via `WalletEntry`; mono reference w/ in-place copy | DONE |
+| wallet/add_bank_screen | 380 | rebuilt 13 Sep 2026: picker + NUBAN field + inline verification line, blocker copy; bank-list retry added | DONE |
+| wallet/bank_selection_screen | 200 | rebuilt 13 Sep 2026: shared `SearchField`, one surface, selected check, retry | DONE |
+| wallet/widget/fund_wallet_sheet · withdrawal_confirmation_sheet | | rebuilt 13 Sep 2026 on `WalletSheet` | DONE |
+| wallet/widget/wallet_ui | 640 | new: `WalletEntry`, `WalletEntryRow`, `WalletStatusPill` (D-05 triple), `WalletSurface`, `KeyValueRow`, `BankAccountRow`, `InlineNotice`, field decoration, `WalletSheet`, `WalletActionBar` | — |
 | **Profile** |
 | profile/profile_screen | 312 | | — |
 | profile/personal_info_screen | 512 | God screen; market layer: State label, dial code | WIP |

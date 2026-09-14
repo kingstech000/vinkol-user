@@ -1,29 +1,24 @@
-// lib/screens/home/widgets/ride_details_input.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
-import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/features/booking/view/screen/location_search_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/map_picker_screen.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/features/booking/view/widget/order_type_copy.dart';
+import 'package:starter_codes/models/location_model.dart';
+import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 
-const _white = AppColors.white;
-const _surface = Color(0xFFF8F9FB);
-const _surfaceElevated = AppColors.white;
-const _border = Color(0xFFE8ECF2);
-const _accent = AppColors.primary;
-const _accentDim = Color(0xFFE7F1FB);
-const _red = AppColors.red;
-const _redDim = Color(0xFFFDECEB);
-const _textPrimary = AppColors.black;
-const _textSecondary = Color(0xFF64748B);
-const _textMuted = Color(0xFF94A3B8);
-const _textOnAccent = AppColors.white;
-
+/// The stops form: where the delivery starts and where it ends. The delivery
+/// shape was chosen on the screen before, so the header names it. The stops
+/// sit on the Line — hollow origin, filled destinations — as white fields on
+/// the canvas; the action lives in [FindRiderAction], pinned to the bottom of
+/// the screen by [DeliveryStopsScreen].
 class RideDetailsInput extends ConsumerWidget {
   const RideDetailsInput({super.key});
 
@@ -73,198 +68,215 @@ class RideDetailsInput extends ConsumerWidget {
     }
 
     final stops = rideLocationState.stops;
-    final isMulti = rideLocationState.orderType == OrderType.multi;
-    final isBulk = rideLocationState.orderType == OrderType.bulk;
+    final orderType = rideLocationState.orderType;
+    final canAddStop =
+        orderType == OrderType.multi || orderType == OrderType.bulk;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
-      decoration: BoxDecoration(
-        color: _white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _border, width: 1),
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: _accentDim,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child:
-                      const Icon(PhosphorIconsRegular.path, color: _accent, size: 18),
-                ),
-                const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Book Your Ride',
-                      style: TextStyle(
-                        color: _textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    Text(
-                      'Set your stops below',
-                      style: TextStyle(
-                        color: _textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-                if (stops.length == 2) ...[
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => rideLocationNotifier.swapLocations(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: _accentDim,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: _accent.withOpacity(0.1)),
-                      ),
-                      child: const Icon(PhosphorIconsRegular.arrowsDownUp,
-                          color: _accent, size: 20),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          _Header(
+            orderType: orderType,
+            canSwap: stops.length == 2,
+            onSwap: rideLocationNotifier.swapLocations,
           ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _ModeSelector(
-              state: rideLocationState,
-              notifier: rideLocationNotifier,
-            ),
+          Gap.h24,
+          _StopsList(
+            stops: stops,
+            orderType: orderType,
+            onStopTap: showLocationSelectionOptions,
+            onRemove: (stop) => rideLocationNotifier.removeStop(stop.id),
+            onClear: (stop) => rideLocationNotifier.clearStopLocation(stop.id),
           ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _StopsList(
-              stops: stops,
-              onStopTap: showLocationSelectionOptions,
-              onRemove: (stop) => rideLocationNotifier.removeStop(stop.id),
-              onClear: (stop) =>
-                  rideLocationNotifier.clearStopLocation(stop.id),
-              orderType: rideLocationState.orderType,
-            ),
-          ),
-          if (isMulti || isBulk) ...[
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _AddStopButton(
-                label: isBulk ? 'Add Drop-off' : 'Add Order',
-                onTap: () => rideLocationNotifier.addStop(),
-              ),
+          if (canAddStop) ...[
+            Gap.h12,
+            _AddStopButton(
+              label: orderType == OrderType.bulk ? 'Add drop-off' : 'Add order',
+              onTap: rideLocationNotifier.addStop,
             ),
           ],
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: _FindRiderButton(
-              onTap: () {
-                final allSelected =
-                    rideLocationState.stops.every((s) => s.location != null);
-                if (allSelected) {
-                  NavigationService.instance
-                      .navigateTo(NavigatorRoutes.packageInfoScreen);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Please select all stop locations.'),
-                      backgroundColor: _surfaceElevated,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  );
-                }
-              },
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _ModeSelector extends StatelessWidget {
-  const _ModeSelector({required this.state, required this.notifier});
-
-  final RideLocationState state;
-  final RideLocationNotifier notifier;
+/// The action for the stops form: full width, anchored at the bottom of the
+/// sheet, near-black like the pod. It stays tappable when stops are missing
+/// so the tap can say what is missing, rather than sitting there disabled
+/// and unexplained.
+class FindRiderAction extends ConsumerWidget {
+  const FindRiderAction({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _border),
-      ),
-      child: Row(
-        children: OrderType.values.map((type) {
-          final isSelected = state.orderType == type;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => notifier.setOrderType(type),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                decoration: BoxDecoration(
-                  color: isSelected ? _accent : Colors.transparent,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  type.name.toUpperCase(),
-                  style: TextStyle(
-                    color: isSelected ? _textOnAccent : _textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stops = ref.watch(rideLocationProvider).stops;
+    final allSelected = stops.every((s) => s.location != null);
+
+    void onTap() {
+      if (allSelected) {
+        NavigationService.instance
+            .navigateTo(NavigatorRoutes.packageInfoScreen);
+        return;
+      }
+      AppStatusDialogs.showError(
+          context, 'Stops incomplete', 'Set every stop to find a rider.');
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Semantics(
+        button: true,
+        label: 'Find a rider',
+        child: Material(
+          color: VinkolPalette.neutral900,
+          borderRadius: BorderRadius.circular(999.r),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              height: 52.h,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AppText.button(
+                    'Find a rider',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: VinkolPalette.white,
                   ),
-                ),
+                  Gap.w8,
+                  Icon(
+                    PhosphorIconsBold.arrowRight,
+                    size: 16.w,
+                    color: VinkolPalette.white,
+                  ),
+                ],
               ),
             ),
-          );
-        }).toList(),
+          ),
+        ),
       ),
     );
   }
 }
 
+// ---------------------------------------------------------------------------
+// Header
+// ---------------------------------------------------------------------------
+
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.orderType,
+    required this.canSwap,
+    required this.onSwap,
+  });
+
+  final OrderType orderType;
+  final bool canSwap;
+  final VoidCallback onSwap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppText.caption(
+                '${orderType.title} delivery'.toUpperCase(),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: VinkolPalette.brand600,
+                letterSpacing: 0.8,
+                maxLines: 1,
+              ),
+              Gap.h6,
+              AppText.h1(
+                'Where is it going?',
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: VinkolPalette.neutral900,
+                letterSpacing: -0.4,
+                maxLines: 1,
+              ),
+              Gap.h6,
+              AppText.body(
+                orderType.description,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: VinkolPalette.neutral500,
+                maxLines: 1,
+              ),
+            ],
+          ),
+        ),
+        if (canSwap) ...[
+          Gap.w12,
+          _SwapButton(onTap: onSwap),
+        ],
+      ],
+    );
+  }
+}
+
+/// Swaps pick-up and drop-off. Hairline chrome, icon bare.
+class _SwapButton extends StatelessWidget {
+  const _SwapButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Swap pick-up and drop-off',
+      child: Material(
+        color: VinkolPalette.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          side: const BorderSide(color: VinkolPalette.neutral200),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 40.w,
+            height: 40.w,
+            child: Icon(
+              PhosphorIconsRegular.arrowsDownUp,
+              size: 20.w,
+              color: VinkolPalette.neutral900,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stops — the Line
+// ---------------------------------------------------------------------------
+
 class _StopsList extends StatelessWidget {
   const _StopsList({
     required this.stops,
+    required this.orderType,
     required this.onStopTap,
     required this.onRemove,
     required this.onClear,
-    required this.orderType,
   });
 
   final List<StopModel> stops;
+  final OrderType orderType;
   final void Function(StopModel) onStopTap;
   final void Function(StopModel) onRemove;
   final void Function(StopModel) onClear;
-  final OrderType orderType;
 
   bool _canRemove(StopModel stop) {
     if (orderType == OrderType.bulk &&
@@ -278,72 +290,102 @@ class _StopsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < stops.length; i++) ...[
+          if (i > 0) const _LineGap(),
+          _StopRow(
+            stop: stops[i],
+            isFirst: i == 0,
+            isLast: i == stops.length - 1,
+            onTap: () => onStopTap(stops[i]),
+            onRemove: _canRemove(stops[i]) ? () => onRemove(stops[i]) : null,
+            onClear: stops[i].location != null ? () => onClear(stops[i]) : null,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The gutter the Line runs down, shared by the rows and the gaps between
+/// them so the rule is continuous from the first node to the last.
+const _gutterWidth = 16.0;
+
+class _Rule extends StatelessWidget {
+  const _Rule({this.visible = true});
+
+  final bool visible;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 2,
+        color: visible ? VinkolPalette.neutral300 : Colors.transparent,
+      );
+}
+
+/// The space between two fields, with the rule running through it.
+class _LineGap extends StatelessWidget {
+  const _LineGap();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 10.h,
+      child: Row(
+        children: [
+          SizedBox(width: _gutterWidth.w, child: const Center(child: _Rule())),
+        ],
+      ),
+    );
+  }
+}
+
+/// One stop: its node on the Line, centred on its field, with the rule
+/// continuing above and below it except at the ends.
+class _StopRow extends StatelessWidget {
+  const _StopRow({
+    required this.stop,
+    required this.isFirst,
+    required this.isLast,
+    required this.onTap,
+    this.onRemove,
+    this.onClear,
+  });
+
+  final StopModel stop;
+  final bool isFirst;
+  final bool isLast;
+  final VoidCallback onTap;
+  final VoidCallback? onRemove;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            width: 28,
+            width: _gutterWidth.w,
             child: Column(
-              children: stops.asMap().entries.map((entry) {
-                final index = entry.key;
-                final stop = entry.value;
-                final isLast = index == stops.length - 1;
-
-                return Expanded(
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: 14,
-                      ),
-                      _StopDot(isPickup: stop.isPickup),
-                      if (!isLast)
-                        Expanded(
-                          child: Center(
-                            child: Container(
-                              width: 1.5,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    stop.isPickup
-                                        ? _accent.withOpacity(0.6)
-                                        : _red.withOpacity(0.6),
-                                    _border,
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              }).toList(),
+              children: [
+                Expanded(child: _Rule(visible: !isFirst)),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.h),
+                  child: _Node(isPickup: stop.isPickup),
+                ),
+                Expanded(child: _Rule(visible: !isLast)),
+              ],
             ),
           ),
-          const SizedBox(width: 10),
+          Gap.w12,
           Expanded(
-            child: Column(
-              children: stops.asMap().entries.map((entry) {
-                final index = entry.key;
-                final stop = entry.value;
-                final isLast = index == stops.length - 1;
-
-                return Column(
-                  children: [
-                    _StopInputField(
-                      stop: stop,
-                      onTap: () => onStopTap(stop),
-                      onRemove: _canRemove(stop) ? () => onRemove(stop) : null,
-                      onClear:
-                          stop.location != null ? () => onClear(stop) : null,
-                    ),
-                    if (!isLast) const SizedBox(height: 8),
-                  ],
-                );
-              }).toList(),
+            child: _StopField(
+              stop: stop,
+              onTap: onTap,
+              onRemove: onRemove,
+              onClear: onClear,
             ),
           ),
         ],
@@ -352,37 +394,32 @@ class _StopsList extends StatelessWidget {
   }
 }
 
-class _StopDot extends StatelessWidget {
-  const _StopDot({required this.isPickup});
+/// Hollow for a pick-up, filled for a drop-off — the same geometry the Line
+/// uses everywhere else in the app.
+class _Node extends StatelessWidget {
+  const _Node({required this.isPickup});
 
   final bool isPickup;
 
   @override
   Widget build(BuildContext context) {
-    final color = isPickup ? _accent : _red;
-    final bgColor = isPickup ? _accentDim : _redDim;
-
     return Container(
-      width: 24,
-      height: 24,
+      width: 12,
+      height: 12,
       decoration: BoxDecoration(
-        color: bgColor,
         shape: BoxShape.circle,
-        border: Border.all(color: color, width: 1.5),
-      ),
-      child: Center(
-        child: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        color: isPickup ? VinkolPalette.white : VinkolPalette.brand500,
+        border: Border.all(
+          color: isPickup ? VinkolPalette.neutral400 : VinkolPalette.brand500,
+          width: 2,
         ),
       ),
     );
   }
 }
 
-class _StopInputField extends StatelessWidget {
-  const _StopInputField({
+class _StopField extends StatelessWidget {
+  const _StopField({
     required this.stop,
     required this.onTap,
     this.onRemove,
@@ -396,92 +433,113 @@ class _StopInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasLocation = stop.location != null;
-    final color = stop.isPickup ? _accent : _red;
+    final address = stop.location?.formattedAddress?.trim();
+    final hasLocation = address != null && address.isNotEmpty;
+    final label = stop.isPickup ? 'Pick-up' : 'Drop-off';
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: hasLocation ? _surfaceElevated : _surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: hasLocation ? color.withOpacity(0.35) : _border,
-            width: 1,
+    return Material(
+      color: VinkolPalette.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(
+          color:
+              hasLocation ? VinkolPalette.neutral300 : VinkolPalette.neutral200,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(16.w, 12.h, 8.w, 12.h),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppText.caption(
+                      label.toUpperCase(),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: VinkolPalette.neutral500,
+                      letterSpacing: 0.6,
+                      maxLines: 1,
+                    ),
+                    Gap.h4,
+                    AppText.body(
+                      hasLocation
+                          ? address
+                          : (stop.isPickup ? 'Where from?' : 'Where to?'),
+                      fontSize: 15,
+                      fontWeight:
+                          hasLocation ? FontWeight.w600 : FontWeight.w500,
+                      color: hasLocation
+                          ? VinkolPalette.neutral900
+                          : VinkolPalette.neutral500,
+                      maxLines: 2,
+                      lineHeight: 1.3,
+                    ),
+                  ],
+                ),
+              ),
+              Gap.w8,
+              if (onClear != null)
+                _FieldAction(
+                  icon: PhosphorIconsRegular.x,
+                  color: VinkolPalette.neutral600,
+                  semanticLabel: 'Clear $label',
+                  onTap: onClear!,
+                )
+              else if (onRemove != null)
+                _FieldAction(
+                  icon: PhosphorIconsRegular.trash,
+                  color: VinkolPalette.dangerText,
+                  semanticLabel: 'Remove $label',
+                  onTap: onRemove!,
+                )
+              else
+                Padding(
+                  padding: EdgeInsetsDirectional.only(end: 6.w),
+                  child: Icon(
+                    PhosphorIconsRegular.caretRight,
+                    size: 16.w,
+                    color: VinkolPalette.neutral400,
+                  ),
+                ),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                stop.isPickup ? 'FROM' : 'TO',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                stop.location?.formattedAddress ??
-                    (stop.isPickup ? 'Pick-up location' : 'Drop-off location'),
-                style: TextStyle(
-                  color: hasLocation ? _textPrimary : _textSecondary,
-                  fontSize: 13,
-                  fontWeight: hasLocation ? FontWeight.w500 : FontWeight.w400,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 6),
-            if (onClear != null)
-              GestureDetector(
-                onTap: onClear,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: _accentDim,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child:
-                      const Icon(PhosphorIconsRegular.x, size: 14, color: _accent),
-                ),
-              )
-            else if (onRemove != null)
-              GestureDetector(
-                onTap: onRemove,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: _redDim,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Icon(PhosphorIconsRegular.trash,
-                      size: 14, color: _red),
-                ),
-              )
-            else
-              Icon(
-                hasLocation
-                    ? PhosphorIconsFill.checkCircle
-                    : PhosphorIconsRegular.caretRight,
-                color: hasLocation ? color : _textMuted,
-                size: 18,
-              ),
-          ],
+      ),
+    );
+  }
+}
+
+class _FieldAction extends StatelessWidget {
+  const _FieldAction({
+    required this.icon,
+    required this.color,
+    required this.semanticLabel,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String semanticLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8.r),
+        child: SizedBox(
+          width: 32.w,
+          height: 32.w,
+          child: Icon(icon, size: 16.w, color: color),
         ),
       ),
     );
@@ -496,64 +554,40 @@ class _AddStopButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: _accentDim,
-              borderRadius: BorderRadius.circular(6),
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Padding(
+        // Line up with the fields, past the Line's gutter.
+        padding: EdgeInsetsDirectional.only(start: 28.w),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8.r),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(PhosphorIconsBold.plus,
+                    size: 14.w, color: VinkolPalette.brand600),
+                Gap.w6,
+                AppText.body(
+                  label,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: VinkolPalette.brand600,
+                ),
+              ],
             ),
-            child: const Icon(PhosphorIconsRegular.plus, color: _accent, size: 14),
           ),
-          const SizedBox(width: 8),
-          AppText.h2(
-            label,
-            color: _accent,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FindRiderButton extends StatelessWidget {
-  const _FindRiderButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 54,
-        decoration: BoxDecoration(
-          color: _accent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppText.body(
-              'Find Rider',
-              color: _textOnAccent,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.2,
-            ),
-          ],
         ),
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Location picker sheet
+// ---------------------------------------------------------------------------
 
 class _LocationPickerSheet extends StatelessWidget {
   const _LocationPickerSheet({
@@ -568,67 +602,58 @@ class _LocationPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = stop.isPickup ? _accent : _red;
-    final label = stop.isPickup ? 'Pick-up' : 'Drop-off';
+    final label = stop.isPickup ? 'pick-up' : 'drop-off';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-      decoration: const BoxDecoration(
-        color: _white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        10.h,
+        20.w,
+        20.h + MediaQuery.paddingOf(context).bottom,
+      ),
+      decoration: BoxDecoration(
+        color: VinkolPalette.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle bar
           Center(
             child: Container(
-              width: 36,
+              width: 36.w,
               height: 4,
               decoration: BoxDecoration(
-                color: _border,
-                borderRadius: BorderRadius.circular(2),
+                color: VinkolPalette.neutral300,
+                borderRadius: BorderRadius.circular(999.r),
               ),
             ),
           ),
-          const SizedBox(height: 20),
-
-          // Title
+          Gap.h20,
           Row(
             children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Set $label Location',
-                style: const TextStyle(
-                  color: _textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+              _Node(isPickup: stop.isPickup),
+              Gap.w8,
+              AppText.h3(
+                'Set the $label',
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: VinkolPalette.neutral900,
               ),
             ],
           ),
-          const SizedBox(height: 20),
-
-          // Options
+          Gap.h16,
           _SheetOption(
             icon: PhosphorIconsRegular.magnifyingGlass,
             title: 'Search for a place',
             subtitle: 'Type an address or landmark',
-            color: _accent,
             onTap: onSearchTap,
           ),
-          const SizedBox(height: 10),
+          Gap.h8,
           _SheetOption(
             icon: PhosphorIconsRegular.mapTrifold,
-            title: 'Pick on map',
+            title: 'Pick on the map',
             subtitle: 'Drop a pin anywhere',
-            color: const Color(0xFF6E8FFF),
             onTap: onMapTap,
           ),
         ],
@@ -642,60 +667,58 @@ class _SheetOption extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.color,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: _surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _border),
-        ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 44,
-              height: 44,
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 14),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: _textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+    return Material(
+      color: VinkolPalette.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: const BorderSide(color: VinkolPalette.neutral200),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.all(14.w),
+          child: Row(
+            children: [
+              Icon(icon, size: 22.w, color: VinkolPalette.brand600),
+              Gap.w12,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText.body(
+                      title,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: VinkolPalette.neutral900,
+                      maxLines: 1,
+                    ),
+                    Gap.h2,
+                    AppText.caption(
+                      subtitle,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: VinkolPalette.neutral500,
+                      maxLines: 1,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: _textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            const Icon(PhosphorIconsRegular.caretRight,
-                color: _textMuted, size: 20),
-          ],
+              ),
+              Gap.w8,
+              Icon(PhosphorIconsRegular.caretRight,
+                  size: 16.w, color: VinkolPalette.neutral400),
+            ],
+          ),
         ),
       ),
     );

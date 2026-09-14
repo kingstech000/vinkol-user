@@ -74,9 +74,12 @@ class WithdrawalNotifier extends StateNotifier<WithdrawalState> {
     ]);
   }
 
+  // Each fetch keeps the previous value while loading, so a refresh never
+  // drops a screen back to its skeleton.
   Future<void> _fetchBankList() async {
     state = state.copyWith(
-      bankList: const AsyncValue.loading(),
+      bankList:
+          const AsyncValue<List<Bank>>.loading().copyWithPrevious(state.bankList),
     );
     final result = await AsyncValue.guard(
       () => bankService.getBankList(),
@@ -86,7 +89,8 @@ class WithdrawalNotifier extends StateNotifier<WithdrawalState> {
 
   Future<void> _fetchUserBank() async {
     state = state.copyWith(
-      userBank: const AsyncValue.loading(),
+      userBank:
+          const AsyncValue<UserBank?>.loading().copyWithPrevious(state.userBank),
     );
     final result = await AsyncValue.guard(
       () => bankService.getUserBank(),
@@ -96,7 +100,8 @@ class WithdrawalNotifier extends StateNotifier<WithdrawalState> {
 
   Future<void> _fetchWithdrawalHistory() async {
     state = state.copyWith(
-      withdrawalHistory: const AsyncValue.loading(),
+      withdrawalHistory: const AsyncValue<WithdrawalResponse>.loading()
+          .copyWithPrevious(state.withdrawalHistory),
     );
     final result = await AsyncValue.guard(() async {
       try {
@@ -193,6 +198,10 @@ class WithdrawalNotifier extends StateNotifier<WithdrawalState> {
       _fetchWithdrawalHistory(),
     ]);
   }
+
+  /// The bank list is fetched once at construction; this is the retry for
+  /// when that fetch failed.
+  Future<void> refreshBankList() => _fetchBankList();
 
   void clearSession() {
     state = WithdrawalState(

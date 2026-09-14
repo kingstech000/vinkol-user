@@ -123,16 +123,24 @@ class SingleStoreData {
     final Map<String, dynamic>? storeJson = json['store'] as Map<String, dynamic>?;
     final List<dynamic>? storeProductsList = json['storeProducts'] as List<dynamic>?;
 
-    return SingleStoreData(
-      store: storeJson != null ? Store.fromJson(storeJson) : Store(
+    final store = storeJson != null ? Store.fromJson(storeJson) : Store(
         id: '', name: 'N/A', email: 'N/A', isEmailVerified: false, role: '', createdAt: DateTime.now().toString(), updatedAt: DateTime.now().toString(),
         address: '', avatar: null, bio: '', lat: 0.0, lga: '', lng: 0.0, phone: '', state: '',
-      ), // Provide a default Store if 'store' is null
-      storeProducts: storeProductsList
-              ?.map((e) => StoreProduct.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [], // Provide an empty list if 'storeProducts' is null
-    );
+      ); // Provide a default Store if 'store' is null
+
+    // The store is the source of truth for its products' market. A store
+    // trades in exactly one market — the server fixes it from the store's
+    // location — so whatever `country` and `currency` a product record
+    // carries, the price is in the store's currency. This guards against
+    // records written under the wrong market (staging has Canadian stores
+    // with NG/NGN products) ever reaching a customer as naira.
+    final products = storeProductsList
+            ?.map((e) => StoreProduct.fromJson(e as Map<String, dynamic>)
+                .copyWith(country: store.country, currency: store.currency))
+            .toList() ??
+        []; // Provide an empty list if 'storeProducts' is null
+
+    return SingleStoreData(store: store, storeProducts: products);
   }
 
   Map<String, dynamic> toJson() {

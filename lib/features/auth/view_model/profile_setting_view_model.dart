@@ -10,6 +10,7 @@ import 'package:starter_codes/core/utils/base_view_model.dart';
 import 'package:starter_codes/features/auth/data/auth_service.dart'; // Assuming you have an AuthService
 import 'package:starter_codes/models/app_state/view_model_state.dart';
 import 'package:starter_codes/models/failure.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:dio/dio.dart'; // Import dio for MultipartFile
 import 'package:starter_codes/core/data/local/local_cache.dart';
@@ -19,11 +20,11 @@ import 'package:starter_codes/utils/phone_number_utils.dart';
 
 class ProfileSettingViewModel extends BaseViewModel {
   final AuthService _authService;
+  final Ref ref;
   final LocalCache _localCache = locator<LocalCache>();
 
   String _firstName = '';
   String _surname = '';
-  String _country = '';
   String _selectedState = '';
 
   /// Overwritten from the device market before the number is submitted.
@@ -31,12 +32,11 @@ class ProfileSettingViewModel extends BaseViewModel {
   String _phoneNumber = '';
   File? _profileImage;
 
-  ProfileSettingViewModel(this._authService);
+  ProfileSettingViewModel(this._authService, this.ref);
 
   // Getters
   String get firstName => _firstName;
   String get surname => _surname;
-  String get country => _country;
   String get selectedState => _selectedState;
   String get phoneNumberPrefix => _phoneNumberPrefix;
   String get phoneNumber => _phoneNumber;
@@ -50,11 +50,6 @@ class ProfileSettingViewModel extends BaseViewModel {
 
   void setSurname(String value) {
     _surname = value;
-    notifyListeners();
-  }
-
-  void setCountry(String value) {
-    _country = value;
     notifyListeners();
   }
 
@@ -147,6 +142,9 @@ class ProfileSettingViewModel extends BaseViewModel {
         firstname: _firstName,
         lastName: _surname,
         state: _selectedState,
+        // The market the region list above came from, sent so the server can
+        // tell a province from a state.
+        country: ref.read(marketProvider),
         phoneNumber:
             formattedPhoneNumber, // Use the validated and formatted number
         avatar: avatarFile,
@@ -180,5 +178,5 @@ final profileSettingViewModelProvider =
   final authService = ref.watch(
     authServiceProvider,
   ); // Assuming authServiceProvider is defined
-  return ProfileSettingViewModel(authService);
+  return ProfileSettingViewModel(authService, ref);
 });

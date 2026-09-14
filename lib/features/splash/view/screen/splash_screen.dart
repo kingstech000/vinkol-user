@@ -19,11 +19,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // Gates the app: the version check either shows the force-update sheet
+    // or proceeds with initialization. Nothing else may schedule navigation,
+    // or it replaces the stack under the sheet and dismisses it.
     _checkAppVersion();
     // Offers a market detected from the account or the device's position. Does
     // nothing if the customer has already chosen one in Settings.
     detectDeviceMarket(ref);
-    _proceedWithInitialization();
   }
 
   Future<void> _checkAppVersion() async {
@@ -42,6 +44,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         currentVersion,
         currentBuildNumber,
       );
+
+      if (!mounted) return;
 
       if (updateRequired) {
         ForceUpdateBottomSheet.show(context);

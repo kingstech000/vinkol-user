@@ -1,11 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:starter_codes/core/constants/link_routes.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/core/utils/launch_link.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class ForceUpdateBottomSheet extends StatelessWidget {
@@ -22,28 +23,16 @@ class ForceUpdateBottomSheet extends StatelessWidget {
     );
   }
 
-  String _getStoreUrl() {
-    if (Platform.isAndroid) {
-      return 'https://play.google.com/store/apps/details?id=app.vinkol.user';
-    } else if (Platform.isIOS) {
-      return 'https://apps.apple.com/ng/app/vinkol/id6751447117';
-    }
-    return '';
-  }
-
   Future<void> _openStore(BuildContext context) async {
     try {
-      final url = _getStoreUrl();
+      final url = LinkRoutes.storeListing();
       if (url.isNotEmpty) {
         await LaunchLink.launchURL(url);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to open app store. Please try again.'),
-          ),
-        );
+        AppStatusDialogs.showError(context, 'Could not open store',
+            'Unable to open app store. Please try again.');
       }
     }
   }
@@ -117,4 +106,3 @@ class ForceUpdateBottomSheet extends StatelessWidget {
     );
   }
 }
-

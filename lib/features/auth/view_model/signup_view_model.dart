@@ -9,6 +9,7 @@ import 'package:starter_codes/core/utils/base_view_model.dart';
 import 'package:starter_codes/features/auth/data/auth_service.dart';
 import 'package:starter_codes/models/app_state/view_model_state.dart'; // Your ViewModelState
 import 'package:starter_codes/models/failure.dart';
+import 'package:starter_codes/provider/market_provider.dart';
 import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
@@ -38,6 +39,7 @@ class SignUpViewModel extends BaseViewModel {
       await _authService.signup(
         email: email,
         password: password,
+        country: ref.read(marketProvider),
       );
 
       // Clear guest mode when user successfully signs up

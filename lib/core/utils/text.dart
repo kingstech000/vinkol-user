@@ -266,11 +266,11 @@ class AppText extends StatelessWidget {
     this.fontWeight,
     this.fontStyle,
     this.lineHeight,
-  }) : style = captionStyle.copyWith(
+  }) : style = freeStyle.copyWith(
             color: color,
             height: height,
-            letterSpacing: letterSpacing,
             fontSize: fontSize,
+            letterSpacing: letterSpacing,
             wordSpacing: wordSpacing,
             fontWeight: fontWeight);
 

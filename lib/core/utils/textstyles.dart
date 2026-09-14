@@ -1,49 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/utils/fonts.dart';
 
-TextStyle headingStyle1 = GoogleFonts.montserrat(
+const TextStyle headingStyle1 = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 24,
   fontWeight: FontWeight.w800,
 );
 
-TextStyle headingStyle2 = GoogleFonts.montserrat(
+const TextStyle headingStyle2 = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 22,
   fontWeight: FontWeight.w700,
 );
 
-TextStyle headingStyle3 = GoogleFonts.montserrat(
+const TextStyle headingStyle3 = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 20,
   fontWeight: FontWeight.w700,
 );
 
-TextStyle headingStyle4 = GoogleFonts.montserrat(
+const TextStyle headingStyle4 = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 18,
   fontWeight: FontWeight.w700,
 );
 
-TextStyle headingStyle5 = GoogleFonts.montserrat(
+const TextStyle headingStyle5 = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 16,
   fontWeight: FontWeight.w500,
 );
 
-TextStyle headingStyle6 = GoogleFonts.montserrat(
+const TextStyle headingStyle6 = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 16,
   fontWeight: FontWeight.w500,
 );
 
-TextStyle captionStyle = GoogleFonts.montserrat(
+const TextStyle captionStyle = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 14,
   fontWeight: FontWeight.w300,
 );
 
-TextStyle bodyStyle = GoogleFonts.montserrat(
+const TextStyle bodyStyle = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 16,
   fontWeight: FontWeight.w400,
 );
 
-TextStyle buttonStyle = GoogleFonts.montserrat(
+const TextStyle buttonStyle = TextStyle(
+  fontFamily: AppFonts.montserrat,
   fontSize: 16,
   fontWeight: FontWeight.w600,
 );
 
-TextStyle freeStyle = GoogleFonts.montserrat();
+const TextStyle freeStyle = TextStyle(fontFamily: AppFonts.montserrat);

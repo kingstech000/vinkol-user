@@ -142,6 +142,9 @@ class PersonalInfoViewModel extends StateNotifier<PersonalInfoState> {
         firstname: state.firstname,
         lastName: state.lastname,
         state: state.address,
+        // The region above was picked from this market's list, so the two are
+        // sent together rather than leaving the server to guess.
+        country: profile.country,
         phoneNumber: formattedPhoneNumber,
         avatar: avatarFile,
       );

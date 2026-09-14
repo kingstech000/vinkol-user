@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/utils/colors.dart';
+import 'package:starter_codes/features/auth/data/auth_service.dart';
 import 'package:starter_codes/features/delivery/data/delivery_service.dart';
 import 'package:starter_codes/features/delivery/model/delivery_model.dart';
 import 'package:starter_codes/provider/delivery_provider.dart';
@@ -149,6 +150,14 @@ class _PaymentVerificationScreenState
       if (widget.isStoreOrder) {
         ref.read(cartProvider.notifier).clearCart();
       }
+
+      // The backend consumes the coupon / advances ordersSincePromo on this
+      // order, so refresh the profile or the home banner keeps the old state.
+      ref.read(authServiceProvider).getUserProfile().then<void>(
+        (_) {},
+        onError: (Object e) =>
+            debugPrint('[PaymentVerification] Profile refresh failed: $e'),
+      );
 
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {

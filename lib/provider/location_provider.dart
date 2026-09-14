@@ -7,11 +7,21 @@ import 'package:starter_codes/models/location_model.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:starter_codes/provider/market_provider.dart';
 
+/// How far around the customer to prefer search results, in metres — roughly a
+/// metropolitan area. A bias, not a boundary: a match outside it still appears,
+/// it just ranks below the nearby ones.
+const int _searchBiasRadiusMetres = 50000;
+
 class LocationController {
   final String? BACKEND_URL;
   final String GOOGLE_MAP_API_KEY;
   final Ref ref;
   LatLng? _currentLatLng;
+
+  /// The fix currently being resolved, if any. Geolocator rejects a second
+  /// permission request while one is still open, so every caller joins the
+  /// request already in flight instead of starting a competing one.
+  Future<LatLng?>? _pendingFix;
 
   LatLng? get currentLatLng => _currentLatLng;
 
@@ -20,28 +30,25 @@ class LocationController {
     this.BACKEND_URL,
     required this.ref,
   }) {
-    _initializeCurrentLocation();
+    // Deliberately not awaited: callers that need the fix call
+    // refreshCurrentLocation(), which joins this same request.
+    refreshCurrentLocation();
   }
 
-  /// Initializes the current location by requesting permissions and fetching it.
-  Future<void> _initializeCurrentLocation() async {
-    _currentLatLng = await _getCurrentLatLngLocation();
-    if (_currentLatLng == null) {
-      // Optionally set a default location
-    }
-  }
-
-  /// Searches for places based on input text.
+  /// Searches for places anywhere in the world.
   ///
-  /// Restricted to the device's market by default, because a delivery address
-  /// in another country is never what the customer meant. Pass
-  /// `restrictToMarket: false` where the customer may legitimately be anywhere:
-  /// filtering while they are telling us where they live is circular — they
-  /// could never find the country they are trying to move to.
+  /// Deliberately unfiltered by country. The customer is the one who knows
+  /// where they are: they may be booking a pickup in a market we have not
+  /// launched in, or telling us where they are moving to, and a country filter
+  /// makes such an address simply unfindable with no way to say so.
+  ///
+  /// [position] *biases* the ranking rather than restricting it — matches near
+  /// the customer come first, and everywhere else still appears below them.
+  /// `strictbounds` is deliberately not sent, since that is what would turn the
+  /// bias back into a filter.
   Future<List<Map<String, dynamic>>> searchPlaces(
     String placeName, {
     LatLng? position,
-    bool restrictToMarket = true,
   }) async {
     List<Map<String, dynamic>> matchedLocations = [];
     final url = Uri.parse(
@@ -55,11 +62,9 @@ class LocationController {
     final params = {
       'input': input,
       'key': GOOGLE_MAP_API_KEY,
-      if (restrictToMarket) ...{
-        'components': 'country:${profile.placesCountryCode}',
-        'location':
-            '${effectivePosition.latitude},${effectivePosition.longitude}',
-      },
+      'location':
+          '${effectivePosition.latitude},${effectivePosition.longitude}',
+      'radius': '$_searchBiasRadiusMetres',
     };
 
     try {
@@ -158,32 +163,39 @@ class LocationController {
       return null;
     }
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+    try {
+      permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return null;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
         return null;
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      return null;
-    }
-
-    try {
-      Position position = await Geolocator.getCurrentPosition(
+      final Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
       return LatLng(position.latitude, position.longitude);
     } catch (e) {
+      // A denied permission, a timeout or a request that raced another one all
+      // mean the same thing to callers: no fix.
       return null;
     }
   }
 
-  /// Public method to force a refresh of the current location.
-  Future<LatLng?> refreshCurrentLocation() async {
-    _currentLatLng = await _getCurrentLatLngLocation();
-    return _currentLatLng;
+  /// Resolves the current location, joining the request already in flight if
+  /// there is one. Never throws — an unavailable fix comes back as null.
+  Future<LatLng?> refreshCurrentLocation() {
+    return _pendingFix ??= _getCurrentLatLngLocation().then((latLng) {
+      _currentLatLng = latLng;
+      return latLng;
+    }).whenComplete(() {
+      _pendingFix = null;
+    });
   }
 }
 

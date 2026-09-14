@@ -7,7 +7,8 @@ import 'package:starter_codes/features/store/model/store_model.dart'; // For Sto
 class Product {
   final String id;
   final String title;
-  final int price;
+  /// Major units. Canadian prices carry cents, so this is never an int.
+  final double price;
   final String? description;
   final ProductStore? store; // Changed to ProductStore object, made nullable for flexibility
   final ProductImage? image; // Made nullable for flexibility
@@ -40,13 +41,13 @@ class Product {
     this.currency = Currency.ngn,
   });
 
-  String get formattedPrice => Money(price.toDouble(), currency).format();
+  String get formattedPrice => Money(price, currency).format();
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       id: json['_id'] as String,
       title: json['title'] as String,
-      price: json['price'] as int,
+      price: (json['price'] as num).toDouble(),
       description: json['description'] as String?,
       store: json['store'] != null
           ? ProductStore.fromJson(json['store'] as Map<String, dynamic>)
@@ -87,7 +88,7 @@ class Product {
   Product copyWith({
     String? id,
     String? title,
-    int? price,
+    double? price,
     String? description,
     ProductStore? store,
     ProductImage? image,

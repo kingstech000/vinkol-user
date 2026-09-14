@@ -1,228 +1,175 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:starter_codes/core/utils/colors.dart';
-import 'package:starter_codes/widgets/gap.dart';
-import '../../model/payment_history_model.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:starter_codes/core/design/vinkol_color.dart';
+import 'package:starter_codes/core/design/vinkol_motion.dart';
+import 'package:starter_codes/core/design/vinkol_space.dart';
+import 'package:starter_codes/core/utils/text.dart';
+import 'package:starter_codes/features/wallet/view/widget/wallet_ui.dart';
+import 'package:starter_codes/widgets/app_bar/mini_app_bar.dart';
+import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/price_text.dart';
 
+/// One ledger entry in full: the amount, where it stands, and every fact the
+/// record carries. Payments and withdrawals share it.
 class TransactionDetailScreen extends StatelessWidget {
-  final PaymentHistory transaction;
+  const TransactionDetailScreen({super.key, required this.entry});
 
-  const TransactionDetailScreen({
-    Key? key,
-    required this.transaction,
-  }) : super(key: key);
+  final WalletEntry entry;
 
   @override
   Widget build(BuildContext context) {
-    final isDebit = transaction.type == 'Debit';
-    final dateFormat = transaction.createdAt.toLocal();
-    final formattedDate = '${dateFormat.day}/${dateFormat.month}/${dateFormat.year}';
-    final formattedTime = '${dateFormat.hour.toString().padLeft(2, '0')}:${dateFormat.minute.toString().padLeft(2, '0')}';
-
+    final e = entry;
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          'Transaction Details',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
+      appBar: MiniAppBar(title: e.kind),
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            VinkolSpace.pageMargin,
+            VinkolSpace.lg,
+            VinkolSpace.pageMargin,
+            VinkolSpace.xxxl,
           ),
-        ),
-        iconTheme: IconThemeData(color: Colors.black),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 64.w,
-                    height: 64.h,
-                    decoration: BoxDecoration(
-                      color: isDebit ? Colors.red.shade50 : Colors.green.shade50,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isDebit ? PhosphorIconsRegular.arrowDown : PhosphorIconsRegular.arrowUp,
-                      color: isDebit ? Colors.red.shade600 : Colors.green.shade600,
-                      size: 32.sp,
-                    ),
-                  ),
-                  Gap.h16,
-                  Text(
-                    transaction.narration.isNotEmpty
-                        ? transaction.narration
-                        : (isDebit ? 'Payment' : 'Funding'),
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  Gap.h8,
-                  Text(
-                    '${isDebit ? '-' : '+'}${transaction.money.format()}',
-                    style: TextStyle(
-                      fontSize: 32.sp,
-                      fontWeight: FontWeight.bold,
-                      color: isDebit ? Colors.red.shade600 : Colors.green.shade600,
-                    ),
-                  ),
-                  Gap.h12,
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: transaction.status.toLowerCase() == 'successful' || transaction.status.toLowerCase() == 'success'
-                          ? Colors.green.shade50
-                          : transaction.status.toLowerCase() == 'pending'
-                              ? Colors.orange.shade50
-                              : Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Text(
-                      transaction.status.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: transaction.status.toLowerCase() == 'successful' || transaction.status.toLowerCase() == 'success'
-                            ? Colors.green.shade700
-                            : transaction.status.toLowerCase() == 'pending'
-                                ? Colors.orange.shade700
-                                : Colors.red.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            // The hero: what it was, how much, and where it stands.
+            AppText.body(
+              e.title,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: VinkolPalette.neutral600,
+              maxLines: 2,
             ),
-            Gap.h24,
-            Container(
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Transaction Information',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Gap.h20,
-                  _buildDetailRow('Date', formattedDate),
-                  Gap.h12,
-                  _buildDetailRow('Time', formattedTime),
-                  Gap.h12,
-                  _buildDetailRow('Type', transaction.type),
-                  Gap.h12,
-                  if (transaction.narration.isNotEmpty)
-                    _buildDetailRow('Narration', transaction.narration),
-                  if (transaction.narration.isNotEmpty) Gap.h12,
-                  _buildDetailRow('Status', transaction.status),
-                  Gap.h20,
-                  Divider(),
-                  Gap.h20,
-                  _buildReferenceRow('Reference', transaction.reference),
-                ],
-              ),
+            Gap.h6,
+            PriceText(
+              e.money,
+              prefix: e.sign,
+              size: 36,
+              weight: FontWeight.w800,
+              color: e.isCredit
+                  ? VinkolPalette.successText
+                  : VinkolPalette.neutral900,
+              symbolColor: e.isCredit
+                  ? VinkolPalette.successText
+                  : VinkolPalette.neutral500,
             ),
+            Gap.h10,
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: WalletStatusPill(label: e.statusLabel, state: e.state),
+            ),
+            if (e.state == WalletEntryState.pending) ...[
+              Gap.h16,
+              InlineNotice(
+                icon: PhosphorIconsRegular.clock,
+                text: e.kind == 'Withdrawal'
+                    ? 'Being sent to your bank. Pull down on the wallet to check for an update.'
+                    : 'Still being confirmed. The balance updates once it goes through.',
+              ),
+            ],
+            Gap.h28,
+            const SectionLabel('DETAILS'),
+            WalletSurface(
+              children: [
+                KeyValueRow(label: 'Date', value: e.dateLabel),
+                KeyValueRow(label: 'Time', value: e.timeLabel),
+                KeyValueRow(label: 'Type', value: e.kind),
+                if (e.bankName != null && e.bankName!.isNotEmpty)
+                  KeyValueRow(label: 'Bank', value: e.bankName!),
+                if (e.accountNumber != null && e.accountNumber!.isNotEmpty)
+                  KeyValueRow(
+                    label: 'Account',
+                    value: '···· ${BankAccountRow.lastFour(e.accountNumber!)}',
+                  ),
+                if (e.note != null && e.note!.isNotEmpty)
+                  KeyValueRow(label: 'Note', value: e.note!),
+              ],
+            ),
+            if (e.reference != null && e.reference!.isNotEmpty) ...[
+              Gap.h28,
+              const SectionLabel('REFERENCE'),
+              _ReferenceRow(reference: e.reference!),
+              Gap.h8,
+              AppText.caption(
+                'Quote this if you contact support about this transaction.',
+                fontSize: 12,
+                color: VinkolPalette.neutral600,
+              ),
+            ],
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildDetailRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: Colors.grey.shade600,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-      ],
-    );
+/// The reference in mono, with a copy control that confirms in place — the
+/// icon becomes a tick for a moment rather than raising a dialog.
+class _ReferenceRow extends StatefulWidget {
+  const _ReferenceRow({required this.reference});
+
+  final String reference;
+
+  @override
+  State<_ReferenceRow> createState() => _ReferenceRowState();
+}
+
+class _ReferenceRowState extends State<_ReferenceRow> {
+  bool _copied = false;
+
+  Future<void> _copy() async {
+    await Clipboard.setData(ClipboardData(text: widget.reference));
+    if (!mounted) return;
+    setState(() => _copied = true);
+    await Future<void>.delayed(const Duration(milliseconds: 1600));
+    if (mounted) setState(() => _copied = false);
   }
 
-  Widget _buildReferenceRow(String label, String value) {
-    return Builder(
-      builder: (context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        VinkolSpace.lg,
+        VinkolSpace.xs,
+        VinkolSpace.xs,
+        VinkolSpace.xs,
+      ),
+      decoration: BoxDecoration(
+        color: VinkolPalette.white,
+        borderRadius: VinkolRadius.brSm,
+        border: Border.all(color: VinkolPalette.neutral200),
+      ),
+      child: Row(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey.shade600,
+          Expanded(
+            child: SelectableText(
+              widget.reference,
+              style: const TextStyle(
+                fontFamily: 'menlo',
+                fontFamilyFallback: ['Courier', 'monospace'],
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: VinkolPalette.neutral900,
+                height: 1.4,
+              ),
             ),
           ),
-          Gap.h8,
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(PhosphorIconsRegular.copy, size: 20.sp, color: AppColors.blue),
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: value));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Reference copied to clipboard'),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
-              ],
+          Gap.w8,
+          IconButton(
+            tooltip: _copied ? 'Copied' : 'Copy reference',
+            onPressed: _copy,
+            icon: AnimatedSwitcher(
+              duration: VinkolMotion.respecting(context, VinkolMotion.fast),
+              child: Icon(
+                _copied
+                    ? PhosphorIconsRegular.check
+                    : PhosphorIconsRegular.copy,
+                key: ValueKey(_copied),
+                size: 20,
+                color: _copied
+                    ? VinkolPalette.successText
+                    : VinkolPalette.brand600,
+              ),
             ),
           ),
         ],

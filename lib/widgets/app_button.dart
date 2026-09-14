@@ -91,7 +91,7 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 60.h,
+      height: 45.h,
       child: TextButton(
         onPressed: disable || loading ? () {} : onTap,
         style: TextButton.styleFrom(

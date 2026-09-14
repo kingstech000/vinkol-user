@@ -5,6 +5,7 @@ import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/features/booking/data/ride_notifier.dart';
 import 'package:starter_codes/models/location_model.dart';
 import 'package:starter_codes/provider/location_provider.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class LocationSearchScreen extends ConsumerStatefulWidget {
@@ -114,9 +115,8 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to get location details: $e')),
-        );
+        AppStatusDialogs.showError(
+            context, 'Location error', 'Failed to get location details: $e');
       }
     } finally {
       if (mounted) {
@@ -396,18 +396,10 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
           ),
           child: Row(
             children: [
-              Container(
-                width: 40.w,
-                height: 40.w,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Icon(
-                  PhosphorIconsRegular.mapPin,
-                  color: AppColors.primary,
-                  size: 24.w,
-                ),
+              Icon(
+                PhosphorIconsRegular.mapPin,
+                color: AppColors.primary,
+                size: 24.w,
               ),
               SizedBox(width: 16.w),
               Expanded(

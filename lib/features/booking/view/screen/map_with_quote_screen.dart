@@ -83,7 +83,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     } else {
       debugPrint('[MapWithQuotesScreen] WARNING: No quotes available!');
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showSnackbar(
+        _showNotice('No options available',
             'No delivery options available. Please go back and try again.');
       });
     }
@@ -162,14 +162,15 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
       } catch (e, st) {
         debugPrint('[MapWithQuotesScreen] Error setting up route: $e\n$st');
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showSnackbar('Error displaying route on map.');
+          _showNotice('Map error', 'Error displaying route on map.');
         });
       }
     } else {
       debugPrint(
           '[MapWithQuotesScreen] Missing pickup or dropoff coordinates!');
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showSnackbar('Missing location details for map display.');
+        _showNotice(
+            'Missing location', 'Missing location details for map display.');
       });
     }
   }
@@ -198,7 +199,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
 
     if (_selectedQuote == null) {
       debugPrint('[MapWithQuotesScreen] ERROR: No quote selected!');
-      _showSnackbar('Please select a delivery option.');
+      _showNotice('No option selected', 'Please select a delivery option.');
       return;
     }
 
@@ -209,9 +210,11 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
       final refreshed = await _refreshQuotes();
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showSnackbar(refreshed
-          ? 'That price expired. We have re-priced your delivery — please confirm again.'
-          : 'That price expired. Please go back and re-enter your trip.');
+      _showNotice(
+          'Price expired',
+          refreshed
+              ? 'We have re-priced your delivery — please confirm again.'
+              : 'Please go back and re-enter your trip.');
       return;
     }
 
@@ -224,7 +227,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
         pickupLocation == null ||
         dropOffLocation == null) {
       debugPrint('[MapWithQuotesScreen] ERROR: Missing required data!');
-      _showSnackbar('Missing ride details. Please re-enter.');
+      _showNotice('Missing details', 'Missing ride details. Please re-enter.');
       return;
     }
 
@@ -376,11 +379,9 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
     }
   }
 
-  void _showSnackbar(String message) {
+  void _showNotice(String title, String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppStatusDialogs.showError(context, title, message, buttonText: 'OK');
     }
   }
 
@@ -568,14 +569,10 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                             return GestureDetector(
                               onTap: !quote.isAvailable
                                   ? () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(SnackBar(
-                                        showCloseIcon: true,
-                                        behavior: SnackBarBehavior.floating,
-                                        content: Text(
-                                            quote.unavailableMessage ??
-                                                'Not available for this route'),
-                                      ));
+                                      _showNotice(
+                                          'Not available',
+                                          quote.unavailableMessage ??
+                                              'Not available for this route');
                                     }
                                   : () {
                                       setState(() {
@@ -596,7 +593,7 @@ class _MapWithQuotesScreenState extends ConsumerState<MapWithQuotesScreen> {
                                 isExpress: isExpressQuote,
                                 strikethrough: (user?.hasCoupon ?? false) &&
                                         quote.discountedPrice != null
-                                    ? quote.fare
+                                    ? quote.originalFare
                                     : null,
                                 isSelected: _selectedQuote == quote,
                                 isAvailable: quote.isAvailable,

@@ -7,6 +7,7 @@ import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/features/delivery/view_model/delivery_view_model.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
+import 'package:starter_codes/widgets/modal/app_status_dialogs.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -57,11 +58,8 @@ class _DownloadReportScreenState extends ConsumerState<DownloadReportScreen> {
 
   void _handleDownload() async {
     if (_startDate == null || _endDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          behavior: SnackBarBehavior.floating,
-          content: Text('Please select both start and end dates.')),
-      );
+      AppStatusDialogs.showError(
+          context, 'Dates required', 'Please select both start and end dates.');
       return;
     }
 

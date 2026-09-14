@@ -1,122 +1,122 @@
 // lib/widgets/modals/logout_modal.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
+import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
-import 'package:starter_codes/core/router/routing_constants.dart'; // Assuming you have routing constants for Support
 import 'package:starter_codes/core/utils/colors.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/core/utils/text.dart';
 import 'package:starter_codes/provider/dashboard_navigator_provider.dart';
-import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/utils/guest_mode_utils.dart';
 import 'package:starter_codes/widgets/app_button.dart';
 import 'package:starter_codes/widgets/gap.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+/// The confirmation for logging out.
+///
+/// No icon on a tinted disc and no oversized headline: the sheet asks one
+/// question, names what is about to happen, and gives the two answers equal
+/// room with the destructive one on the end.
 class LogoutModal extends ConsumerWidget {
   const LogoutModal({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use watch to react to user authentication state changes
-    final user = ref.watch(userProvider);
     final localCache = locator<LocalCache>();
+
     return Container(
-      // The Container is now the direct child of the ModalBottomSheet
-      padding: EdgeInsets.all(24.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          // Only top corners are rounded for a bottom sheet
-          topLeft: Radius.circular(20.r),
-          topRight: Radius.circular(20.r),
-          // No bottomLeft or bottomRight for a standard bottom sheet
-        ),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // Make the column take minimum space
-        children: [
-          CircleAvatar(
-            radius: 30.r,
-            backgroundColor: AppColors.primary
-                .withOpacity(0.3), // A light blue background for the icon
-            child: Icon(
-              PhosphorIconsRegular.xCircle, // A clear "cancel" or "stop" icon
-              color: AppColors
-                  .primary, // Primary color for the icon, or a distinct blue/red
-              size: 40.w,
-            ),
-          ),
-          Gap.h24,
-          AppText.h2(
-            'Log Out',
-            fontWeight: FontWeight.bold,
-            color: AppColors.black,
-          ),
-          Gap.h8,
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: AppText.body(
-              'Really want to log out of the app?\nIf it is due to issue please contact us',
-              textAlign: TextAlign.center,
-              color: Colors.grey.shade600,
-              fontSize: 14.sp,
-            ),
-          ),
-          Gap.h32,
-          Row(
-            children: [
-              Expanded(
-                child: AppButton.outline(
-                  // Assuming you have an outline button style
-                  title: 'Contact Us',
-                  onTap: () {
-                    NavigationService.instance.goBack(); // Close the modal
-                    NavigationService.instance.navigateTo(NavigatorRoutes
-                        .supportAndHelpScreen); // Navigate to Support screen
-                  },
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.lightgrey,
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
-              Gap.w16,
-              Expanded(
-                child: AppButton(
-                  color: AppColors.red,
-                  textColor: AppColors.white,
-                  title: 'Log Out',
-                  onTap: () async {
-                    // Clear guest mode and token
-                    await GuestModeUtils.clearGuestMode();
-                    await localCache.saveToken('');
-                    ref.watch(navigationIndexProvider.notifier).state = 0;
-                    NavigationService.instance.navigateToReplaceAll(
-                        NavigatorRoutes
-                            .authChoiceScreen); // Navigate to auth choice
-                  },
+            ),
+            Gap.h24,
+            AppText.h4('Log out?', color: AppColors.black),
+            Gap.h8,
+            AppText.body(
+              'You will need your email and password to get back in. Nothing '
+              'about your orders changes.',
+              color: AppColors.darkgrey,
+              fontSize: 14,
+              lineHeight: 1.45,
+            ),
+            Gap.h24,
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton.outline(
+                    title: 'Cancel',
+                    onTap: () => NavigationService.instance.goBack(),
+                  ),
+                ),
+                Gap.w12,
+                Expanded(
+                  child: AppButton(
+                    color: AppColors.redText,
+                    textColor: AppColors.white,
+                    outlineColor: AppColors.redText,
+                    title: 'Log out',
+                    onTap: () async {
+                      await GuestModeUtils.clearGuestMode();
+                      await localCache.saveToken('');
+                      ref.read(navigationIndexProvider.notifier).state = 0;
+                      NavigationService.instance.navigateToReplaceAll(
+                          NavigatorRoutes.authChoiceScreen);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Gap.h8,
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  NavigationService.instance.goBack();
+                  NavigationService.instance
+                      .navigateTo(NavigatorRoutes.supportAndHelpScreen);
+                },
+                child: AppText.body(
+                  'Having a problem? Contact us',
+                  color: AppColors.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// Function to show the Logout Modal as a Bottom Sheet
+/// Function to show the Logout Modal as a Bottom Sheet
 void showLogoutModal(BuildContext context) {
   showModalBottomSheet(
     context: context,
-    isScrollControlled:
-        true, // Allows the modal to be full height if needed (though not for this one)
-    backgroundColor: Colors
-        .transparent, // Important for showing the Container's rounded corners
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
     builder: (BuildContext context) {
       return Padding(
         padding:
             EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: const LogoutModal(), // Your modal content
+        child: const LogoutModal(),
       );
     },
   );

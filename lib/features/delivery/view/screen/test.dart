@@ -15,7 +15,6 @@ import 'package:starter_codes/widgets/app_bar/HorizontalDottedLine.dart';
 import 'package:starter_codes/widgets/border_icon_button.dart';
 import 'package:starter_codes/widgets/circular_network_image.dart';
 import 'package:starter_codes/widgets/gap.dart';
-import 'package:starter_codes/widgets/dot_spinning_indicator.dart';
 import 'package:starter_codes/widgets/reverse_map.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -527,7 +526,7 @@ class _BookingOrderScreenState extends ConsumerState<BookingOrderScreen> {
                             },
                             loading: () => const Padding(
                               padding: EdgeInsets.all(20.0),
-                              child: Center(child: DotSpinningIndicator()),
+                              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
                             ),
                             error: (err, stack) => Padding(
                               padding: const EdgeInsets.all(20.0),

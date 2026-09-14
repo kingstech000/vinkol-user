@@ -19,7 +19,6 @@ class MarketProfile {
   const MarketProfile({
     required this.country,
     required this.displayName,
-    required this.placesCountryCode,
     required this.defaultLat,
     required this.defaultLng,
     required this.dialCode,
@@ -37,9 +36,6 @@ class MarketProfile {
 
   /// What to call this market to a customer.
   final String displayName;
-
-  /// ISO country code for the Google Places `components` filter.
-  final String placesCountryCode;
 
   /// Where the map opens before the customer has picked anything.
   final double defaultLat;
@@ -83,7 +79,6 @@ class MarketProfile {
 const MarketProfile _nigeria = MarketProfile(
   country: Country.ng,
   displayName: 'Nigeria',
-  placesCountryCode: 'NG',
   defaultLat: 6.5244, // Lagos
   defaultLng: 3.3792,
   dialCode: '+234',
@@ -138,7 +133,6 @@ const MarketProfile _nigeria = MarketProfile(
 const MarketProfile _canada = MarketProfile(
   country: Country.ca,
   displayName: 'Canada',
-  placesCountryCode: 'CA',
   defaultLat: 43.6532, // Toronto
   defaultLng: -79.3832,
   dialCode: '+1',
@@ -162,7 +156,7 @@ const MarketProfile _canada = MarketProfile(
   ],
   clampPickToRegion: false,
   postalCodeLabel: 'Postal code',
-  supportPhone: '+1 647 946 0011',
+  supportPhone: '+1 647 573 2867',
   supportHours: '8am-8pm ET',
 );
 

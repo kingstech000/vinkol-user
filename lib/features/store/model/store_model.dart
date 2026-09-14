@@ -61,11 +61,21 @@ class OpeningHours {
     };
   }
 
-  /// Check if store is open today
-  bool isOpenToday() {
-    final now = DateTime.now();
-    final dayOfWeek = now.weekday; // 1 = Monday, 7 = Sunday
+  /// Today's hours, or null when the store gave none for today.
+  DayHours? get today => _forWeekday(DateTime.now().weekday);
 
+  /// Today's closing time as the store wrote it (`19:00`), or null when it
+  /// is closed today or gave no hours.
+  String? get closesTodayAt {
+    final hours = today;
+    if (hours == null || (hours.isClosed ?? true)) return null;
+    final last = hours.hours?.lastOrNull;
+    if (last is! Map) return null;
+    final close = last['close'];
+    return close is String && close.isNotEmpty ? close : null;
+  }
+
+  DayHours? _forWeekday(int dayOfWeek) {
     DayHours? todayHours;
     switch (dayOfWeek) {
       case 1:
@@ -90,6 +100,12 @@ class OpeningHours {
         todayHours = sunday;
         break;
     }
+    return todayHours;
+  }
+
+  /// Check if store is open today
+  bool isOpenToday() {
+    final todayHours = today;
 
     // If no hours data for today, assume closed
     if (todayHours == null) {
@@ -170,6 +186,7 @@ class Store {
   });
 
   factory Store.fromJson(Map<String, dynamic> json) {
+    final country = Country.fromCode(json['country'] as String?);
     return Store(
       id: json['_id'] as String,
       email: json['email'] as String?,
@@ -192,8 +209,13 @@ class Store {
       openingHours: json['openingHours'] != null
           ? OpeningHours.fromJson(json['openingHours'] as Map<String, dynamic>)
           : null,
-      country: Country.fromCode(json['country'] as String?),
-      currency: Currency.fromCode(json['currency'] as String?),
+      country: country,
+      // Store records name their country but not always their currency; the
+      // market decides it, so an absent field is derived rather than defaulted
+      // to naira.
+      currency: json['currency'] == null
+          ? country.currency
+          : Currency.fromCode(json['currency'] as String?),
     );
   }
 
@@ -422,7 +444,8 @@ class ProductStore {
 class StoreProduct {
   final String id;
   final String title;
-  final int price;
+  /// Major units. Canadian prices carry cents, so this is never an int.
+  final double price;
   final String? description;
   final String? store; // Made nullable for safety, might be absent in some contexts
   final StoreProductImage image;
@@ -431,7 +454,24 @@ class StoreProduct {
   final String? createdAt;
   final String? updatedAt;
   final int? v;
+
+  /// The market this product is sold in. Absent on records written before
+  /// the Canada expansion, all of which are Nigerian.
+  final Country country;
+  final Currency currency;
+
+  /// Units left, as the store reports it. Null when the store does not track
+  /// stock.
+  final int? inventory;
+  final bool isAvailable;
   int? quantity; // <--- ADD THIS FOR CART FUNCTIONALITY
+
+  /// The unit price in its own market, so it can never render with the
+  /// wrong symbol.
+  Money get unitPrice => Money(price, currency);
+
+  /// Whether the store can sell this right now.
+  bool get inStock => isAvailable && (inventory == null || inventory! > 0);
 
   StoreProduct({
     required this.id,
@@ -445,6 +485,10 @@ class StoreProduct {
     this.createdAt,
     this.updatedAt,
     this.v,
+    this.country = Country.ng,
+    this.currency = Currency.ngn,
+    this.inventory,
+    this.isAvailable = true,
     this.quantity = 0, // <--- Initialize quantity for cart
   });
 
@@ -452,7 +496,7 @@ class StoreProduct {
     return StoreProduct(
       id: json['_id'] as String? ?? '',
       title: json['title'] as String? ?? '',
-      price: json['price'] as int? ?? 0,
+      price: (json['price'] as num?)?.toDouble() ?? 0,
       description: json['description'] as String?,
       // --- Focused Null-Safety Enhancement for 'store' ---
       store: json['store'] is String
@@ -465,6 +509,10 @@ class StoreProduct {
       createdAt: json['createdAt'] as String?,
       updatedAt: json['updatedAt'] as String?,
       v: json['__v'] as int?,
+      country: Country.fromCode(json['country'] as String?),
+      currency: Currency.fromCode(json['currency'] as String?),
+      inventory: (json['inventory'] as num?)?.toInt(),
+      isAvailable: json['isAvailable'] as bool? ?? true,
       quantity: json['quantity'] as int?, // Parse quantity if it comes from JSON
     );
   }
@@ -482,6 +530,10 @@ class StoreProduct {
       'createdAt': createdAt,
       'updatedAt': updatedAt,
       '__v': v,
+      'country': country.code,
+      'currency': currency.code,
+      'inventory': inventory,
+      'isAvailable': isAvailable,
       'quantity': quantity, // Include quantity in toJson
     };
   }
@@ -489,7 +541,7 @@ class StoreProduct {
   StoreProduct copyWith({
     String? id,
     String? title,
-    int? price,
+    double? price,
     String? description,
     String? store,
     StoreProductImage? image,
@@ -498,6 +550,10 @@ class StoreProduct {
     String? createdAt,
     String? updatedAt,
     int? v,
+    Country? country,
+    Currency? currency,
+    int? inventory,
+    bool? isAvailable,
     int? quantity, // <--- Add quantity to copyWith
   }) {
     return StoreProduct(
@@ -512,6 +568,10 @@ class StoreProduct {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       v: v ?? this.v,
+      country: country ?? this.country,
+      currency: currency ?? this.currency,
+      inventory: inventory ?? this.inventory,
+      isAvailable: isAvailable ?? this.isAvailable,
       quantity: quantity ?? this.quantity, // <--- Update quantity
     );
   }

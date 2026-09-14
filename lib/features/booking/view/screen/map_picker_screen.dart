@@ -31,6 +31,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
   GoogleMapController? _mapController;
   LatLng? _pickedLocation;
   String? _pickedAddress;
+  LocationModel? _pickedLocationDetails;
   bool _isLoadingAddress = false;
   String? _userState;
   StateBoundary? _stateBoundary;
@@ -572,6 +573,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     setState(() {
       _isLoadingAddress = true;
       _pickedAddress = null;
+      _pickedLocationDetails = null;
     });
 
     try {
@@ -581,6 +583,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
       if (!mounted) return;
 
       setState(() {
+        _pickedLocationDetails = location;
         _pickedAddress = location?.formattedAddress ?? 'Unknown location';
       });
     } catch (e) {
@@ -623,6 +626,8 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     final selectedLocation = LocationModel.fromLatLng(
       _pickedLocation!,
       formattedAddress: _pickedAddress,
+      state: _pickedLocationDetails?.state,
+      country: _pickedLocationDetails?.country,
     );
 
     // Update the ride location notifier if stopId is provided

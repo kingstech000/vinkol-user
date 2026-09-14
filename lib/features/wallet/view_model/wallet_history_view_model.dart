@@ -1,36 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/wallet_service.dart';
 import '../model/payment_history_model.dart';
-import '../model/withdrawable_amount_model.dart';
-import 'package:starter_codes/provider/user_provider.dart';
 import 'package:starter_codes/core/utils/app_logger.dart';
 
 // State class to hold both withdrawal history and wallet balance
 class WalletOverviewState {
   final AsyncValue<List<PaymentHistory>> withdrawalHistory;
-  final AsyncValue<double> walletBalance; // Assuming this is also managed here
-
-  /// What can actually be withdrawn, which nets off disputed and pending
-  /// amounts. Use this rather than [walletBalance] to gate a withdrawal —
-  /// `/withdraw` refuses anything above it.
-  final AsyncValue<WithdrawableAmount> withdrawable;
+  /// The balance, which is also what gates a withdrawal: the endpoint that
+  /// nets off pending and disputed amounts (`users/{id}/withdrawable-amount`)
+  /// is admin-only and answers 403 to a customer token.
+  final AsyncValue<double> walletBalance;
 
   WalletOverviewState({
     this.withdrawalHistory = const AsyncValue.loading(),
     this.walletBalance = const AsyncValue.loading(),
-    this.withdrawable = const AsyncValue.loading(),
   });
 
   // Helper to create a new state with updated values (immutability is key)
   WalletOverviewState copyWith({
     AsyncValue<List<PaymentHistory>>? withdrawalHistory,
     AsyncValue<double>? walletBalance,
-    AsyncValue<WithdrawableAmount>? withdrawable,
   }) {
     return WalletOverviewState(
       withdrawalHistory: withdrawalHistory ?? this.withdrawalHistory,
       walletBalance: walletBalance ?? this.walletBalance,
-      withdrawable: withdrawable ?? this.withdrawable,
     );
   }
 }
@@ -92,15 +85,24 @@ class WalletOverviewNotifier extends Notifier<WalletOverviewState> {
       return;
     }
 
-    // Only set loading if we are actually going to fetch new data
+    // Loading keeps whatever was last shown. A refresh is not a first load:
+    // the screen keeps the old balance and rows in place and swaps them when
+    // the new ones arrive, rather than dropping to a skeleton every time the
+    // tab is opened (`AsyncValue.when` skips the loading branch on a refresh).
     if (!state.withdrawalHistory.isLoading) {
-      state = state.copyWith(withdrawalHistory: const AsyncValue.loading());
+      state = state.copyWith(
+        withdrawalHistory: const AsyncValue<List<PaymentHistory>>.loading()
+            .copyWithPrevious(state.withdrawalHistory),
+      );
     }
 
     // --- Fetch Wallet Balance ---
     try {
       if (!state.walletBalance.isLoading) {
-        state = state.copyWith(walletBalance: const AsyncValue.loading());
+        state = state.copyWith(
+          walletBalance: const AsyncValue<double>.loading()
+              .copyWithPrevious(state.walletBalance),
+        );
       }
 
       final balance = await _walletService.fetchWalletBalance();
@@ -111,27 +113,6 @@ class WalletOverviewNotifier extends Notifier<WalletOverviewState> {
       _logger.e('WalletOverviewNotifier: Error fetching wallet balance.',
           error: e, stackTrace: st);
       state = state.copyWith(walletBalance: AsyncValue.error(e, st));
-    }
-
-    // --- Fetch Withdrawable Amount ---
-    final userId = ref.read(userProvider)?.id;
-    if (userId == null) {
-      _logger.w('WalletOverviewNotifier: No user id; skipping withdrawable.');
-    } else {
-      try {
-        if (!state.withdrawable.isLoading) {
-          state = state.copyWith(withdrawable: const AsyncValue.loading());
-        }
-        final withdrawable =
-            await _walletService.fetchWithdrawableAmount(userId);
-        state = state.copyWith(withdrawable: AsyncValue.data(withdrawable));
-        _logger.d('WalletOverviewNotifier: Withdrawable amount fetched: '
-            '${withdrawable.withdrawableAmount}');
-      } catch (e, st) {
-        _logger.e('WalletOverviewNotifier: Error fetching withdrawable amount.',
-            error: e, stackTrace: st);
-        state = state.copyWith(withdrawable: AsyncValue.error(e, st));
-      }
     }
 
     try {
@@ -152,4 +133,8 @@ class WalletOverviewNotifier extends Notifier<WalletOverviewState> {
         'WalletOverviewNotifier: Refresh data requested. Re-initiating fetch.');
     await _fetchHistoryAndBalance(forceRefresh: true);
   }
+
+  /// For a screen mounting: fetch only if the cache is stale or empty. Pull
+  /// to refresh and post-transaction updates use [refreshData].
+  Future<void> fetchIfStale() => _fetchHistoryAndBalance();
 }

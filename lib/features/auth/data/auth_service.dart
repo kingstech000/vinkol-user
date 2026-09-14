@@ -6,6 +6,7 @@ import 'package:starter_codes/core/utils/app_logger.dart';
 import 'package:starter_codes/core/utils/network_client.dart';
 import 'package:starter_codes/core/constants/api_routes.dart';
 import 'package:starter_codes/core/data/local/local_cache.dart';
+import 'package:starter_codes/core/money/money.dart';
 import 'package:starter_codes/core/utils/locator.dart';
 import 'package:starter_codes/features/auth/model/user_model.dart';
 import 'package:starter_codes/models/failure.dart';
@@ -49,9 +50,16 @@ class AuthService {
     }
   }
 
+  /// Registers an account in [country].
+  ///
+  /// `country` is the device's market — what the customer chose in Settings, or
+  /// what their location detected — so a Canadian customer's account is created
+  /// Canadian rather than defaulting to Nigeria and having to be corrected. It
+  /// does not decide what anything costs: an order's market comes off its quote.
   Future<void> signup({
     required String email,
     required String password,
+    required Country country,
   }) async {
     try {
       final responseData = await _networkClient.post(
@@ -59,6 +67,7 @@ class AuthService {
         body: SignupRequest(
           email: email,
           password: password,
+          country: country,
         ).toJson(),
       );
       logger.i('Signup API response: $responseData');
@@ -159,9 +168,16 @@ class AuthService {
     }
   }
 
+  /// Updates whichever fields are supplied, leaving the rest as they are.
+  ///
+  /// [country] and [state] belong together: a region name means nothing without
+  /// the market it was picked from — "Ontario" and a Nigerian state come out of
+  /// the same field. Callers send the device's market, which is where the
+  /// region list they offered came from in the first place.
   Future<void> updateProfile({
     String? firstname,
     String? state,
+    Country? country,
     String? lastName,
     String? phoneNumber,
     MultipartFile? avatar,
@@ -178,6 +194,9 @@ class AuthService {
       }
       if (state != null) {
         data['state'] = state;
+      }
+      if (country != null) {
+        data['country'] = country.code;
       }
       if (avatar != null) {
         data['avatar'] = avatar; // Add MultipartFile directly to map

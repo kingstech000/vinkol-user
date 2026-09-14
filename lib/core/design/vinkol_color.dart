@@ -50,6 +50,13 @@ abstract final class VinkolPalette {
   static const dangerGround = Color(0xFFFDECEA);
   static const dangerDark = Color(0xFFFF8A80);
 
+  // Promotion. Rewards and loyalty progress only — a hue the brand blue and the state
+  // colors never use, so a reward card reads as a gift, not a second CTA or a warning.
+  static const promoText = Color(0xFF5B21B6); // 8.98:1 on white
+  static const promoFill = Color(0xFF6D28D9); // 7.10:1 with white
+  static const promoGround = Color(0xFFEDE9FE);
+  static const promoDark = Color(0xFFC4B5FD); // 10.39:1 on neutral950
+
   // Shadow tints, pre-multiplied so no call site needs withOpacity.
   static const shadow06 = Color(0x0F0D0F13);
   static const shadow18 = Color(0x2E0D0F13);

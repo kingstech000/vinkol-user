@@ -13,17 +13,18 @@ import 'package:starter_codes/features/delivery/view/screen/booking_order_screen
 import 'package:starter_codes/features/booking/view/screen/map_with_quote_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/bulk_map_with_quote_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/multi_map_with_quote_screen.dart';
+import 'package:starter_codes/features/booking/view/screen/delivery_stops_screen.dart';
+import 'package:starter_codes/features/booking/view/screen/delivery_type_screen.dart';
 import 'package:starter_codes/features/booking/view/screen/package_info_screen.dart';
 import 'package:starter_codes/features/dashboard/view/screen/dashboard_screen.dart';
 import 'package:starter_codes/features/onboarding/view/screen/location_setup_screen.dart';
 import 'package:starter_codes/features/payment/view/payment_veification_screen.dart';
 import 'package:starter_codes/features/payment/view/payment_webview.dart';
-import 'package:starter_codes/features/profile/view/screen/SupportAndHelpScreen.dart';
+import 'package:starter_codes/features/profile/view/screen/support_and_help_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/delete_account_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/notification_settings_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/personal_info_screen.dart';
 import 'package:starter_codes/features/profile/view/screen/security_screen.dart';
-import 'package:starter_codes/features/profile/view/screen/settings_screen.dart';
 import 'package:starter_codes/features/splash/view/screen/splash_screen.dart';
 import 'package:starter_codes/features/store/view/screen/cart_screen.dart';
 import 'package:starter_codes/features/store/view/screen/product_list_screen.dart';
@@ -167,11 +168,6 @@ class AppRouter {
             settings: settings,
             viewToShow: const NotificationSettingScreen(),
             transition: transition);
-      case NavigatorRoutes.settingsScreen:
-        return _getPageRoute(
-            settings: settings,
-            viewToShow: const SettingsScreen(),
-            transition: transition);
       case NavigatorRoutes.supportAndHelpScreen:
         return _getPageRoute(
             settings: settings,
@@ -184,6 +180,16 @@ class AppRouter {
             transition: transition);
 
       //BOOKING
+      case NavigatorRoutes.deliveryTypeScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const DeliveryTypeScreen(),
+            transition: transition);
+      case NavigatorRoutes.deliveryStopsScreen:
+        return _getPageRoute(
+            settings: settings,
+            viewToShow: const DeliveryStopsScreen(),
+            transition: transition);
       case NavigatorRoutes.packageInfoScreen:
         return _getPageRoute(
             settings: settings,

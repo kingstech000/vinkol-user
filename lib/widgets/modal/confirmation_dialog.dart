@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:starter_codes/core/utils/fonts.dart';
 import 'package:starter_codes/core/router/routing_constants.dart';
 import 'package:starter_codes/core/services/navigation_service.dart';
 import 'package:starter_codes/core/utils/colors.dart';
@@ -154,7 +154,8 @@ class PaymentConfirmationDialog extends StatelessWidget {
               child: Text(
                 'Note: If you\'ve already paid, the order will be processed even if you cancel verification. Check your Deliveries section later.',
                 textAlign: TextAlign.start,
-                style: GoogleFonts.montserrat(
+                style: TextStyle(
+                  fontFamily: AppFonts.montserrat,
                   fontWeight: FontWeight.w400,
                   fontSize: 12.sp,
                   color: Colors.orange.withOpacity(.8),
